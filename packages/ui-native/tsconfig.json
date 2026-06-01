@@ -1,0 +1,16 @@
+{
+  "extends": "@workspace/typescript-config/react-library.json",
+  "compilerOptions": {
+    // These components export source consumed by Expo/Metro, which resolves
+    // like a bundler. Match that (not NodeNext) so @rn-primitives' package
+    // exports and named members resolve the same way they do in the app.
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "paths": {
+      "@workspace/ui-native/*": ["./src/*"]
+    }
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,10 @@
+# build output
+dist/
+
+# generated types / astro cache
+.astro/
+
+# environment
+.env
+.env.production
+.env*.local

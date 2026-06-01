@@ -1,0 +1,53 @@
+{
+  "name": "@workspace/ui-native",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "lint": "eslint",
+    "format": "prettier --write \"**/*.{ts,tsx}\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rn-primitives/avatar": "^1.4.0",
+    "@rn-primitives/checkbox": "^1.4.0",
+    "@rn-primitives/dialog": "^1.4.0",
+    "@rn-primitives/dropdown-menu": "^1.4.0",
+    "@rn-primitives/label": "^1.4.0",
+    "@rn-primitives/popover": "^1.4.0",
+    "@rn-primitives/portal": "^1.4.0",
+    "@rn-primitives/select": "^1.4.0",
+    "@rn-primitives/separator": "^1.4.0",
+    "@rn-primitives/slot": "^1.4.0",
+    "@rn-primitives/switch": "^1.4.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react-native": "^0.577.0",
+    "tailwind-merge": "^3.6.0"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-gesture-handler": "*",
+    "react-native-reanimated": "*",
+    "react-native-screens": "*",
+    "uniwind": "*"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "eslint": "^9",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-reanimated": "~4.2.1",
+    "react-native-screens": "~4.25.2",
+    "typescript": "^5",
+    "uniwind": "^1.7.0"
+  },
+  "exports": {
+    "./components/*": "./src/components/*.tsx",
+    "./lib/*": "./src/lib/*.ts",
+    "./hooks/*": "./src/hooks/*.ts"
+  }
+}

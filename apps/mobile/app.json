@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Convex Starter",
+    "slug": "convex-starter-mobile",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "scheme": "convexstarter",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fiveangles.convexstarter"
+    },
+    "android": {
+      "package": "com.fiveangles.convexstarter"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-status-bar",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

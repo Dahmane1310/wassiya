@@ -1,0 +1,26 @@
+---
+import { Badge } from "@workspace/ui/components/badge"
+import { buttonVariants } from "@workspace/ui/components/button"
+---
+
+<section class="mx-auto flex max-w-3xl flex-col items-center gap-6 px-6 py-24 text-center sm:py-32">
+  <Badge variant="secondary">Open-source template</Badge>
+  <h1 class="text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
+    Ship full-stack apps on Convex, fast.
+  </h1>
+  <p class="text-muted-foreground max-w-2xl text-lg text-pretty">
+    A batteries-included monorepo: a Convex backend, WorkOS authentication, and
+    shared UI across a Next.js web app and an Expo mobile app.
+  </p>
+  <div class="flex flex-wrap items-center justify-center gap-3">
+    <a class={buttonVariants({ size: "lg" })} href="https://docs.convex.dev">
+      Get started
+    </a>
+    <a
+      class={buttonVariants({ variant: "outline", size: "lg" })}
+      href="https://github.com"
+    >
+      View on GitHub
+    </a>
+  </div>
+</section>

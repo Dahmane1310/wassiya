@@ -1,0 +1,7 @@
+/* Reuse the shared design system (Tailwind v4 theme tokens + shadcn styles). */
+@import "@workspace/ui/globals.css";
+
+/* The shared globals.css only scans .ts and .tsx files, so it misses utility
+   classes written directly in .astro markup. Add Astro files as a content
+   source so those classes are generated. */
+@source "./**/*.{astro,ts,tsx}";

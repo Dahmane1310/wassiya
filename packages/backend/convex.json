@@ -1,0 +1,20 @@
+{
+  "authKit": {
+    "dev": {
+      "configure": {
+        "redirectUris": [
+          "http://localhost:3001/callback",
+          "http://localhost:3002/callback",
+          "convexstarter://callback"
+        ],
+        "appHomepageUrl": "http://localhost:3001",
+        "corsOrigins": ["http://localhost:3001", "http://localhost:3002"]
+      },
+      "localEnvVars": {
+        "WORKOS_CLIENT_ID": "${authEnv.WORKOS_CLIENT_ID}",
+        "WORKOS_API_KEY": "${authEnv.WORKOS_API_KEY}",
+        "NEXT_PUBLIC_WORKOS_REDIRECT_URI": "http://localhost:3001/callback"
+      }
+    }
+  }
+}
