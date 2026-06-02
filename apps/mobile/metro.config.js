@@ -14,6 +14,6 @@ config.resolver.unstable_enablePackageExports = true
 // outermost wrapper. `@source` inside global.css covers the shared
 // `@workspace/ui-native` package so its class names aren't purged.
 module.exports = withUniwindConfig(config, {
-  cssEntryFile: "./src/global.css",
-  dtsFile: "./src/uniwind-types.d.ts",
+  cssEntryFile: "./global.css",
+  dtsFile: "./uniwind-types.d.ts",
 })

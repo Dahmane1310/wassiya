@@ -23,6 +23,6 @@ export const usePreferences = create<PreferencesState>()(
       // AsyncStorage is async, so the store rehydrates after the first render
       // (initial render shows defaults). No SSR hydration concern on native.
       storage: createJSONStorage(() => AsyncStorage),
-    },
-  ),
+    }
+  )
 )

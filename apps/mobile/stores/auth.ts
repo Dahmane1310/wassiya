@@ -4,7 +4,7 @@ import {
   refreshWorkOSTokens,
   signInWithWorkOS,
   type WorkOSTokens,
-} from "@/src/lib/auth"
+} from "@/lib/auth"
 
 const ACCESS_KEY = "workos.accessToken"
 const REFRESH_KEY = "workos.refreshToken"
@@ -24,7 +24,9 @@ type AuthState = {
   signIn: () => Promise<void>
   signOut: () => Promise<void>
   // Bridge for Convex's ConvexProviderWithAuth.
-  fetchAccessToken: (opts?: { forceRefreshToken?: boolean }) => Promise<string | null>
+  fetchAccessToken: (opts?: {
+    forceRefreshToken?: boolean
+  }) => Promise<string | null>
 }
 
 async function persistTokens(tokens: WorkOSTokens | null) {

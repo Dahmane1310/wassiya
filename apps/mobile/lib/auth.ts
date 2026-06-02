@@ -14,11 +14,12 @@ export type WorkOSTokens = { accessToken: string; refreshToken: string }
 // open the hosted WorkOS page, capture the `code` from the deep-link callback,
 // then exchange code + verifier for tokens. No API key required.
 export async function signInWithWorkOS(): Promise<WorkOSTokens> {
-  const { url, codeVerifier } = await workos.userManagement.getAuthorizationUrlWithPKCE({
-    provider: "authkit",
-    clientId,
-    redirectUri,
-  })
+  const { url, codeVerifier } =
+    await workos.userManagement.getAuthorizationUrlWithPKCE({
+      provider: "authkit",
+      clientId,
+      redirectUri,
+    })
 
   const result = await WebBrowser.openAuthSessionAsync(url, redirectUri)
   if (result.type !== "success") {
@@ -40,7 +41,9 @@ export async function signInWithWorkOS(): Promise<WorkOSTokens> {
 
 // Exchanges a stored refresh token for a fresh access token (used by the Convex
 // fetchAccessToken bridge on expiry / forced refresh).
-export async function refreshWorkOSTokens(refreshToken: string): Promise<WorkOSTokens> {
+export async function refreshWorkOSTokens(
+  refreshToken: string
+): Promise<WorkOSTokens> {
   const auth = await workos.userManagement.authenticateWithRefreshToken({
     refreshToken,
     clientId,

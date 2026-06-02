@@ -20,7 +20,9 @@
       "expo-status-bar",
       "expo-web-browser",
       "react-native-quick-crypto",
-      "expo-build-properties"
+      "expo-build-properties",
+      "expo-font",
+      "expo-splash-screen"
     ],
     "experiments": {
       "typedRoutes": true

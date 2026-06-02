@@ -1,0 +1,23 @@
+{
+  "brand": {
+    "name": "Wassiya"
+  },
+  "welcome": {
+    "headline": "Your legacy, sealed until it's needed.",
+    "subhead": "One private vault for your whole estate, released exactly as you intend.",
+    "continue": "Continue with sign-in",
+    "haveVault": "I already have a vault",
+    "footer": "We can never read what you store."
+  },
+  "home": {
+    "welcomeBack": "Welcome back",
+    "signOut": "Sign out"
+  },
+  "auth": {
+    "signInFailed": "Sign-in failed"
+  },
+  "lang": {
+    "toArabic": "العربية",
+    "toEnglish": "English"
+  }
+}
