@@ -22,7 +22,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ConvexProviderWithAuth client={convex} useAuth={useAuthFromWorkOS}>
         <Stack>
-          <Stack.Screen name="index" options={{ title: "Convex Starter" }} />
+          <Stack.Screen name="index" options={{ title: "Wassiya" }} />
           <Stack.Screen name="callback" options={{ headerShown: false }} />
         </Stack>
         {/* Overlay teleport target for dialog / dropdown-menu / popover / select. */}

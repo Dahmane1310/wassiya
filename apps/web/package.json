@@ -14,6 +14,7 @@
   "dependencies": {
     "@workos-inc/authkit-nextjs": "^4.1.1",
     "@workspace/backend": "workspace:*",
+    "@workspace/crypto": "workspace:*",
     "@workspace/ui": "workspace:*",
     "convex": "^1.39.1",
     "lucide-react": "^1.17.0",

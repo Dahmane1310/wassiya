@@ -1,4 +1,4 @@
-# convex-starter
+# wassiya
 
 A Turborepo + pnpm template for bootstrapping apps on **Convex** with **WorkOS AuthKit** auth, across **web (Next.js)** and **mobile (Expo)**.
 
@@ -51,7 +51,7 @@ Fill it: `NEXT_PUBLIC_CONVEX_URL` (the deployment URL), mirror `WORKOS_CLIENT_ID
 ```bash
 cp apps/mobile/.env.example apps/mobile/.env.local   # fill EXPO_PUBLIC_CONVEX_URL + EXPO_PUBLIC_WORKOS_CLIENT_ID
 ```
-Register the mobile redirect URI: it's already in `packages/backend/convex.json` (`convexstarter://callback`) — re-run `convex dev` once so WorkOS picks it up. Then build a dev client:
+Register the mobile redirect URI: it's already in `packages/backend/convex.json` (`wassiya://callback`) — re-run `convex dev` once so WorkOS picks it up. Then build a dev client:
 ```bash
 cd apps/mobile
 npx expo prebuild --clean
@@ -74,7 +74,7 @@ pnpm dev                      # turbo: web + convex dev (+ native if started)
 | `WORKOS_COOKIE_PASSWORD` | — | ✅ | — |
 | `WORKOS_WEBHOOK_SECRET` | ✅ | — | — |
 | `*_CONVEX_URL` | — | ✅ | ✅ (`EXPO_PUBLIC_`) |
-| `*_WORKOS_REDIRECT_URI` | — | ✅ `…:3001/callback` | ✅ `convexstarter://callback` |
+| `*_WORKOS_REDIRECT_URI` | — | ✅ `…:3001/callback` | ✅ `wassiya://callback` |
 
 `convex.json` `localEnvVars` only writes to `packages/backend/.env.local` — mirror the needed values into each app's `.env.local` yourself. Verify deployment vars with `npx convex env list`.
 

@@ -1,24 +1,26 @@
 {
   "expo": {
-    "name": "Convex Starter",
-    "slug": "convex-starter-mobile",
+    "name": "Wassiya",
+    "slug": "wassiya-mobile",
     "version": "0.0.1",
     "orientation": "portrait",
-    "scheme": "convexstarter",
+    "scheme": "wassiya",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fiveangles.convexstarter"
+      "bundleIdentifier": "com.fiveangles.wassiya"
     },
     "android": {
-      "package": "com.fiveangles.convexstarter"
+      "package": "com.fiveangles.wassiya"
     },
     "plugins": [
       "expo-router",
       "expo-secure-store",
       "expo-status-bar",
-      "expo-web-browser"
+      "expo-web-browser",
+      "react-native-quick-crypto",
+      "expo-build-properties"
     ],
     "experiments": {
       "typedRoutes": true

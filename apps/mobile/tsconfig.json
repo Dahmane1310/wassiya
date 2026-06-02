@@ -4,6 +4,7 @@
     "strict": true,
     "paths": {
       "@/*": ["./*"],
+      "@workspace/crypto": ["../../packages/crypto/src/index.ts"],
       "@workspace/ui-native/*": ["../../packages/ui-native/src/*"]
     }
   },
