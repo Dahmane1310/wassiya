@@ -1,0 +1,108 @@
+import { Pressable, View } from "react-native"
+import { router } from "expo-router"
+import { ChevronLeft, ChevronRight, Paperclip } from "lucide-react-native"
+import { useTranslation } from "react-i18next"
+import { Card } from "@workspace/ui-native/components/ui/card"
+import { Icon } from "@workspace/ui-native/components/ui/icon"
+import { Text } from "@workspace/ui-native/components/ui/text"
+import { cn } from "@workspace/ui-native/lib/utils"
+import { useBrandType } from "@/hooks/use-brand-type"
+import { type AssetSummary } from "@/hooks/use-assets"
+import { categoryIcon, categoryTint } from "@/lib/asset-categories"
+import { type AssetPayload } from "@/lib/asset-crypto"
+import { formatCurrencyAmount } from "@/lib/estate-summary"
+
+// Debt rows wear a destructive tint regardless of category — the chip is the
+// at-a-glance "this is owed, not owned" signal inside the Debts group.
+const DEBT_TINT = { bg: "bg-destructive/10", fg: "text-destructive" }
+
+/**
+ * One asset/debt row. The payload is already decrypted upstream (the whole list
+ * is unwrapped once at the screen so the estate can be totalled); a null payload
+ * means THIS row alone failed to decrypt and is shown in isolation.
+ */
+export function AssetListItem({
+  row,
+  payload,
+}: {
+  row: AssetSummary
+  payload: AssetPayload | null
+}) {
+  const { t } = useTranslation()
+  const { ar, body } = useBrandType()
+
+  if (payload === null) {
+    return (
+      <Card className="px-4 py-3">
+        <Text className={cn("text-sm text-destructive", body)}>
+          {t("asset.error.load")}
+        </Text>
+      </Card>
+    )
+  }
+
+  const isDebt = payload.kind === "debt"
+  const tint = isDebt ? DEBT_TINT : categoryTint(payload.category)
+  const CategoryIcon = categoryIcon(payload.category)
+
+  const hasValue = payload.value !== null && Number.isFinite(payload.value)
+  const valueText = hasValue
+    ? (isDebt ? "−" : "") +
+      formatCurrencyAmount(payload.currency ?? "", Math.abs(payload.value!), true)
+    : null
+
+  return (
+    <Pressable
+      onPress={() =>
+        router.push({ pathname: "/vault/[id]", params: { id: row._id } })
+      }
+      accessibilityRole="button"
+      accessibilityLabel={payload.label}
+      className="active:opacity-70"
+    >
+      <Card className="flex-row items-center gap-3 px-4 py-3">
+        <View
+          className={cn(
+            "h-11 w-11 items-center justify-center rounded-xl",
+            tint.bg,
+          )}
+        >
+          <Icon as={CategoryIcon} className={tint.fg} size={20} />
+        </View>
+        <View className="flex-1 gap-0.5">
+          <Text
+            numberOfLines={1}
+            className={cn("text-base text-foreground", ar ? body : "font-sans-medium")}
+          >
+            {payload.label}
+          </Text>
+          <View className="flex-row items-center gap-2">
+            <Text className={cn("text-xs text-muted-foreground", body)}>
+              {t(`asset.category.${payload.category}`)}
+            </Text>
+            {row.storageId ? (
+              <Icon as={Paperclip} className="text-muted-foreground" size={12} />
+            ) : null}
+          </View>
+        </View>
+        {valueText ? (
+          <Text
+            numberOfLines={1}
+            className={cn(
+              "text-sm",
+              isDebt ? "text-destructive" : "text-foreground",
+              ar ? body : "font-sans-semibold",
+            )}
+          >
+            {valueText}
+          </Text>
+        ) : null}
+        <Icon
+          as={ar ? ChevronLeft : ChevronRight}
+          className="text-muted-foreground"
+          size={18}
+        />
+      </Card>
+    </Pressable>
+  )
+}

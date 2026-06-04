@@ -9,12 +9,156 @@
     "haveVault": "I already have a vault",
     "footer": "We can never read what you store."
   },
+  "tabs": {
+    "home": "Home",
+    "vault": "Vault",
+    "people": "People",
+    "settings": "Settings"
+  },
   "home": {
     "welcomeBack": "Welcome back",
+    "vaultSecured": "Your vault is secured",
+    "vaultSecuredHint": "Everything you store stays end-to-end encrypted on this device.",
+    "assets": "Assets",
+    "people": "People",
+    "checkIn": "Check-in",
+    "comingSoon": "Coming soon"
+  },
+  "vault": {
+    "emptyTitle": "No assets yet",
+    "emptyBody": "Add documents, accounts, and instructions — all encrypted on this device before they ever leave it.",
+    "unlockSubhead": "Enter your vault passphrase to open your encrypted assets."
+  },
+  "asset": {
+    "list": {
+      "title": "Vault",
+      "add": "Add"
+    },
+    "section": {
+      "assets": "Assets",
+      "debts": "Debts"
+    },
+    "summary": {
+      "netEstate": "Net estate",
+      "afterDebts": "after {{amount}} in debts",
+      "noValues": "Add estimated values to see your net estate.",
+      "assets": "assets",
+      "debts": "debts"
+    },
+    "form": {
+      "createTitle": "Add asset",
+      "editTitle": "Edit asset",
+      "kindAsset": "Asset",
+      "kindDebt": "Debt",
+      "categoryLabel": "Category",
+      "categoryPlaceholder": "Choose a category",
+      "labelLabel": "Name",
+      "labelPlaceholder": "e.g. Apartment in Dubai Marina",
+      "valueLabel": "Estimated value",
+      "valuePlaceholder": "0",
+      "currencyLabel": "Currency",
+      "currencyPlaceholder": "AED",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Account numbers, locations, instructions…",
+      "fileLabel": "Attachment",
+      "save": "Save"
+    },
+    "detail": {
+      "title": "Asset",
+      "valueLabel": "Estimated value",
+      "notesLabel": "Notes",
+      "openFile": "Open file",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "category": {
+      "real_estate": "Real estate",
+      "bank_account": "Bank account",
+      "vehicle": "Vehicle",
+      "cash": "Cash",
+      "business": "Business share",
+      "crypto": "Crypto",
+      "document": "Document",
+      "other": "Other"
+    },
+    "badge": {
+      "debt": "Debt"
+    },
+    "delete": {
+      "title": "Delete this asset?",
+      "body": "This permanently removes the asset and its attached file. This can't be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "file": {
+      "attachDocument": "Document",
+      "attachPhoto": "Photo",
+      "remove": "Remove"
+    },
+    "error": {
+      "load": "Couldn't decrypt this asset.",
+      "save": "Couldn't save. Please try again."
+    }
+  },
+  "people": {
+    "emptyTitle": "No people yet",
+    "emptyBody": "Add the people who inherit, so your vault reaches them exactly as you intend."
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "language": "Language",
+    "security": "Security",
+    "lock": "Lock vault",
+    "locked": "Vault is locked",
+    "biometric": "Biometric unlock",
+    "biometricOff": "Turn off biometric unlock",
+    "biometricEnableHint": "Enable it next time you unlock.",
+    "biometricUnavailable": "Not available on this device",
+    "account": "Account",
     "signOut": "Sign out"
   },
   "auth": {
     "signInFailed": "Sign-in failed"
+  },
+  "onboarding": {
+    "headline": "Create your vault passphrase",
+    "security": "Your sign-in proves who you are. This passphrase is what encrypts your vault — and we can never recover it. Choose something strong you won't forget.",
+    "passphraseLabel": "Vault passphrase",
+    "passphrasePlaceholder": "At least 12 characters",
+    "confirmLabel": "Confirm passphrase",
+    "confirmPlaceholder": "Re-enter your passphrase",
+    "show": "Show",
+    "hide": "Hide",
+    "tooShort": "Use at least {{min}} characters.",
+    "mismatch": "Passphrases don't match.",
+    "cta": "Create my vault",
+    "strength": {
+      "weak": "Weak",
+      "fair": "Fair",
+      "good": "Good",
+      "strong": "Strong"
+    }
+  },
+  "unlock": {
+    "heading": "Unlock your vault",
+    "subhead": "Enter your vault passphrase to continue.",
+    "passphraseLabel": "Vault passphrase",
+    "passphrasePlaceholder": "Your passphrase",
+    "cta": "Unlock",
+    "wrongPassphrase": "That passphrase is incorrect.",
+    "signOut": "Sign out"
+  },
+  "biometric": {
+    "enrollTitle": "Unlock faster next time",
+    "enrollBody": "Use your device biometrics to open your vault with a touch — your passphrase stays on this device, protected by your biometrics.",
+    "enable": "Enable biometric unlock",
+    "notNow": "Not now",
+    "use": "Use biometrics",
+    "turnOff": "Turn off biometric unlock",
+    "unlockPrompt": "Unlock your vault",
+    "savePrompt": "Save to unlock with biometrics"
   },
   "lang": {
     "toArabic": "العربية",

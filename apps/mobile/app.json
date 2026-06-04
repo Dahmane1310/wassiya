@@ -22,7 +22,8 @@
       "react-native-quick-crypto",
       "expo-build-properties",
       "expo-font",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,7 +1,7 @@
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react"
 import { StatusBar } from "expo-status-bar"
 import { BrandedSplash } from "@/screens/welcome/components/branded-splash"
-import { PostSignInHandoff } from "@/screens/welcome/components/post-sign-in-handoff"
+import { VaultGate } from "@/screens/welcome/components/vault-gate"
 import { Welcome } from "@/screens/welcome/components/welcome"
 
 // The first screen: an adaptive (light + dark, EN + AR) branded entry point that
@@ -18,7 +18,7 @@ export function WelcomeScreen() {
         <Welcome />
       </Unauthenticated>
       <Authenticated>
-        <PostSignInHandoff />
+        <VaultGate />
       </Authenticated>
     </>
   )

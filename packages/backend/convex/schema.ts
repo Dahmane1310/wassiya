@@ -240,6 +240,8 @@ export default defineSchema({
     event: v.union(
       v.literal("vault_unlocked"),
       v.literal("asset_created"),
+      v.literal("asset_updated"),
+      v.literal("asset_deleted"),
       v.literal("asset_read_at_release"),
       v.literal("beneficiary_invited"),
       v.literal("beneficiary_enrolled"),

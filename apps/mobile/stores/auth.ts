@@ -5,6 +5,9 @@ import {
   signInWithWorkOS,
   type WorkOSTokens,
 } from "@/lib/auth"
+import { clearBiometricPassphrase } from "@/lib/biometric"
+import { usePreferences } from "@/stores/preferences"
+import { useVaultStore } from "@/stores/vault"
 
 const ACCESS_KEY = "workos.accessToken"
 const REFRESH_KEY = "workos.refreshToken"
@@ -67,6 +70,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     await persistTokens(null)
     set({ accessToken: null, refreshToken: null, isAuthenticated: false })
+    // Clear the in-memory master key + the biometric secret/flag whenever the
+    // session ends — the stored passphrase is per-account and must not leak to a
+    // different user signing in on the same device.
+    useVaultStore.getState().lock()
+    usePreferences.getState().setBiometricEnabled(false)
+    void clearBiometricPassphrase()
   },
 
   fetchAccessToken: async ({ forceRefreshToken } = {}) => {
@@ -80,9 +89,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ ...refreshed })
         return refreshed.accessToken
       } catch {
-        // Refresh token invalid/expired — drop the session.
+        // Refresh token invalid/expired — drop the session and lock the vault.
         await persistTokens(null)
         set({ accessToken: null, refreshToken: null, isAuthenticated: false })
+        useVaultStore.getState().lock()
         return null
       }
     }

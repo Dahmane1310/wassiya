@@ -28,6 +28,7 @@ const PBKDF2_HASH = "SHA-256"
 const AES_KEY_BITS = 256
 const IV_BYTES = 12
 const SALT_BYTES = 16
+const DEK_KEY_BYTES = 32 // raw length of an AES-256 Data Encryption Key
 
 let injected: CryptoProvider | undefined
 
@@ -55,7 +56,7 @@ const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 const B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
-function bytesToBase64(bytes: Uint8Array): string {
+export function bytesToBase64(bytes: Uint8Array): string {
   let out = ""
   for (let i = 0; i < bytes.length; i += 3) {
     const b0 = bytes[i]!
@@ -69,7 +70,7 @@ function bytesToBase64(bytes: Uint8Array): string {
   return out
 }
 
-function base64ToBytes(b64: string): Uint8Array<ArrayBuffer> {
+export function base64ToBytes(b64: string): Uint8Array<ArrayBuffer> {
   const clean = b64.replace(/[^A-Za-z0-9+/]/g, "")
   const len = Math.floor((clean.length * 3) / 4)
   const out = new Uint8Array(len)
@@ -160,4 +161,97 @@ export async function decryptData(
     base64ToBytes(ciphertext),
   )
   return decoder.decode(plain)
+}
+
+// --- Envelope encryption (per-record Data Encryption Keys) ------------------
+//
+// Each vault record (e.g. an asset) is encrypted under its own random DEK, and
+// the DEK is then "wrapped" (encrypted) under the in-memory master key. This
+// indirection lets a record be re-shared to a beneficiary later — by wrapping
+// the SAME DEK to their public key — without ever handing out the master key.
+//
+// We deliberately keep the DEK as RAW BYTES in the caller's hands and wrap it by
+// encrypting those bytes under the master key. We never call `subtle.exportKey`
+// or `subtle.wrapKey`: the master key is non-extractable with only
+// `encrypt`/`decrypt` usages (see `deriveKeyFromPassword`), so `wrapKey` would
+// throw, and `exportKey` is not reliably implemented across RN WebCrypto
+// backends. `encrypt`/`decrypt` + `importKey("raw", …)` are the only primitives
+// the existing unlock path already exercises.
+
+// All byte params/returns are `Uint8Array<ArrayBuffer>` (not the looser
+// `ArrayBufferLike`) — that's what WebCrypto's `BufferSource` requires, and what
+// `base64ToBytes` / `new Uint8Array(n)` already produce, so the whole chain is
+// copy-free.
+
+/** Fresh raw bytes for a per-record Data Encryption Key (AES-256). */
+export function generateDataKeyBytes(): Uint8Array<ArrayBuffer> {
+  const raw = new Uint8Array(DEK_KEY_BYTES)
+  getCrypto().getRandomValues(raw)
+  return raw
+}
+
+/** Import raw DEK bytes as a non-extractable AES-GCM key (encrypt/decrypt). */
+export async function importDataKey(
+  raw: Uint8Array<ArrayBuffer>,
+): Promise<CryptoKey> {
+  return getCrypto().subtle.importKey("raw", raw, { name: "AES-GCM" }, false, [
+    "encrypt",
+    "decrypt",
+  ])
+}
+
+/** Encrypt raw bytes (e.g. a file). A fresh random IV is generated on every call. */
+export async function encryptBytes(
+  bytes: Uint8Array<ArrayBuffer>,
+  key: CryptoKey,
+): Promise<EncryptedDataPackage> {
+  const provider = getCrypto()
+  // Keep our own IV reference — some getRandomValues fill in place, return void.
+  const iv = new Uint8Array(IV_BYTES)
+  provider.getRandomValues(iv)
+  const cipher = await provider.subtle.encrypt({ name: "AES-GCM", iv }, key, bytes)
+  return {
+    ciphertext: bytesToBase64(new Uint8Array(cipher)),
+    iv: bytesToBase64(iv),
+  }
+}
+
+/** Decrypt back to raw bytes. Throws if the auth tag fails (tamper/wrong key). */
+export async function decryptBytes(
+  ciphertext: string,
+  iv: string,
+  key: CryptoKey,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const { subtle } = getCrypto()
+  const plain = await subtle.decrypt(
+    { name: "AES-GCM", iv: base64ToBytes(iv) },
+    key,
+    base64ToBytes(ciphertext),
+  )
+  return new Uint8Array(plain)
+}
+
+/**
+ * Wrap a DEK by AES-GCM-encrypting its raw bytes under the wrapping key (the
+ * master key). Returns base64 ciphertext + IV — store these as
+ * `ownerWrappedKey` / `ownerWrapIv`. Zero `rawDek` afterwards at the call site.
+ */
+export async function wrapKey(
+  rawDek: Uint8Array<ArrayBuffer>,
+  wrappingKey: CryptoKey,
+): Promise<{ wrappedKey: string; iv: string }> {
+  const { ciphertext, iv } = await encryptBytes(rawDek, wrappingKey)
+  return { wrappedKey: ciphertext, iv }
+}
+
+/**
+ * Recover a DEK's raw bytes from its wrapped form. The caller imports them via
+ * `importDataKey` and then zeroes the bytes.
+ */
+export async function unwrapKey(
+  wrappedKey: string,
+  iv: string,
+  wrappingKey: CryptoKey,
+): Promise<Uint8Array<ArrayBuffer>> {
+  return decryptBytes(wrappedKey, iv, wrappingKey)
 }

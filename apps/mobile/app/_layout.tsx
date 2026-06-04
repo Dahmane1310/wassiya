@@ -22,6 +22,7 @@ import {
   Tajawal_500Medium,
   Tajawal_700Bold,
 } from "@expo-google-fonts/tajawal"
+import { useAutoLock } from "@/hooks/use-auto-lock"
 import { initLanguage } from "@/lib/i18n"
 import { initTheme } from "@/lib/theme"
 import { useAuthFromWorkOS, useAuthStore } from "@/stores/auth"
@@ -73,6 +74,9 @@ export default function RootLayout() {
     }
   }, [ready])
 
+  // Re-lock the vault whenever the app backgrounds (biometric makes re-entry cheap).
+  useAutoLock()
+
   // Gate AFTER all hooks (rules of hooks).
   if (!ready) {
     return null
@@ -85,6 +89,10 @@ export default function RootLayout() {
           {/* Full-bleed branded Welcome hero — no native header. */}
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="callback" options={{ headerShown: false }} />
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+          <Stack.Screen name="unlock" options={{ headerShown: false }} />
+          {/* Authenticated tab shell (Home · Vault · People · Settings). */}
+          <Stack.Screen name="(vault)" options={{ headerShown: false }} />
         </Stack>
         {/* Overlay teleport target for dialog / dropdown-menu / popover / select. */}
         <PortalHost />

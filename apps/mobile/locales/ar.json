@@ -9,12 +9,156 @@
     "haveVault": "لديّ خزنة بالفعل",
     "footer": "لا يمكننا أبداً قراءة ما تحفظه."
   },
+  "tabs": {
+    "home": "الرئيسية",
+    "vault": "الخزنة",
+    "people": "الأشخاص",
+    "settings": "الإعدادات"
+  },
   "home": {
     "welcomeBack": "مرحباً بعودتك",
+    "vaultSecured": "خزنتك محميّة",
+    "vaultSecuredHint": "كل ما تحفظه يبقى مشفّراً بالكامل على هذا الجهاز.",
+    "assets": "الأصول",
+    "people": "الأشخاص",
+    "checkIn": "تسجيل الحضور",
+    "comingSoon": "قريباً"
+  },
+  "vault": {
+    "emptyTitle": "لا توجد أصول بعد",
+    "emptyBody": "أضف المستندات والحسابات والتعليمات — كلها مشفّرة على هذا الجهاز قبل أن تغادره.",
+    "unlockSubhead": "أدخل عبارة مرور خزنتك لفتح أصولك المشفّرة."
+  },
+  "asset": {
+    "list": {
+      "title": "الخزنة",
+      "add": "إضافة"
+    },
+    "section": {
+      "assets": "الأصول",
+      "debts": "الديون"
+    },
+    "summary": {
+      "netEstate": "صافي التركة",
+      "afterDebts": "بعد {{amount}} من الديون",
+      "noValues": "أضف القيم التقديرية لعرض صافي التركة.",
+      "assets": "أصل",
+      "debts": "دين"
+    },
+    "form": {
+      "createTitle": "إضافة أصل",
+      "editTitle": "تعديل الأصل",
+      "kindAsset": "أصل",
+      "kindDebt": "دَين",
+      "categoryLabel": "الفئة",
+      "categoryPlaceholder": "اختر فئة",
+      "labelLabel": "الاسم",
+      "labelPlaceholder": "مثال: شقة في مرسى دبي",
+      "valueLabel": "القيمة التقديرية",
+      "valuePlaceholder": "0",
+      "currencyLabel": "العملة",
+      "currencyPlaceholder": "AED",
+      "notesLabel": "ملاحظات",
+      "notesPlaceholder": "أرقام الحسابات، المواقع، التعليمات…",
+      "fileLabel": "مرفق",
+      "save": "حفظ"
+    },
+    "detail": {
+      "title": "أصل",
+      "valueLabel": "القيمة التقديرية",
+      "notesLabel": "ملاحظات",
+      "openFile": "فتح الملف",
+      "edit": "تعديل",
+      "delete": "حذف"
+    },
+    "category": {
+      "real_estate": "عقارات",
+      "bank_account": "حساب بنكي",
+      "vehicle": "مركبة",
+      "cash": "نقد",
+      "business": "حصة في شركة",
+      "crypto": "عملات رقمية",
+      "document": "مستند",
+      "other": "أخرى"
+    },
+    "badge": {
+      "debt": "دَين"
+    },
+    "delete": {
+      "title": "حذف هذا الأصل؟",
+      "body": "سيؤدي هذا إلى حذف الأصل وملفه المرفق نهائياً. لا يمكن التراجع عن ذلك.",
+      "confirm": "حذف",
+      "cancel": "إلغاء"
+    },
+    "file": {
+      "attachDocument": "مستند",
+      "attachPhoto": "صورة",
+      "remove": "إزالة"
+    },
+    "error": {
+      "load": "تعذّر فك تشفير هذا الأصل.",
+      "save": "تعذّر الحفظ. حاول مرة أخرى."
+    }
+  },
+  "people": {
+    "emptyTitle": "لا يوجد أشخاص بعد",
+    "emptyBody": "أضف الأشخاص الذين سيرثون، لتصل خزنتك إليهم تماماً كما تريد."
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "appearance": "المظهر",
+    "theme": "السمة",
+    "language": "اللغة",
+    "security": "الأمان",
+    "lock": "قفل الخزنة",
+    "locked": "الخزنة مقفلة",
+    "biometric": "الفتح بالسمات الحيوية",
+    "biometricOff": "إيقاف الفتح بالسمات الحيوية",
+    "biometricEnableHint": "فعّله في المرة القادمة عند فتح الخزنة.",
+    "biometricUnavailable": "غير متاح على هذا الجهاز",
+    "account": "الحساب",
     "signOut": "تسجيل الخروج"
   },
   "auth": {
     "signInFailed": "فشل تسجيل الدخول"
+  },
+  "onboarding": {
+    "headline": "أنشئ عبارة مرور خزنتك",
+    "security": "تسجيل الدخول يُثبت هويتك. عبارة المرور هذه هي ما يُشفّر خزنتك — ولا يمكننا استعادتها أبداً. اختر عبارة قويّة لن تنساها.",
+    "passphraseLabel": "عبارة مرور الخزنة",
+    "passphrasePlaceholder": "12 حرفاً على الأقل",
+    "confirmLabel": "تأكيد عبارة المرور",
+    "confirmPlaceholder": "أعد إدخال عبارة المرور",
+    "show": "إظهار",
+    "hide": "إخفاء",
+    "tooShort": "استخدم {{min}} حرفاً على الأقل.",
+    "mismatch": "عبارتا المرور غير متطابقتين.",
+    "cta": "أنشئ خزنتي",
+    "strength": {
+      "weak": "ضعيفة",
+      "fair": "مقبولة",
+      "good": "جيدة",
+      "strong": "قويّة"
+    }
+  },
+  "unlock": {
+    "heading": "افتح خزنتك",
+    "subhead": "أدخل عبارة مرور الخزنة للمتابعة.",
+    "passphraseLabel": "عبارة مرور الخزنة",
+    "passphrasePlaceholder": "عبارة المرور",
+    "cta": "فتح",
+    "wrongPassphrase": "عبارة المرور غير صحيحة.",
+    "signOut": "تسجيل الخروج"
+  },
+  "biometric": {
+    "enrollTitle": "افتح خزنتك أسرع في المرة القادمة",
+    "enrollBody": "استخدم السمات الحيوية لجهازك لفتح خزنتك بلمسة — تبقى عبارة المرور على هذا الجهاز، محميّةً ببصمتك.",
+    "enable": "تفعيل الفتح بالسمات الحيوية",
+    "notNow": "ليس الآن",
+    "use": "استخدام السمات الحيوية",
+    "turnOff": "إيقاف الفتح بالسمات الحيوية",
+    "unlockPrompt": "افتح خزنتك",
+    "savePrompt": "حفظ للفتح بالسمات الحيوية"
   },
   "lang": {
     "toArabic": "العربية",
