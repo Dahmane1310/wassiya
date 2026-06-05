@@ -1,12 +1,12 @@
 import { useState } from "react"
-import { ActivityIndicator, Pressable, View } from "react-native"
-import { Eye, EyeOff } from "lucide-react-native"
+import { ActivityIndicator, View } from "react-native"
+import { AlertTriangle } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import { Button } from "@workspace/ui-native/components/ui/button"
 import { Icon } from "@workspace/ui-native/components/ui/icon"
-import { Input } from "@workspace/ui-native/components/ui/input"
 import { Text } from "@workspace/ui-native/components/ui/text"
 import { cn } from "@workspace/ui-native/lib/utils"
+import { PassphraseField } from "@/components/ui/passphrase-field"
 import { useBrandType } from "@/hooks/use-brand-type"
 import { PasswordStrength } from "@/screens/onboarding/components/password-strength"
 
@@ -18,10 +18,9 @@ export function PassphraseForm({
   onSubmit: (passphrase: string) => Promise<void>
 }) {
   const { t } = useTranslation()
-  const { body, ar } = useBrandType()
+  const { body } = useBrandType()
   const [passphrase, setPassphrase] = useState("")
   const [confirm, setConfirm] = useState("")
-  const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -43,38 +42,20 @@ export function PassphraseForm({
     }
   }
 
-  const labelClass = cn("text-sm text-foreground", body)
-  const errorClass = cn("text-xs text-destructive", body)
+  const labelClass = cn("font-sans-semibold text-[12.5px] text-ink-2", body)
+  const errorClass = cn("text-xs text-danger", body)
 
   return (
     <View className="gap-4 self-stretch">
       <View className="gap-2">
         <Text className={labelClass}>{t("onboarding.passphraseLabel")}</Text>
-        <View className="relative">
-          <Input
-            value={passphrase}
-            onChangeText={setPassphrase}
-            secureTextEntry={!show}
-            autoCapitalize="none"
-            autoCorrect={false}
-            textContentType="newPassword"
-            placeholder={t("onboarding.passphrasePlaceholder")}
-            className="pr-10"
-          />
-          <Pressable
-            onPress={() => setShow((s) => !s)}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t(show ? "onboarding.hide" : "onboarding.show")}
-            className="absolute top-0 right-0 h-10 w-10 items-center justify-center"
-          >
-            <Icon
-              as={show ? EyeOff : Eye}
-              className="text-muted-foreground"
-              size={18}
-            />
-          </Pressable>
-        </View>
+        <PassphraseField
+          value={passphrase}
+          onChangeText={setPassphrase}
+          placeholder={t("onboarding.passphrasePlaceholder")}
+          accessibilityLabel={t("onboarding.passphraseLabel")}
+          newPassword
+        />
         <PasswordStrength value={passphrase} />
         {tooShort ? (
           <Text className={errorClass}>
@@ -85,26 +66,30 @@ export function PassphraseForm({
 
       <View className="gap-2">
         <Text className={labelClass}>{t("onboarding.confirmLabel")}</Text>
-        <Input
+        <PassphraseField
           value={confirm}
           onChangeText={setConfirm}
-          secureTextEntry={!show}
-          autoCapitalize="none"
-          autoCorrect={false}
-          textContentType="newPassword"
           placeholder={t("onboarding.confirmPlaceholder")}
+          accessibilityLabel={t("onboarding.confirmLabel")}
+          newPassword
         />
-        {mismatch ? (
-          <Text className={errorClass}>{t("onboarding.mismatch")}</Text>
-        ) : null}
+        {mismatch ? <Text className={errorClass}>{t("onboarding.mismatch")}</Text> : null}
       </View>
 
-      {error ? (
-        <Text className={cn("text-sm text-destructive", body)}>{error}</Text>
-      ) : null}
+      {/* Recovery-kit warning — the design's amber caution that this is unrecoverable. */}
+      <View className="flex-row items-center gap-2.5 rounded-2xl bg-gold-soft p-3.5">
+        <Icon as={AlertTriangle} size={18} className="text-gold-deep" />
+        <Text className={cn("flex-1 text-[12.5px] leading-[1.4] text-gold-deep", body)}>
+          {t("onboarding.recoveryWarning")}
+        </Text>
+      </View>
+
+      {error ? <Text className={cn("text-sm text-danger", body)}>{error}</Text> : null}
 
       <Button
+        variant="vault"
         size="lg"
+        className="h-[54px] rounded-2xl"
         onPress={() => void submit()}
         disabled={!canSubmit || busy}
         accessibilityLabel={t("onboarding.cta")}
@@ -112,7 +97,7 @@ export function PassphraseForm({
         {busy ? (
           <ActivityIndicator color="white" />
         ) : (
-          <Text className={ar ? body : undefined}>{t("onboarding.cta")}</Text>
+          <Text className={cn("font-heading text-white", body)}>{t("onboarding.cta")}</Text>
         )}
       </Button>
     </View>

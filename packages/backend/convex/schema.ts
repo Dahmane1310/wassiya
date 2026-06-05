@@ -25,6 +25,9 @@ export default defineSchema({
     // "Two-Step" SSO vault-passphrase onboarding complete. SSO authenticates the
     // account; it NEVER unlocks the vault — the local passphrase does.
     onboardingComplete: v.optional(v.boolean()),
+    // The OWNER's (deceased's) gender — needed by the Fara'id engine (the spouse's
+    // share depends on whether the deceased is husband or wife). Non-secret structural data.
+    ownerGender: v.optional(v.union(v.literal("male"), v.literal("female"))),
   }).index("by_tokenIdentifier", ["tokenIdentifier"]),
 
   // The dead-man's-switch state machine, one row per owner. Stable config plus
@@ -50,6 +53,9 @@ export default defineSchema({
     attestationThreshold: v.optional(v.number()), // N-of-M attestations to advance/shorten grace
     longstopMs: v.optional(v.number()), // backstop auto-release if verification never comes
     pendingVerificationStartedAt: v.optional(v.number()),
+    // Consecutive on-time check-ins; bumped on check-in, reset to 0 when the cron
+    // moves a missed row into grace. Display-only ("N in a row" on the Vault home).
+    checkInStreak: v.optional(v.number()),
   })
     .index("by_ownerId", ["ownerId"])
     // Cron sweeps "active"/"grace" rows whose deadline has passed.

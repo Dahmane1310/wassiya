@@ -10,9 +10,16 @@
 
 import type * as assets from "../assets.js";
 import type * as auth from "../auth.js";
+import type * as beneficiaries from "../beneficiaries.js";
+import type * as crons from "../crons.js";
+import type * as executors from "../executors.js";
+import type * as familyMembers from "../familyMembers.js";
 import type * as http from "../http.js";
+import type * as invites from "../invites.js";
+import type * as switch_ from "../switch.js";
 import type * as users from "../users.js";
 import type * as vault from "../vault.js";
+import type * as wasiyyah from "../wasiyyah.js";
 
 import type {
   ApiFromModules,
@@ -23,9 +30,16 @@ import type {
 declare const fullApi: ApiFromModules<{
   assets: typeof assets;
   auth: typeof auth;
+  beneficiaries: typeof beneficiaries;
+  crons: typeof crons;
+  executors: typeof executors;
+  familyMembers: typeof familyMembers;
   http: typeof http;
+  invites: typeof invites;
+  switch: typeof switch_;
   users: typeof users;
   vault: typeof vault;
+  wasiyyah: typeof wasiyyah;
 }>;
 
 /**

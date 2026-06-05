@@ -1,12 +1,10 @@
 import { useState } from "react"
-import { ActivityIndicator, Pressable, View } from "react-native"
-import { Eye, EyeOff } from "lucide-react-native"
+import { ActivityIndicator, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import { Button } from "@workspace/ui-native/components/ui/button"
-import { Icon } from "@workspace/ui-native/components/ui/icon"
-import { Input } from "@workspace/ui-native/components/ui/input"
 import { Text } from "@workspace/ui-native/components/ui/text"
 import { cn } from "@workspace/ui-native/lib/utils"
+import { PassphraseField } from "@/components/ui/passphrase-field"
 import { useBrandType } from "@/hooks/use-brand-type"
 import { WrongPassphraseError } from "@/lib/vault"
 
@@ -16,9 +14,8 @@ export function UnlockForm({
   onUnlock: (passphrase: string) => Promise<void>
 }) {
   const { t } = useTranslation()
-  const { body, ar } = useBrandType()
+  const { body } = useBrandType()
   const [passphrase, setPassphrase] = useState("")
-  const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -45,42 +42,23 @@ export function UnlockForm({
   return (
     <View className="gap-4 self-stretch">
       <View className="gap-2">
-        <Text className={cn("text-sm text-foreground", body)}>
+        <Text className={cn("font-sans-semibold text-[12.5px] text-ink-2", body)}>
           {t("unlock.passphraseLabel")}
         </Text>
-        <View className="relative">
-          <Input
-            value={passphrase}
-            onChangeText={setPassphrase}
-            secureTextEntry={!show}
-            autoCapitalize="none"
-            autoCorrect={false}
-            textContentType="password"
-            placeholder={t("unlock.passphrasePlaceholder")}
-            onSubmitEditing={() => void submit()}
-            className="pr-10"
-          />
-          <Pressable
-            onPress={() => setShow((s) => !s)}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t(show ? "onboarding.hide" : "onboarding.show")}
-            className="absolute top-0 right-0 h-10 w-10 items-center justify-center"
-          >
-            <Icon
-              as={show ? EyeOff : Eye}
-              className="text-muted-foreground"
-              size={18}
-            />
-          </Pressable>
-        </View>
-        {error ? (
-          <Text className={cn("text-sm text-destructive", body)}>{error}</Text>
-        ) : null}
+        <PassphraseField
+          value={passphrase}
+          onChangeText={setPassphrase}
+          placeholder={t("unlock.passphrasePlaceholder")}
+          accessibilityLabel={t("unlock.passphraseLabel")}
+          onSubmitEditing={() => void submit()}
+        />
+        {error ? <Text className={cn("text-sm text-danger", body)}>{error}</Text> : null}
       </View>
 
       <Button
+        variant="vault"
         size="lg"
+        className="h-[54px] rounded-2xl"
         onPress={() => void submit()}
         disabled={passphrase.length === 0 || busy}
         accessibilityLabel={t("unlock.cta")}
@@ -88,7 +66,7 @@ export function UnlockForm({
         {busy ? (
           <ActivityIndicator color="white" />
         ) : (
-          <Text className={ar ? body : undefined}>{t("unlock.cta")}</Text>
+          <Text className={cn("font-heading text-white", body)}>{t("unlock.cta")}</Text>
         )}
       </Button>
     </View>

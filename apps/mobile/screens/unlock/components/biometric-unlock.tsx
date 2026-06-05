@@ -50,12 +50,16 @@ export function BiometricUnlock({
   return (
     <View className="gap-1 self-stretch">
       <Button
+        variant="vault"
         size="lg"
+        className="h-[54px] rounded-2xl"
         onPress={() => void attempt()}
         accessibilityLabel={t("biometric.use")}
       >
-        <Icon as={ScanFace} />
-        <Text className={ar ? body : undefined}>{t("biometric.use")}</Text>
+        <Icon as={ScanFace} className="text-white" />
+        <Text className={cn("font-heading text-white", ar ? body : undefined)}>
+          {t("biometric.use")}
+        </Text>
       </Button>
       <Button
         variant="link"

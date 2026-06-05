@@ -22,6 +22,11 @@ import {
   Tajawal_500Medium,
   Tajawal_700Bold,
 } from "@expo-google-fonts/tajawal"
+import {
+  JetBrainsMono_400Regular,
+  JetBrainsMono_500Medium,
+  JetBrainsMono_600SemiBold,
+} from "@expo-google-fonts/jetbrains-mono"
 import { useAutoLock } from "@/hooks/use-auto-lock"
 import { initLanguage } from "@/lib/i18n"
 import { initTheme } from "@/lib/theme"
@@ -47,6 +52,9 @@ export default function RootLayout() {
     Tajawal_400Regular,
     Tajawal_500Medium,
     Tajawal_700Bold,
+    JetBrainsMono_400Regular,
+    JetBrainsMono_500Medium,
+    JetBrainsMono_600SemiBold,
   })
 
   const [prefsReady, setPrefsReady] = useState(false)
@@ -91,7 +99,8 @@ export default function RootLayout() {
           <Stack.Screen name="callback" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="unlock" options={{ headerShown: false }} />
-          {/* Authenticated tab shell (Home · Vault · People · Settings). */}
+          <Stack.Screen name="contacts" options={{ headerShown: false }} />
+          {/* Authenticated tab shell (Vault · Assets · Heirs · Wasiyyah · Profile). */}
           <Stack.Screen name="(vault)" options={{ headerShown: false }} />
         </Stack>
         {/* Overlay teleport target for dialog / dropdown-menu / popover / select. */}

@@ -1,0 +1,15 @@
+{
+  "extends": "@workspace/typescript-config/base.json",
+  "compilerOptions": {
+    // Pure source package consumed by bundlers (Metro / esbuild / Convex), so use
+    // bundler resolution — matches how it's actually imported and allows extensionless
+    // relative imports in the test file.
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@workspace/faraid/*": ["./src/*"]
+    }
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
+}

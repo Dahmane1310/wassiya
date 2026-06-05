@@ -1,6 +1,6 @@
 import { Pressable, View } from "react-native"
 import { router } from "expo-router"
-import { ChevronLeft, ChevronRight, Paperclip } from "lucide-react-native"
+import { ChevronLeft, ChevronRight, Lock, Paperclip } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import { Card } from "@workspace/ui-native/components/ui/card"
 import { Icon } from "@workspace/ui-native/components/ui/icon"
@@ -9,6 +9,7 @@ import { cn } from "@workspace/ui-native/lib/utils"
 import { useBrandType } from "@/hooks/use-brand-type"
 import { type AssetSummary } from "@/hooks/use-assets"
 import { categoryIcon, categoryTint } from "@/lib/asset-categories"
+import { summaryDetail } from "@/lib/asset-fields"
 import { type AssetPayload } from "@/lib/asset-crypto"
 import { formatCurrencyAmount } from "@/lib/estate-summary"
 
@@ -45,6 +46,11 @@ export function AssetListItem({
   const tint = isDebt ? DEBT_TINT : categoryTint(payload.category)
   const CategoryIcon = categoryIcon(payload.category)
 
+  // For an asset, prefer the at-a-glance category detail (area / model / bank)
+  // over the bare category name; debts keep the category for the "what kind" cue.
+  const detail = isDebt ? null : summaryDetail(payload.category, payload.details)
+  const subtitle = detail ?? t(`asset.category.${payload.category}`)
+
   const hasValue = payload.value !== null && Number.isFinite(payload.value)
   const valueText = hasValue
     ? (isDebt ? "−" : "") +
@@ -60,10 +66,10 @@ export function AssetListItem({
       accessibilityLabel={payload.label}
       className="active:opacity-70"
     >
-      <Card className="flex-row items-center gap-3 px-4 py-3">
+      <Card className="flex-row items-center gap-3 rounded-2xl px-3.5 py-3">
         <View
           className={cn(
-            "h-11 w-11 items-center justify-center rounded-xl",
+            "h-11 w-11 items-center justify-center rounded-[13px]",
             tint.bg,
           )}
         >
@@ -72,16 +78,18 @@ export function AssetListItem({
         <View className="flex-1 gap-0.5">
           <Text
             numberOfLines={1}
-            className={cn("text-base text-foreground", ar ? body : "font-sans-medium")}
+            className={cn("text-[15px] text-foreground", ar ? body : "font-sans-semibold")}
           >
             {payload.label}
           </Text>
-          <View className="flex-row items-center gap-2">
-            <Text className={cn("text-xs text-muted-foreground", body)}>
-              {t(`asset.category.${payload.category}`)}
+          <View className="flex-row items-center gap-1.5">
+            {/* lock glyph reinforces "encrypted on-device" at a glance */}
+            <Icon as={Lock} className="text-green" size={12} />
+            <Text numberOfLines={1} className={cn("flex-shrink text-xs text-ink-3", body)}>
+              {subtitle}
             </Text>
             {row.storageId ? (
-              <Icon as={Paperclip} className="text-muted-foreground" size={12} />
+              <Icon as={Paperclip} className="text-ink-3" size={12} />
             ) : null}
           </View>
         </View>
@@ -89,9 +97,8 @@ export function AssetListItem({
           <Text
             numberOfLines={1}
             className={cn(
-              "text-sm",
-              isDebt ? "text-destructive" : "text-foreground",
-              ar ? body : "font-sans-semibold",
+              "font-mono text-[13.5px]",
+              isDebt ? "text-danger" : "text-foreground",
             )}
           >
             {valueText}
@@ -99,7 +106,7 @@ export function AssetListItem({
         ) : null}
         <Icon
           as={ar ? ChevronLeft : ChevronRight}
-          className="text-muted-foreground"
+          className="text-ink-3"
           size={18}
         />
       </Card>

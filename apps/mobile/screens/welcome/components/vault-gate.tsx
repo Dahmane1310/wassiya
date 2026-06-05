@@ -5,9 +5,9 @@ import { BrandedSplash } from "@/screens/welcome/components/branded-splash"
 
 /**
  * Post-sign-in routing. A new user (no salt / onboarding incomplete) goes to
- * onboarding; everyone else lands on the Home tab — even while the vault is
- * locked. In the lazy-unlock model the shell is open to authenticated users;
- * the Vault tab itself prompts for the passphrase/biometric when opened.
+ * onboarding (which derives + holds the master key, landing them unlocked).
+ * A returning user goes to `/unlock` to re-derive the in-memory key — the unlock
+ * step now precedes the tab shell, since every redesigned tab shows decrypted data.
  * Declarative `<Redirect>` (like app/callback.tsx) — render-safe, no effect.
  */
 export function VaultGate() {
@@ -20,5 +20,5 @@ export function VaultGate() {
   if (!status.vaultSalt || !status.onboardingComplete) {
     return <Redirect href="/onboarding" />
   }
-  return <Redirect href="/home" />
+  return <Redirect href="/unlock" />
 }

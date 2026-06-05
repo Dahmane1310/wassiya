@@ -93,7 +93,9 @@ export function Welcome() {
         >
           <View className="gap-2">
             <Button
+              variant="vault"
               size="lg"
+              className="h-[54px] rounded-2xl"
               onPress={() => void onSignIn()}
               disabled={busy}
               accessibilityLabel={t("welcome.continue")}
@@ -104,10 +106,10 @@ export function Welcome() {
                 <>
                   {/* In English keep the button's medium weight; in Arabic route
                       through Tajawal so the glyphs aren't tofu on Android. */}
-                  <Text className={ar ? body : undefined}>
+                  <Text className={cn("font-heading text-white", ar ? body : undefined)}>
                     {t("welcome.continue")}
                   </Text>
-                  <Icon as={ar ? ArrowLeft : ArrowRight} />
+                  <Icon as={ar ? ArrowLeft : ArrowRight} className="text-white" />
                 </>
               )}
             </Button>

@@ -13,10 +13,12 @@ import { Separator } from "@workspace/ui-native/components/ui/separator"
 import { Text } from "@workspace/ui-native/components/ui/text"
 import { cn } from "@workspace/ui-native/lib/utils"
 import { ScreenContainer } from "@/components/layout/screen-container"
+import { EncField } from "@/components/ui/enc-field"
 import { useBrandType } from "@/hooks/use-brand-type"
-import { useAsset } from "@/hooks/use-asset"
+import { useAsset } from "@/screens/asset/hooks/use-asset"
 import { useAssets } from "@/hooks/use-assets"
 import { categoryIcon } from "@/lib/asset-categories"
+import { ASSET_FIELDS, CATEGORY_FIELDS } from "@/lib/asset-fields"
 import { openDecryptedFile } from "@/lib/asset-file"
 import { AssetDetailSkeleton } from "@/screens/asset/components/asset-detail-skeleton"
 import { AssetScreenHeader } from "@/screens/asset/components/asset-screen-header"
@@ -136,6 +138,34 @@ export function AssetDetailScreen() {
                   </Text>
                 </View>
               ) : null}
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {p.details && CATEGORY_FIELDS[p.category].some((k) => p.details?.[k]) ? (
+          <Card>
+            <CardContent className="gap-3">
+              {CATEGORY_FIELDS[p.category]
+                .filter((k) => p.details?.[k])
+                .map((k, i, arr) => {
+                  const v = p.details![k]!
+                  const def = ASSET_FIELDS[k]!
+                  return (
+                    <View key={k} className="gap-3">
+                      {def.sensitive ? (
+                        <EncField label={t(`assetFields.${k}`)} value={v} />
+                      ) : (
+                        <View className="gap-1">
+                          <Text className={cn("text-xs text-muted-foreground", body)}>
+                            {t(`assetFields.${k}`)}
+                          </Text>
+                          <Text className={cn("text-base text-foreground", body)}>{v}</Text>
+                        </View>
+                      )}
+                      {i < arr.length - 1 ? <Separator /> : null}
+                    </View>
+                  )
+                })}
             </CardContent>
           </Card>
         ) : null}

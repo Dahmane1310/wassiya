@@ -1,5 +1,5 @@
-import { HomeScreen } from "@/screens/home"
+import { VaultHomeScreen } from "@/screens/vault-home"
 
 export default function Home() {
-  return <HomeScreen />
+  return <VaultHomeScreen />
 }

@@ -44,6 +44,8 @@ export type AssetDraft = {
   value: number | null
   currency: string | null
   notes: string | null
+  /** Category-specific fields (deed №, IBAN, plate…), keyed by field id. */
+  details: Record<string, string> | null
 }
 
 /** What an edit needs from the existing row to keep its DEK + file. */
@@ -79,6 +81,7 @@ function buildPayload(
     value: draft.value,
     currency: draft.currency,
     notes: draft.notes,
+    details: draft.details,
     file,
     createdAt,
     updatedAt,

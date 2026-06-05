@@ -52,6 +52,9 @@ export type AssetPayload = {
   value: number | null
   currency: string | null // ISO 4217
   notes: string | null
+  // Category-specific fields (deed №, IBAN, seed location, plate…), keyed by the
+  // field id from `lib/asset-fields.ts`. Encrypted with the rest of the payload.
+  details: Record<string, string> | null
   file: AssetFileMeta | null
   createdAt: number
   updatedAt: number

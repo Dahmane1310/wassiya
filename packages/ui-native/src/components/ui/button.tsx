@@ -38,6 +38,20 @@ const buttonVariants = cva(
           Platform.select({ web: "hover:bg-accent dark:hover:bg-accent/50" })
         ),
         link: "",
+        // Wassiya "Living Vault" additions (design handoff):
+        // warm-espresso vault button, bronze/legacy button, soft trust-blue chip.
+        vault: cn(
+          "bg-vault-2 shadow-sm shadow-black/20 active:bg-vault-2/90",
+          Platform.select({ web: "hover:bg-vault-2/90" })
+        ),
+        gold: cn(
+          "bg-gold-deep shadow-sm shadow-black/5 active:bg-gold-deep/90",
+          Platform.select({ web: "hover:bg-gold-deep/90" })
+        ),
+        soft: cn(
+          "bg-primary-soft active:bg-primary-soft-2",
+          Platform.select({ web: "hover:bg-primary-soft-2" })
+        ),
       },
       size: {
         default: cn(
@@ -86,6 +100,9 @@ const buttonTextVariants = cva(
             web: "underline-offset-4 group-hover:underline hover:underline",
           })
         ),
+        vault: "text-white",
+        gold: "text-white",
+        soft: "text-primary",
       },
       size: {
         default: "",

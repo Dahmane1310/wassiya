@@ -8,7 +8,8 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg"
  */
 export function VaultGlow() {
   const isLight = useColorScheme() === "light"
-  const color = isLight ? "#0A5566" : "#2BA6BE"
+  // Warm bronze/gold glow to match the app accent (was teal).
+  const color = isLight ? "#a26d33" : "#dcaf6c"
   const peak = isLight ? 0.08 : 0.2
 
   return (

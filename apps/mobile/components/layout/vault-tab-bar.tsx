@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { Pressable, View } from "react-native"
 import { type BottomTabBarProps } from "expo-router/js-tabs"
-import { House, Settings, Users, Vault } from "lucide-react-native"
+import { Heart, Layers, ScrollText, Shield, Users } from "lucide-react-native"
 import { type LucideIcon } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import { Icon } from "@workspace/ui-native/components/ui/icon"
@@ -9,14 +9,16 @@ import { Text } from "@workspace/ui-native/components/ui/text"
 import { cn } from "@workspace/ui-native/lib/utils"
 import { useBrandType } from "@/hooks/use-brand-type"
 
-// Fixed brand order for the bar. File order is alphabetical (home, people,
-// settings, vault), so we sort the navigator's routes into this order instead.
-const TAB_ORDER = ["home", "vault", "people", "settings"]
+// Fixed brand order for the bar (Vault heartbeat home · Assets · Heirs · Wasiyyah ·
+// Profile). Route files are named home/vault/people/wasiyyah/settings; we sort the
+// navigator's routes into this order and relabel them in the redesign.
+const TAB_ORDER = ["home", "vault", "people", "wasiyyah", "settings"]
 const TAB_ICONS: Record<string, LucideIcon> = {
-  home: House,
-  vault: Vault,
+  home: Heart,
+  vault: Layers,
   people: Users,
-  settings: Settings,
+  wasiyyah: ScrollText,
+  settings: Shield,
 }
 
 /**

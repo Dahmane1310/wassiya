@@ -95,6 +95,28 @@ export function generateSalt(): string {
 }
 
 /**
+ * A fresh random invite token (URL-safe base64url, 32 bytes of entropy). The RAW
+ * token is shown to the owner once and shared out-of-band — it is NEVER persisted
+ * server-side; only its `sha256` hash is stored (schema `invites.tokenHash`), so a
+ * DB read can't reveal a redeemable token.
+ */
+export function generateInviteToken(): string {
+  const bytes = new Uint8Array(32)
+  getCrypto().getRandomValues(bytes)
+  return bytesToBase64(bytes)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "")
+}
+
+/** SHA-256 of a string → base64. Hash the raw token on both ends (issue/redeem);
+ *  the server compares hashes and never sees the token itself. */
+export async function sha256(input: string): Promise<string> {
+  const digest = await getCrypto().subtle.digest("SHA-256", encoder.encode(input))
+  return bytesToBase64(new Uint8Array(digest))
+}
+
+/**
  * Derive the per-user AES-GCM master key from the master/vault passphrase and
  * the user's salt. Run once per session on unlock; keep the returned CryptoKey
  * in memory. The key is non-extractable.

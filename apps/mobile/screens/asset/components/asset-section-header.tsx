@@ -7,11 +7,11 @@ import { useBrandType } from "@/hooks/use-brand-type"
 export function AssetSectionHeader({ title }: { title: string }) {
   const { ar, body } = useBrandType()
   return (
-    <View className="pb-3 pt-6">
+    <View className="px-1 pb-2.5 pt-5">
       <Text
         className={cn(
-          "text-xs text-muted-foreground",
-          ar ? body : "font-sans-medium uppercase tracking-wider",
+          "text-xs text-ink-3",
+          ar ? body : "font-sans-semibold uppercase tracking-wide",
         )}
       >
         {title}

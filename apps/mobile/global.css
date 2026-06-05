@@ -27,102 +27,146 @@
   --font-display-ar: Tajawal_500Medium;
   --font-display-ar-bold: Tajawal_700Bold;
   --font-body-ar: Tajawal_400Regular;
+  /* Monospace for ciphertext / security texture and big numbers (the redesign
+     leans on it heavily — EncField, AED values). Language-agnostic. */
+  --font-mono: JetBrainsMono_500Medium;
 
   /* Plain rem (no calc): React Native borderRadius needs a concrete number and
-     Uniwind can't reduce a mixed-unit calc(rem - px) at build time. These equal
-     the shadcn calc scale at a 16px root — a touch softer than the TW defaults. */
+     Uniwind can't reduce a mixed-unit calc(rem - px) at build time. */
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.625rem;
   --radius-xl: 0.875rem;
 }
 
-/* "Deep Teal Trust" — the Wassiya brand palette, expressed as Uniwind theme
-   variables. Components consume them as utilities (bg-background, text-foreground,
-   bg-primary, text-gold, bg-state-active, ...). INVARIANT: every token MUST appear
-   in BOTH @variant blocks with the same key set, or the Metro build errors with
-   "Theme <x> is missing variable <y>". The aqua accent (#3BB6A6) is ~2.5:1 on
-   white — text on aqua surfaces must use the dark `*-foreground` tokens. */
+/* "Living Vault" palette — the Wassiya redesign expressed as Uniwind theme
+   variables, ported from the Claude Design handoff (warm-neutral paper, trust-blue
+   primary, bronze/gold for legacy, sage-emerald for "alive"/Fara'id, warm espresso
+   vault surfaces). Authored in oklch — Uniwind (culori + lightningcss) normalizes
+   oklch and compiles color-mix() to a runtime helper, so these render on RN.
+   Soft tints are done in components with opacity utilities (bg-primary/10).
+
+   INVARIANT: every token MUST appear in BOTH @variant blocks with the same key set,
+   or the Metro build errors with "Theme <x> is missing variable <y>". */
 @layer theme {
   :root {
     @variant light {
-      --color-background: hsl(192 18% 96%);
-      --color-foreground: hsl(193 53% 12%);
-      --color-card: hsl(0 0% 100%);
-      --color-card-foreground: hsl(193 53% 12%);
-      --color-popover: hsl(0 0% 100%);
-      --color-popover-foreground: hsl(193 53% 12%);
-      --color-primary: hsl(192 82% 22%);
-      --color-primary-foreground: hsl(0 0% 100%);
-      --color-secondary: hsl(192 16% 91%);
-      --color-secondary-foreground: hsl(193 53% 12%);
-      --color-muted: hsl(192 16% 91%);
-      --color-muted-foreground: hsl(194 21% 40%);
-      --color-accent: hsl(170 47% 91%);
-      --color-accent-foreground: hsl(192 82% 14%);
-      --color-destructive: hsl(0 60% 48%);
-      --color-destructive-foreground: hsl(0 0% 100%);
-      --color-border: hsl(192 16% 85%);
-      --color-input: hsl(192 16% 85%);
-      --color-ring: hsl(192 82% 22%);
-      --color-chart-1: hsl(192 82% 22%);
-      --color-chart-2: hsl(173 51% 47%);
-      --color-chart-3: hsl(35 80% 57%);
-      --color-chart-4: hsl(194 21% 40%);
-      --color-chart-5: hsl(160 49% 33%);
-      /* semantic: metallic accent + vault-state + status */
-      --color-gold: hsl(40 60% 52%);
-      --color-gold-foreground: hsl(40 60% 14%);
-      --color-state-active: hsl(192 82% 22%);
-      --color-state-grace: hsl(35 80% 57%);
-      --color-state-released: hsl(173 51% 47%);
-      --color-state-paused: hsl(194 21% 40%);
-      --color-success: hsl(160 49% 33%);
-      --color-success-foreground: hsl(0 0% 100%);
-      --color-warning: hsl(35 80% 57%);
-      --color-warning-foreground: hsl(40 80% 12%);
-      --color-danger: hsl(0 60% 48%);
-      --color-danger-foreground: hsl(0 0% 100%);
+      /* warm neutral surfaces */
+      --color-background: oklch(0.984 0.006 80);
+      --color-foreground: oklch(0.24 0.016 255);
+      --color-card: oklch(1 0 0);
+      --color-card-foreground: oklch(0.24 0.016 255);
+      --color-popover: oklch(1 0 0);
+      --color-popover-foreground: oklch(0.24 0.016 255);
+      --color-surface-2: oklch(0.975 0.006 80);
+      --color-surface-3: oklch(0.962 0.007 80);
+      /* ink ramp (text) */
+      --color-ink-2: oklch(0.5 0.014 255);
+      --color-ink-3: oklch(0.66 0.012 255);
+      /* primary = bronze/gold — the app's single dominant accent (was trust-blue) */
+      --color-primary: oklch(0.58 0.1 66);
+      --color-primary-foreground: oklch(1 0 0);
+      --color-primary-600: oklch(0.5 0.105 64);
+      --color-primary-soft: oklch(0.955 0.035 80);
+      --color-primary-soft-2: oklch(0.92 0.05 78);
+      --color-secondary: oklch(0.962 0.007 80);
+      --color-secondary-foreground: oklch(0.24 0.016 255);
+      --color-muted: oklch(0.962 0.007 80);
+      --color-muted-foreground: oklch(0.5 0.014 255);
+      --color-accent: oklch(0.955 0.035 80);
+      --color-accent-foreground: oklch(0.5 0.105 64);
+      --color-destructive: oklch(0.56 0.17 25);
+      --color-destructive-foreground: oklch(1 0 0);
+      --color-border: oklch(0.915 0.006 80);
+      --color-line-2: oklch(0.945 0.006 80);
+      --color-input: oklch(0.915 0.006 80);
+      --color-ring: oklch(0.58 0.1 66);
+      --color-chart-1: oklch(0.58 0.1 66);
+      --color-chart-2: oklch(0.6 0.1 160);
+      --color-chart-3: oklch(0.58 0.1 66);
+      --color-chart-4: oklch(0.66 0.012 255);
+      --color-chart-5: oklch(0.52 0.11 285);
+      /* legacy amber/bronze */
+      --color-gold: oklch(0.7 0.105 72);
+      --color-gold-foreground: oklch(1 0 0);
+      --color-gold-deep: oklch(0.58 0.1 66);
+      --color-gold-soft: oklch(0.955 0.035 80);
+      /* alive / Fara'id sage-emerald */
+      --color-green: oklch(0.6 0.1 160);
+      --color-green-soft: oklch(0.95 0.04 160);
+      /* danger */
+      --color-red-soft: oklch(0.955 0.035 25);
+      /* warm espresso vault surfaces (dark hero cards on a light app) */
+      --color-vault-1: oklch(0.275 0.015 66);
+      --color-vault-2: oklch(0.205 0.014 62);
+      --color-vault-3: oklch(0.155 0.012 58);
+      /* vault-state + status semantics */
+      --color-state-active: oklch(0.6 0.1 160);
+      --color-state-grace: oklch(0.58 0.1 66);
+      --color-state-released: oklch(0.48 0.115 245);
+      --color-state-paused: oklch(0.66 0.012 255);
+      --color-success: oklch(0.6 0.1 160);
+      --color-success-foreground: oklch(1 0 0);
+      --color-warning: oklch(0.58 0.1 66);
+      --color-warning-foreground: oklch(1 0 0);
+      --color-danger: oklch(0.56 0.17 25);
+      --color-danger-foreground: oklch(1 0 0);
     }
 
     @variant dark {
-      --color-background: hsl(192 65% 9%);
-      --color-foreground: hsl(192 22% 93%);
-      --color-card: hsl(193 50% 13%);
-      --color-card-foreground: hsl(192 22% 93%);
-      --color-popover: hsl(193 50% 13%);
-      --color-popover-foreground: hsl(192 22% 93%);
-      --color-primary: hsl(190 68% 35%);
-      --color-primary-foreground: hsl(0 0% 100%);
-      --color-secondary: hsl(193 38% 18%);
-      --color-secondary-foreground: hsl(192 22% 93%);
-      --color-muted: hsl(193 38% 18%);
-      --color-muted-foreground: hsl(192 18% 61%);
-      --color-accent: hsl(173 51% 47%);
-      --color-accent-foreground: hsl(192 82% 14%);
-      --color-destructive: hsl(0 55% 45%);
-      --color-destructive-foreground: hsl(0 0% 100%);
-      --color-border: hsl(193 38% 20%);
-      --color-input: hsl(193 38% 20%);
-      --color-ring: hsl(173 51% 47%);
-      --color-chart-1: hsl(173 51% 47%);
-      --color-chart-2: hsl(190 68% 45%);
-      --color-chart-3: hsl(35 80% 60%);
-      --color-chart-4: hsl(192 18% 61%);
-      --color-chart-5: hsl(160 45% 45%);
-      /* semantic: metallic accent + vault-state + status */
-      --color-gold: hsl(40 65% 58%);
-      --color-gold-foreground: hsl(40 70% 12%);
-      --color-state-active: hsl(190 68% 45%);
-      --color-state-grace: hsl(35 80% 60%);
-      --color-state-released: hsl(173 51% 47%);
-      --color-state-paused: hsl(192 18% 61%);
-      --color-success: hsl(160 45% 45%);
-      --color-success-foreground: hsl(160 60% 8%);
-      --color-warning: hsl(35 80% 60%);
-      --color-warning-foreground: hsl(40 80% 10%);
-      --color-danger: hsl(0 55% 52%);
-      --color-danger-foreground: hsl(0 0% 100%);
+      /* warm dark (espresso/charcoal, not blue) */
+      --color-background: oklch(0.185 0.008 60);
+      --color-foreground: oklch(0.965 0.006 80);
+      --color-card: oklch(0.232 0.009 62);
+      --color-card-foreground: oklch(0.965 0.006 80);
+      --color-popover: oklch(0.232 0.009 62);
+      --color-popover-foreground: oklch(0.965 0.006 80);
+      --color-surface-2: oklch(0.265 0.009 62);
+      --color-surface-3: oklch(0.305 0.01 62);
+      --color-ink-2: oklch(0.76 0.012 80);
+      --color-ink-3: oklch(0.6 0.012 72);
+      --color-primary: oklch(0.64 0.11 73);
+      --color-primary-foreground: oklch(1 0 0);
+      --color-primary-600: oklch(0.78 0.1 76);
+      --color-primary-soft: oklch(0.34 0.045 72);
+      --color-primary-soft-2: oklch(0.4 0.05 72);
+      --color-secondary: oklch(0.305 0.01 62);
+      --color-secondary-foreground: oklch(0.965 0.006 80);
+      --color-muted: oklch(0.305 0.01 62);
+      --color-muted-foreground: oklch(0.76 0.012 80);
+      --color-accent: oklch(0.34 0.045 72);
+      --color-accent-foreground: oklch(0.78 0.1 76);
+      --color-destructive: oklch(0.68 0.16 25);
+      --color-destructive-foreground: oklch(1 0 0);
+      --color-border: oklch(0.33 0.009 62);
+      --color-line-2: oklch(0.285 0.009 62);
+      --color-input: oklch(0.33 0.009 62);
+      --color-ring: oklch(0.64 0.11 73);
+      --color-chart-1: oklch(0.64 0.11 73);
+      --color-chart-2: oklch(0.7 0.105 162);
+      --color-chart-3: oklch(0.64 0.11 73);
+      --color-chart-4: oklch(0.6 0.012 72);
+      --color-chart-5: oklch(0.6 0.11 285);
+      --color-gold: oklch(0.78 0.1 76);
+      --color-gold-foreground: oklch(0.185 0.008 60);
+      --color-gold-deep: oklch(0.64 0.11 73);
+      --color-gold-soft: oklch(0.34 0.045 72);
+      --color-green: oklch(0.7 0.105 162);
+      --color-green-soft: oklch(0.32 0.05 162);
+      --color-red-soft: oklch(0.33 0.07 25);
+      --color-vault-1: oklch(0.3 0.015 66);
+      --color-vault-2: oklch(0.235 0.013 62);
+      --color-vault-3: oklch(0.18 0.012 58);
+      --color-state-active: oklch(0.7 0.105 162);
+      --color-state-grace: oklch(0.64 0.11 73);
+      --color-state-released: oklch(0.58 0.13 245);
+      --color-state-paused: oklch(0.6 0.012 72);
+      --color-success: oklch(0.7 0.105 162);
+      --color-success-foreground: oklch(0.185 0.008 60);
+      --color-warning: oklch(0.64 0.11 73);
+      --color-warning-foreground: oklch(0.185 0.008 60);
+      --color-danger: oklch(0.68 0.16 25);
+      --color-danger-foreground: oklch(1 0 0);
     }
   }
 }
