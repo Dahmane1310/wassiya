@@ -31,6 +31,7 @@
   "vaultHome": {
     "greetingKicker": "السلام عليكم",
     "greeting": "Salam, {{name}}",
+    "greetingNoName": "Salam",
     "toggleTheme": "Toggle theme",
     "notifications": "Notifications",
     "armed": "ARMED",
@@ -45,6 +46,7 @@
     "graceNoteUrgent": "Check in now to re-arm your vault and stop the countdown.",
     "graceNote": "If you miss a check-in, a {{days}}-day grace period begins before release is authorized.",
     "netEstate": "Net estate",
+    "unlockToView": "Unlock to view",
     "estateBreakdown": "{{assets}} assets − {{debts}} debts",
     "ready": "READY",
     "statAssets": "Assets",
@@ -52,6 +54,13 @@
     "statEncrypted": "Encrypted",
     "finishVault": "Finish your vault",
     "left": "{{count}} left",
+    "allSet": "All set",
+    "setup": {
+      "pin": "Vault secured with a PIN",
+      "asset": "Add your first asset",
+      "heirs": "Add your heirs",
+      "switch": "Start your check-ins"
+    },
     "addAsset": "Add asset",
     "distribution": "Distribution",
     "recentActivity": "Recent activity"
@@ -64,7 +73,38 @@
     "wasiyyah": "− Wasiyyah (bequest, ≤⅓)",
     "pool": "= Fara’id pool to heirs",
     "heirsReceive": "Heirs receive",
-    "releaseNote": "Released only after a missed check-in + grace period. Authorized server-side."
+    "releaseNote": "Released only after a missed check-in + grace period. Authorized server-side.",
+    "unlockToPreview": "Unlock your vault to preview how your estate will be distributed.",
+    "noValues": "Add estimated values to your assets to preview the distribution.",
+    "noHeirs": "Add your heirs to see their legal shares.",
+    "reviewHeirs": "Complete your heir details on the Heirs tab to compute exact shares.",
+    "primaryCurrencyNote": "Showing {{currency}}. Other currencies are released under the same shares."
+  },
+  "activity": {
+    "empty": "No activity yet.",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago",
+    "weeksAgo": "{{count}}w ago",
+    "event": {
+      "check_in": "Checked in",
+      "vault_unlocked": "Vault unlocked",
+      "asset_created": "Asset added",
+      "asset_updated": "Asset updated",
+      "asset_deleted": "Asset removed",
+      "asset_read_at_release": "Asset accessed at release",
+      "beneficiary_invited": "Beneficiary invited",
+      "beneficiary_enrolled": "Beneficiary enrolled",
+      "executor_invited": "Executor invited",
+      "attestation_recorded": "Attestation recorded",
+      "attestation_revoked": "Attestation revoked",
+      "death_cert_submitted": "Death certificate submitted",
+      "death_cert_reviewed": "Death certificate reviewed",
+      "switch_state_changed": "Dead-man’s switch updated",
+      "release_authorized": "Release authorized",
+      "unknown": "Vault activity"
+    }
   },
   "vault": {
     "emptyTitle": "No assets yet",
@@ -305,13 +345,17 @@
   },
   "profile": {
     "title": "Profile",
+    "you": "You",
     "plan": "Lifetime · Founder",
     "zeroKnowledge": "Zero-knowledge",
     "switchTitle": "Dead-man’s switch",
     "cadence": "Check-in cadence",
     "cadenceValue": "Every 30 days",
+    "cadenceSubtitle": "How often Wassiya expects a check-in from you.",
     "grace": "Grace period",
     "graceValue": "14 days",
+    "graceSubtitle": "Time after a missed check-in before release begins.",
+    "daysValue": "{{days}} days",
     "reminders": "Reminders",
     "remindersValue": "3, 7, 14 days",
     "executors": "Executors & trusted contacts",
@@ -327,14 +371,19 @@
     "lockNow": "Lock vault now",
     "locked": "Vault is locked",
     "appearance": "Appearance",
+    "preferences": "Preferences",
     "theme": "Theme",
+    "themeSubtitle": "Choose how Wassiya looks on this device.",
     "light": "Light",
     "dark": "Dark",
+    "system": "System",
     "language": "Language",
     "inheritance": "Inheritance",
     "ownerGender": "Your gender",
+    "genderSubtitle": "Required to compute the spouse’s Fara’id share.",
+    "genderNotSet": "Not set",
     "release": "Release & recipients",
-    "contacts": "Beneficiaries & executors",
+    "contacts": "Bequest recipients",
     "general": "General",
     "lifetime": "Lifetime",
     "legal": "Legal & Sharia review",
@@ -342,7 +391,29 @@
     "replayOnboarding": "Replay onboarding",
     "help": "Help & support",
     "signOut": "Sign out",
-    "footer": "Wassiya · وصية · Encrypted on-device"
+    "footer": "Wassiya · وصية · Encrypted on-device",
+    "changePin": "Change PIN",
+    "changePinCurrent": "Enter your current PIN",
+    "changePinNew": "Choose a new PIN",
+    "changePinConfirm": "Confirm your new PIN",
+    "changePinMismatch": "PINs didn't match — try again.",
+    "changePinWrongCurrent": "Current PIN is incorrect."
+  },
+  "paywall": {
+    "title": "Wassiya Premium",
+    "trialEnded": "Your free trial has ended",
+    "daysLeft": "{{days}} days left in your trial",
+    "upgradeCta": "Tap to upgrade",
+    "manageOnWeb": "Manage your subscription on the web to unlock your vault.",
+    "annual": "Annual",
+    "annualPrice": "$79 / year",
+    "lifetime": "Lifetime",
+    "lifetimePrice": "$249 once",
+    "dismiss": "Not now",
+    "planTrial": "Trial · {{days}}d left",
+    "planAnnual": "Annual",
+    "planLifetime": "Lifetime",
+    "planExpired": "Trial ended"
   },
   "notif": {
     "title": "Notifications",
@@ -361,13 +432,14 @@
     "doneBody": "Only your devices can ever decrypt this."
   },
   "contacts": {
-    "title": "Beneficiaries & executors",
-    "subtitle": "Who receives your vault, and who confirms",
-    "beneficiaries": "Beneficiaries",
+    "title": "Bequest recipients",
+    "subtitle": "Non-heir people who receive a bequest and can decrypt your vault",
+    "beneficiaries": "Recipients",
     "executors": "Executors",
     "add": "Add",
-    "noBeneficiaries": "No beneficiaries yet — add the people who’ll receive your vault.",
+    "noBeneficiaries": "No recipients yet — add a non-heir who’ll receive a bequest. (Heirs are added on the Heirs tab.)",
     "noExecutors": "No executors yet — add trusted contacts who confirm your passing.",
+    "cantRemoveBeneficiary": "Remove this person’s bequest in Wasiyyah before removing them.",
     "addBeneficiary": "Add beneficiary",
     "addExecutor": "Add executor",
     "beneficiarySub": "They can decrypt your vault after release.",
@@ -398,6 +470,10 @@
     "lineage": "Lineage",
     "fullName": "Full name",
     "namePlaceholder": "e.g. Hana",
+    "email": "Email (optional)",
+    "emailPlaceholder": "name@example.com",
+    "emailHint": "Add an email to invite them to decrypt your vault after release. Every heir is a beneficiary.",
+    "emailInvalid": "Enter a valid email address.",
     "note": "Their Fara’id fraction recalculates automatically across all heirs.",
     "spouseNeedsGender": "Set your own gender (Profile) before adding a spouse.",
     "cta": "Add heir"
@@ -406,8 +482,8 @@
     "signInFailed": "Sign-in failed"
   },
   "onboarding": {
-    "headline": "Create your vault passphrase",
-    "security": "Your sign-in proves who you are. This passphrase is what encrypts your vault — and we can never recover it. Choose something strong you won't forget.",
+    "headline": "Create your vault PIN",
+    "security": "Your sign-in proves who you are. Your 6-digit PIN unlocks your encrypted vault on this device. You'll also get a one-time Recovery Key — the only way back in if you forget your PIN or change devices.",
     "passphraseLabel": "Vault passphrase",
     "passphrasePlaceholder": "At least 12 characters",
     "confirmLabel": "Confirm passphrase",
@@ -423,7 +499,11 @@
       "fair": "Fair",
       "good": "Good",
       "strong": "Strong"
-    }
+    },
+    "enterPin": "Create a 6-digit PIN",
+    "confirmPin": "Re-enter your PIN",
+    "pinMismatch": "PINs didn't match — try again.",
+    "pinHint": "You'll use this to unlock your vault."
   },
   "cadence": {
     "title": "Set your heartbeat",
@@ -442,16 +522,20 @@
   },
   "unlock": {
     "heading": "Unlock your vault",
-    "subhead": "Enter your vault passphrase to continue.",
+    "subhead": "Enter your PIN to unlock your vault.",
     "passphraseLabel": "Vault passphrase",
     "passphrasePlaceholder": "Your passphrase",
     "cta": "Unlock",
     "wrongPassphrase": "That passphrase is incorrect.",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "pinHeading": "Enter your PIN",
+    "enterPin": "Unlock your vault",
+    "wrongPin": "Wrong PIN — try again.",
+    "forgotPin": "Forgot PIN?"
   },
   "biometric": {
     "enrollTitle": "Unlock faster next time",
-    "enrollBody": "Use your device biometrics to open your vault with a touch — your passphrase stays on this device, protected by your biometrics.",
+    "enrollBody": "Use your device biometrics to open your vault with a touch — your key stays on this device, protected by your biometrics.",
     "enable": "Enable biometric unlock",
     "notNow": "Not now",
     "use": "Use biometrics",
@@ -462,5 +546,20 @@
   "lang": {
     "toArabic": "العربية",
     "toEnglish": "English"
+  },
+  "recovery": {
+    "title": "Recover your vault",
+    "body": "Enter your Recovery Key to restore access on this device, then set a new PIN.",
+    "enterKey": "Recovery Key",
+    "invalidKey": "That Recovery Key isn't right. Check it and try again.",
+    "setNewPin": "Set a new 6-digit PIN for this device.",
+    "cta": "Continue",
+    "saveTitle": "Save your Recovery Key",
+    "saveBody": "This is the ONLY way back into your vault if you forget your PIN or switch devices. We can never recover it for you — store it somewhere safe.",
+    "share": "Save / share",
+    "shareMessage": "My Wassiya vault Recovery Key:\n\n{{code}}\n\nKeep this private and safe.",
+    "warning": "If you lose both your PIN and this key, your vault can never be opened.",
+    "saved": "I've saved my Recovery Key somewhere safe.",
+    "continue": "Continue"
   }
 }

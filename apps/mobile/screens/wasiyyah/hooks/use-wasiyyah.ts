@@ -49,10 +49,15 @@ export function useWasiyyah() {
     }
   }, [beneficiaryRows, masterKey])
 
+  // Candidates exclude heirs: a Wasiyyah bequest to a legal heir is invalid, and all
+  // heirs are already beneficiaries. (nameMap keeps every beneficiary so existing
+  // allocations still resolve a name.)
   const beneficiaries: AllocBeneficiary[] | null =
     beneficiaryRows === undefined || nameMap === null
       ? null
-      : beneficiaryRows.map((b) => ({ id: b._id, name: nameMap.get(b._id) ?? b.contactEmail }))
+      : beneficiaryRows
+          .filter((b) => !b.isHeir)
+          .map((b) => ({ id: b._id, name: nameMap.get(b._id) ?? b.contactEmail }))
 
   const allocations: Allocation[] | null =
     allocationRows === undefined || nameMap === null

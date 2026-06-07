@@ -1,9 +1,28 @@
 import { v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { mutation, query, type MutationCtx } from "./_generated/server"
+import { type Id } from "./_generated/dataModel"
+import { assertEntitled } from "./lib/entitlements"
 
 // Mirrors the `encrypted` column validator in schema.ts / vault.ts — base64
 // AES-GCM ciphertext + the 12-byte IV it was sealed with. Stored opaquely.
 const encrypted = v.object({ ciphertext: v.string(), iv: v.string() })
+
+/** Delete every beneficiary key-wrap for an asset (batched — queries can't
+ *  `.delete()`). Used on asset delete and on DEK rotation, where existing wraps
+ *  encrypt a now-stale DEK. */
+async function clearWrappedKeys(ctx: MutationCtx, assetId: Id<"assets">) {
+  let batch = await ctx.db
+    .query("wrappedKeys")
+    .withIndex("by_assetId", (q) => q.eq("assetId", assetId))
+    .take(100)
+  while (batch.length > 0) {
+    for (const wk of batch) await ctx.db.delete(wk._id)
+    batch = await ctx.db
+      .query("wrappedKeys")
+      .withIndex("by_assetId", (q) => q.eq("assetId", assetId))
+      .take(100)
+  }
+}
 
 // The owner-scoped shape returned for one stored asset. We build explicit DTOs
 // (never echo the raw Doc) and OMIT `ownerId` — the caller is always the owner.
@@ -115,6 +134,8 @@ export const createAsset = mutation({
       throw new Error("Not authenticated")
     }
     const ownerId = identity.tokenIdentifier
+    // Trial/paid gate: creating an asset is blocked once the trial lapses (read-only vault).
+    await assertEntitled(ctx, ownerId)
     const assetId = await ctx.db.insert("assets", {
       ownerId,
       payload: args.payload,
@@ -156,6 +177,8 @@ export const updateAsset = mutation({
       throw new Error("Not authenticated")
     }
     const ownerId = identity.tokenIdentifier
+    // Trial/paid gate: editing is blocked once the trial lapses (read-only vault).
+    await assertEntitled(ctx, ownerId)
     const row = await ctx.db.get(args.assetId)
     if (row === null || row.ownerId !== ownerId) {
       throw new Error("Asset not found")
@@ -172,6 +195,13 @@ export const updateAsset = mutation({
     })
     if (previousStorageId && previousStorageId !== args.storageId) {
       await ctx.storage.delete(previousStorageId)
+    }
+    // A changed ownerWrappedKey means the DEK rotated (file replace → fresh DEK).
+    // Existing beneficiary wraps now encrypt a stale DEK, so drop them; the client
+    // reconciliation pass re-wraps the new DEK. A payload-only edit reuses the DEK
+    // (same ownerWrappedKey), so the wraps stay valid and are untouched.
+    if (row.ownerWrappedKey !== args.ownerWrappedKey) {
+      await clearWrappedKeys(ctx, args.assetId)
     }
     await ctx.db.insert("auditLog", {
       ownerId,
@@ -198,21 +228,8 @@ export const deleteAsset = mutation({
     if (row === null || row.ownerId !== ownerId) {
       throw new Error("Asset not found")
     }
-    // Remove any per-beneficiary DEK copies (none yet this pass — keeps delete
-    // total once beneficiaries land). Queries can't `.delete()`; batch-iterate.
-    let wrapped = await ctx.db
-      .query("wrappedKeys")
-      .withIndex("by_assetId", (q) => q.eq("assetId", args.assetId))
-      .take(100)
-    while (wrapped.length > 0) {
-      for (const wk of wrapped) {
-        await ctx.db.delete(wk._id)
-      }
-      wrapped = await ctx.db
-        .query("wrappedKeys")
-        .withIndex("by_assetId", (q) => q.eq("assetId", args.assetId))
-        .take(100)
-    }
+    // Remove any per-beneficiary DEK copies so they don't outlive the asset.
+    await clearWrappedKeys(ctx, args.assetId)
     if (row.storageId) {
       await ctx.storage.delete(row.storageId)
     }

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react"
-import { ActivityIndicator, TextInput, View } from "react-native"
+import { ActivityIndicator, Image, TextInput, View } from "react-native"
 import { Lock } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import { type Id } from "@workspace/backend/dataModel"
+import { bytesToBase64 } from "@workspace/crypto"
 import { Button } from "@workspace/ui-native/components/ui/button"
 import { Icon } from "@workspace/ui-native/components/ui/icon"
 import { Text } from "@workspace/ui-native/components/ui/text"
@@ -12,6 +13,9 @@ import { Field } from "@/components/ui/field"
 import { useBrandType } from "@/hooks/use-brand-type"
 import { useAsset } from "@/screens/asset/hooks/use-asset"
 import { useAssets, type Attachment, type AssetDraft } from "@/hooks/use-assets"
+import { isTrialExpired } from "@/lib/entitlement-error"
+import { usePaywallStore } from "@/stores/paywall"
+import { openDecryptedFile } from "@/lib/asset-file"
 import { useThemeColors } from "@/lib/colors"
 import { pickDetails } from "@/lib/asset-fields"
 import { type AssetCategory, type AssetKind } from "@/lib/asset-crypto"
@@ -39,7 +43,8 @@ export function AssetForm({
   const { ar, body } = useBrandType()
   const c = useThemeColors()
   const { create, update } = useAssets()
-  const { asset, status } = useAsset(mode === "edit" ? assetId : undefined)
+  const showPaywall = usePaywallStore((s) => s.show)
+  const { asset, status, loadFile } = useAsset(mode === "edit" ? assetId : undefined)
 
   const [kind, setKind] = useState<AssetKind>("asset")
   const [category, setCategory] = useState<AssetCategory>("real_estate")
@@ -51,8 +56,31 @@ export function AssetForm({
   const [attachment, setAttachment] = useState<Attachment>({ kind: "none" })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fileBusy, setFileBusy] = useState(false)
+  const [imageUri, setImageUri] = useState<string | null>(null)
   const seeded = useRef(false)
   const setField = (key: string, val: string) => setDetails((d) => ({ ...d, [key]: val }))
+
+  /** Decrypt + open the saved attachment: images preview inline, others via the
+   *  OS share/Quick-Look sheet. Bytes are decrypted on demand, never persisted. */
+  async function openFile() {
+    if (!asset || fileBusy) return
+    setFileBusy(true)
+    try {
+      const bytes = await loadFile()
+      if (!bytes) return
+      const meta = asset.payload.file
+      if (meta?.mimeType?.startsWith("image/")) {
+        setImageUri(`data:${meta.mimeType};base64,${bytesToBase64(bytes)}`)
+      } else {
+        await openDecryptedFile(bytes, meta?.name ?? "file", meta?.mimeType ?? undefined)
+      }
+    } catch {
+      // Non-fatal: nothing plaintext is logged; the form stays usable.
+    } finally {
+      setFileBusy(false)
+    }
+  }
 
   useEffect(() => {
     if (mode !== "edit" || seeded.current || !asset) return
@@ -100,6 +128,13 @@ export function AssetForm({
       }
       onDone()
     } catch (err) {
+      if (isTrialExpired(err)) {
+        onDone() // close first…
+        // …then present the paywall next frame so it doesn't race the sheet dismiss
+        // (present-over-dismiss can silently no-op on iOS). (Verify on device.)
+        setTimeout(() => showPaywall(), 400)
+        return
+      }
       setError(err instanceof Error ? err.message : t("asset.error.save"))
       setBusy(false)
     }
@@ -185,7 +220,22 @@ export function AssetForm({
         <Text className="mb-2 font-sans-semibold text-[12.5px] text-ink-2">
           {t("asset.form.fileLabel")}
         </Text>
-        <FileAttachment value={attachment} onChange={setAttachment} />
+        {imageUri ? (
+          <Image
+            source={{ uri: imageUri }}
+            className="mb-2 h-48 w-full rounded-2xl"
+            resizeMode="cover"
+          />
+        ) : null}
+        <FileAttachment
+          value={attachment}
+          onChange={(a) => {
+            setImageUri(null)
+            setAttachment(a)
+          }}
+          onOpen={() => void openFile()}
+          opening={fileBusy}
+        />
       </View>
 
       {error ? (

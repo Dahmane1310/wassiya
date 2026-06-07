@@ -14,7 +14,7 @@ import { Pill } from "@/components/ui/pill"
 import { ScreenHeader } from "@/components/ui/screen-header"
 import { SectionLabel } from "@/components/ui/section-label"
 import { heirPalette, useThemeColors } from "@/lib/colors"
-import { pct } from "@/lib/mock-estate"
+import { pct } from "@/lib/estate-summary"
 import { useDecryptedHeirs, type DecryptedHeir } from "@/screens/heirs/hooks/use-decrypted-heirs"
 import { AddHeirSheet } from "@/screens/flows/add-heir-sheet"
 import { Donut } from "@/screens/heirs/components/donut"
@@ -69,33 +69,24 @@ export function HeirsScreen() {
     />
   )
 
-  if (loading || heirs === null) {
-    return (
-      <ScreenContainer scroll edges={["top"]}>
-        <View className="flex-1 gap-4 pb-28 pt-1">
-          {header}
-          <View className="items-center py-16">
-            <ActivityIndicator />
-          </View>
+  // Render the ScreenContainer + header + sheet ONCE; only the inner content
+  // swaps between loading / empty / main. (Putting the sheet inside each branch
+  // remounts it when the heir list goes empty→non-empty after the first add,
+  // orphaning the native sheet so the next add can't present/submit.)
+  function renderContent() {
+    if (loading || heirs === null) {
+      return (
+        <View className="items-center py-16">
+          <ActivityIndicator />
         </View>
-        {sheet}
-      </ScreenContainer>
-    )
-  }
+      )
+    }
 
-  if (heirs.length === 0) {
-    return (
-      <ScreenContainer scroll edges={["top"]}>
-        <View className="flex-1 gap-4 pb-28 pt-1">
-          {header}
-          <EmptyState icon={Users} title={t("heirs.emptyTitle")} body={t("heirs.emptyBody")} />
-        </View>
-        {sheet}
-      </ScreenContainer>
-    )
-  }
+    if (heirs.length === 0) {
+      return <EmptyState icon={Users} title={t("heirs.emptyTitle")} body={t("heirs.emptyBody")} />
+    }
 
-  const effective = heirs.map((h) => ({ ...h, isAlive: override[h.id] ?? h.isAlive }))
+    const effective = heirs.map((h) => ({ ...h, isAlive: override[h.id] ?? h.isAlive }))
   const idx = new Map<string, number>(heirs.map((h, i) => [h.id, i]))
   const colorFor = (id: string) => palette[(idx.get(id) ?? 0) % palette.length]!
   const ownerInitials =
@@ -129,11 +120,8 @@ export function HeirsScreen() {
     .map((h) => ({ id: h.id, color: colorFor(h.id), value: shareMap.get(h.id)?.fraction ?? 0 }))
   const legend = result.status === "ok" ? [...result.shares].sort((a, b) => b.fraction - a.fraction) : []
 
-  return (
-    <ScreenContainer scroll edges={["top"]}>
-      <View className="flex-1 gap-4 pb-28 pt-1">
-        {header}
-
+    return (
+      <>
         <FamilyTree
           members={effective}
           onToggle={toggle}
@@ -233,8 +221,16 @@ export function HeirsScreen() {
             </Text>
           </View>
         </View>
-      </View>
+      </>
+    )
+  }
 
+  return (
+    <ScreenContainer scroll edges={["top"]}>
+      <View className="flex-1 gap-4 pb-6 pt-1">
+        {header}
+        {renderContent()}
+      </View>
       {sheet}
     </ScreenContainer>
   )

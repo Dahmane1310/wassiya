@@ -8,18 +8,22 @@
  * @module
  */
 
+import type * as activity from "../activity.js";
 import type * as assets from "../assets.js";
 import type * as auth from "../auth.js";
 import type * as beneficiaries from "../beneficiaries.js";
 import type * as crons from "../crons.js";
-import type * as executors from "../executors.js";
+import type * as entitlements from "../entitlements.js";
 import type * as familyMembers from "../familyMembers.js";
 import type * as http from "../http.js";
 import type * as invites from "../invites.js";
+import type * as lib_entitlements from "../lib/entitlements.js";
+import type * as recipients from "../recipients.js";
 import type * as switch_ from "../switch.js";
 import type * as users from "../users.js";
 import type * as vault from "../vault.js";
 import type * as wasiyyah from "../wasiyyah.js";
+import type * as wrappedKeys from "../wrappedKeys.js";
 
 import type {
   ApiFromModules,
@@ -28,18 +32,22 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  activity: typeof activity;
   assets: typeof assets;
   auth: typeof auth;
   beneficiaries: typeof beneficiaries;
   crons: typeof crons;
-  executors: typeof executors;
+  entitlements: typeof entitlements;
   familyMembers: typeof familyMembers;
   http: typeof http;
   invites: typeof invites;
+  "lib/entitlements": typeof lib_entitlements;
+  recipients: typeof recipients;
   switch: typeof switch_;
   users: typeof users;
   vault: typeof vault;
   wasiyyah: typeof wasiyyah;
+  wrappedKeys: typeof wrappedKeys;
 }>;
 
 /**

@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import { AppState } from "react-native"
+import { isAutoLockSuppressed } from "@/lib/auto-lock"
 import { useVaultStore } from "@/stores/vault"
 
 /**
@@ -15,7 +16,8 @@ export function useAutoLock() {
     const sub = AppState.addEventListener("change", (state) => {
       if (
         state === "background" &&
-        useVaultStore.getState().status === "unlocked"
+        useVaultStore.getState().status === "unlocked" &&
+        !isAutoLockSuppressed() // skip locks caused by pickers / share sheets
       ) {
         useVaultStore.getState().lock()
       }

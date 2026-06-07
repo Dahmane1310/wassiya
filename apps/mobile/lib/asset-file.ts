@@ -2,6 +2,7 @@ import { randomUUID } from "expo-crypto"
 import * as FileSystem from "expo-file-system/legacy"
 import * as Sharing from "expo-sharing"
 import { base64ToBytes, bytesToBase64 } from "@workspace/crypto"
+import { withoutAutoLock } from "@/lib/auto-lock"
 
 // Device file I/O for encrypted asset attachments. Uses the stable legacy
 // expo-file-system API (file-based upload/download is far more reliable than
@@ -95,7 +96,8 @@ export async function openDecryptedFile(
   const uri = await writeBytesToCache(bytes, name)
   try {
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(uri, { mimeType })
+      // Suppress auto-lock: the share sheet backgrounds the app.
+      await withoutAutoLock(() => Sharing.shareAsync(uri, { mimeType }))
     }
   } finally {
     await deleteCacheFile(uri)

@@ -6,8 +6,12 @@ import {
   encryptData,
   generateDataKeyBytes,
   importDataKey,
+  importPublicKey,
+  publicKeyFingerprint,
+  RSA_WRAP_ALGORITHM,
   unwrapKey,
   wrapKey,
+  wrapKeyForPublicKey,
   type EncryptedDataPackage,
 } from "@workspace/crypto"
 
@@ -139,6 +143,48 @@ export async function decryptAsset(
     const dek = await importDataKey(rawDek)
     const json = await decryptData(row.payload.ciphertext, row.payload.iv, dek)
     return JSON.parse(json) as AssetPayload
+  } finally {
+    rawDek.fill(0)
+  }
+}
+
+/** A beneficiary's enrolled public key (base64 SPKI) to wrap a DEK to. */
+export type RecipientPublicKey = { beneficiaryId: string; publicKey: string }
+
+/** One wrapped-key row ready for `wrappedKeys.saveWrappedKeys`. */
+export type WrappedKeyEntry = {
+  beneficiaryId: string
+  wrappedKey: string
+  algorithm: string
+  keyFingerprint: string
+}
+
+/**
+ * Re-wrap an asset's DEK to one or more beneficiaries' public keys (the release
+ * envelope). Unwraps the DEK ONCE under the master key, then RSA-OAEP-wraps the
+ * same raw bytes to each recipient, recording the public-key fingerprint per wrap
+ * so a substituted key is detectable. The raw DEK is zeroed before returning.
+ * Pure — the caller persists the result via Convex.
+ */
+export async function wrapDekForRecipients(
+  wrapped: { ownerWrappedKey: string; ownerWrapIv: string },
+  masterKey: CryptoKey,
+  recipients: readonly RecipientPublicKey[],
+): Promise<WrappedKeyEntry[]> {
+  if (recipients.length === 0) return []
+  const rawDek = await unwrapKey(wrapped.ownerWrappedKey, wrapped.ownerWrapIv, masterKey)
+  try {
+    const out: WrappedKeyEntry[] = []
+    for (const r of recipients) {
+      const pub = await importPublicKey(r.publicKey)
+      out.push({
+        beneficiaryId: r.beneficiaryId,
+        wrappedKey: await wrapKeyForPublicKey(rawDek, pub),
+        algorithm: RSA_WRAP_ALGORITHM,
+        keyFingerprint: await publicKeyFingerprint(r.publicKey),
+      })
+    }
+    return out
   } finally {
     rawDek.fill(0)
   }

@@ -1,6 +1,10 @@
 import { useCallback, useRef, useState } from "react"
 import { Platform, View } from "react-native"
-import { Gesture, GestureDetector } from "react-native-gesture-handler"
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler"
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -78,7 +82,11 @@ export function CapSlider({
   }))
 
   return (
-    <View>
+    // A LOCAL gesture root: this slider lives inside a native TrueSheet, whose
+    // content is presented OUTSIDE the app's root GestureHandlerRootView — without
+    // a root here the Pan gesture never fires (the slider appears "dead"). An
+    // explicit style keeps it hugging content instead of defaulting to flex:1.
+    <GestureHandlerRootView style={{ width: "100%" }}>
       <GestureDetector gesture={pan}>
         <Animated.View
           onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
@@ -130,6 +138,6 @@ export function CapSlider({
         <Text className="font-heading text-[11px] text-gold-deep">{capLabel ?? t("wasiyyah.capLabel")}</Text>
         <Text className="font-heading text-[11px] text-ink-3">50%</Text>
       </View>
-    </View>
+    </GestureHandlerRootView>
   )
 }

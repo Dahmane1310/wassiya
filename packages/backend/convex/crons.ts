@@ -14,4 +14,14 @@ crons.interval(
   {}
 )
 
+// Expire elapsed trials / subscriptions (trialing|active|past_due past their
+// currentPeriodEnd → expired). Day-scale validity makes 6h plenty; the sweep is indexed
+// (by_status_and_currentPeriodEnd) and batched. Lifetime rows have no anchor and are skipped.
+crons.interval(
+  "sweep expired subscriptions",
+  { hours: 6 },
+  internal.entitlements.sweepEntitlements,
+  {}
+)
+
 export default crons

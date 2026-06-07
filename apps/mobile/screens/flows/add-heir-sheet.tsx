@@ -22,6 +22,7 @@ const RELS: { key: Relationship; icon: typeof User; lineage: boolean }[] = [
   { key: "sister", icon: Users, lineage: true },
 ]
 const LINEAGES: Lineage[] = ["full", "paternal", "maternal"]
+const emailOk = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim())
 const FIXED_GENDER: Partial<Record<Relationship, Gender>> = {
   father: "male",
   son: "male",
@@ -49,8 +50,10 @@ export function AddHeirSheet({
   const [rel, setRel] = useState<Relationship | null>(null)
   const [lineage, setLineage] = useState<Lineage>("full")
   const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const emailInvalid = email.trim() !== "" && !emailOk(email)
 
   const meta = RELS.find((r) => r.key === rel)
   const genderFor = (r: Relationship): Gender | null =>
@@ -62,16 +65,24 @@ export function AddHeirSheet({
     setRel(null)
     setLineage("full")
     setName("")
+    setEmail("")
     setError(null)
+    setBusy(false) // reset busy too, or a successful add leaves the button spinning
     onClose()
   }
 
   async function submit() {
-    if (!rel || !gender || !name.trim() || busy) return
+    if (!rel || !gender || !name.trim() || emailInvalid || busy) return
     setBusy(true)
     setError(null)
     try {
-      await add({ relationship: rel, lineage: meta?.lineage ? lineage : undefined, gender, name })
+      await add({
+        relationship: rel,
+        lineage: meta?.lineage ? lineage : undefined,
+        gender,
+        name,
+        contactEmail: email.trim() || undefined,
+      })
       close()
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -144,8 +155,29 @@ export function AddHeirSheet({
           </Field>
         </View>
 
+        <View className="mt-4">
+          <Field label={t("addHeir.email")}>
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder={t("addHeir.emailPlaceholder")}
+              placeholderTextColor={c.ink3}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              className="h-full flex-1 font-sans text-[15.5px] text-foreground"
+            />
+          </Field>
+          <Text className="mt-1.5 font-sans-medium text-[12px] leading-[1.4] text-ink-3">
+            {t("addHeir.emailHint")}
+          </Text>
+        </View>
+
         {spouseBlocked ? (
           <Text className="mt-3 font-sans-medium text-[12.5px] text-danger">{t("addHeir.spouseNeedsGender")}</Text>
+        ) : null}
+        {emailInvalid ? (
+          <Text className="mt-3 font-sans-medium text-[12.5px] text-danger">{t("addHeir.emailInvalid")}</Text>
         ) : null}
         {error ? <Text className="mt-3 font-sans-medium text-[12.5px] text-danger">{error}</Text> : null}
 
@@ -157,7 +189,7 @@ export function AddHeirSheet({
         <Button
           variant="gold"
           className="mt-5 h-[54px] rounded-2xl"
-          disabled={!rel || !name.trim() || !gender || spouseBlocked || busy}
+          disabled={!rel || !name.trim() || !gender || spouseBlocked || emailInvalid || busy}
           onPress={() => void submit()}
         >
           {busy ? <ActivityIndicator color="white" /> : <Text className="font-heading text-white">{t("addHeir.cta")}</Text>}

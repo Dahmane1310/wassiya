@@ -14,6 +14,8 @@ export type HeirDraft = {
   lineage?: Lineage
   gender: Gender
   name: string
+  /** Optional — when set, the heir is also enrolled as a (decrypting) beneficiary. */
+  contactEmail?: string
 }
 
 /** Family-tree CRUD wired to the in-memory master key. The heir's name is
@@ -28,12 +30,14 @@ export function useHeirs() {
   async function add(draft: HeirDraft): Promise<void> {
     if (!masterKey) throw new Error("Vault is locked")
     const name = await encryptHeirName(draft.name.trim(), masterKey)
+    const email = draft.contactEmail?.trim()
     await addMutation({
       relationship: draft.relationship,
       lineage: draft.lineage,
       gender: draft.gender,
       isAlive: true,
       name,
+      contactEmail: email ? email : undefined,
     })
   }
   async function setAlive(id: Id<"familyMembers">, isAlive: boolean): Promise<void> {

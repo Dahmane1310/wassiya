@@ -1,5 +1,4 @@
 import { Pressable, View } from "react-native"
-import { router } from "expo-router"
 import { ChevronLeft, ChevronRight, Lock, Paperclip } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import { Card } from "@workspace/ui-native/components/ui/card"
@@ -25,9 +24,11 @@ const DEBT_TINT = { bg: "bg-destructive/10", fg: "text-destructive" }
 export function AssetListItem({
   row,
   payload,
+  onPress,
 }: {
   row: AssetSummary
   payload: AssetPayload | null
+  onPress: () => void
 }) {
   const { t } = useTranslation()
   const { ar, body } = useBrandType()
@@ -59,9 +60,7 @@ export function AssetListItem({
 
   return (
     <Pressable
-      onPress={() =>
-        router.push({ pathname: "/vault/[id]", params: { id: row._id } })
-      }
+      onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={payload.label}
       className="active:opacity-70"

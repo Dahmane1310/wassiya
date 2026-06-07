@@ -23,6 +23,8 @@ export type SwitchView = {
   lastCheckInAt: number | null
   checkIn: () => Promise<void>
   arm: (intervalMs: number, graceMs: number) => Promise<void>
+  /** Edit cadence/grace from Settings without recording a check-in. */
+  updateConfig: (intervalMs: number, graceMs: number) => Promise<void>
 }
 
 /**
@@ -35,6 +37,7 @@ export function useSwitch(): SwitchView {
   const state = useQuery(api.switch.getSwitchState)
   const recordCheckIn = useMutation(api.switch.recordCheckIn)
   const armSwitch = useMutation(api.switch.armSwitch)
+  const updateSwitchConfig = useMutation(api.switch.updateSwitchConfig)
 
   const status: SwitchStatus =
     state === undefined ? "loading" : state === null ? "unarmed" : state.state
@@ -56,6 +59,12 @@ export function useSwitch(): SwitchView {
     },
     arm: async (intervalMs, graceMs) => {
       await armSwitch({ checkInIntervalMs: intervalMs, gracePeriodMs: graceMs })
+    },
+    updateConfig: async (intervalMs, graceMs) => {
+      await updateSwitchConfig({
+        checkInIntervalMs: intervalMs,
+        gracePeriodMs: graceMs,
+      })
     },
   }
 }

@@ -1,30 +1,37 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
+import { TRIAL_MS } from "./lib/entitlements"
 
-// Shape of the encrypted passphrase verifier — mirrors `EncryptedDataPackage`
-// from @workspace/crypto and the `encrypted` column validator in schema.ts.
+// Shape of an encrypted package — mirrors `EncryptedDataPackage` from
+// @workspace/crypto and the `encrypted` column validator in schema.ts.
 const encrypted = v.object({ ciphertext: v.string(), iv: v.string() })
 
-// ZERO-KNOWLEDGE: the master passphrase and the derived key NEVER reach the
-// server. We persist only the non-secret PBKDF2 salt and AES-GCM ciphertext
-// (the verifier). The server can never decrypt anything with its own data.
+// ZERO-KNOWLEDGE: the master key and the PIN NEVER reach the server. We persist only
+// the non-secret recovery salt, the RECOVERY-key-wrapped master key (high-entropy
+// code ⇒ offline brute force infeasible), and an AES-GCM verifier. The PIN wrap lives
+// only on the device. The server can never decrypt anything with its own data.
+
+const EMPTY = {
+  recoverySalt: null,
+  recoveryWrappedKey: null,
+  recoveryWrapIv: null,
+  vaultVerifier: null,
+  onboardingComplete: false,
+}
 
 /**
  * The current user's vault / onboarding state. Returns an all-empty shape when
- * unauthenticated OR when the `users` row doesn't exist yet (it's created lazily
- * by `completeVaultSetup`) — both cases mean "needs onboarding".
+ * unauthenticated OR when the `users` row doesn't exist yet (it's created lazily by
+ * `completeVaultSetup`) — both mean "needs onboarding". The recovery trio is consumed
+ * only by the recovery flow (new device / forgotten PIN); routing uses existence +
+ * `onboardingComplete`.
  */
 export const getVaultStatus = query({
   args: {},
   handler: async (ctx) => {
-    const empty = {
-      vaultSalt: null,
-      passphraseVerifier: null,
-      onboardingComplete: false,
-    }
     const identity = await ctx.auth.getUserIdentity()
     if (identity === null) {
-      return empty
+      return EMPTY
     }
     const user = await ctx.db
       .query("users")
@@ -33,32 +40,36 @@ export const getVaultStatus = query({
       )
       .unique()
     if (user === null) {
-      return empty
+      return EMPTY
     }
     return {
-      vaultSalt: user.vaultSalt,
-      passphraseVerifier: user.passphraseVerifier ?? null,
+      recoverySalt: user.recoverySalt,
+      recoveryWrappedKey: user.recoveryWrappedKey,
+      recoveryWrapIv: user.recoveryWrapIv,
+      vaultVerifier: user.vaultVerifier ?? null,
       onboardingComplete: user.onboardingComplete ?? false,
     }
   },
 })
 
 /**
- * Completes the Two-Step onboarding atomically: persists the write-once PBKDF2
- * salt, the encrypted passphrase verifier, and `onboardingComplete` in a single
- * transaction (so there is never an observable "salt without verifier" state).
+ * Completes onboarding atomically: persists the write-once recovery salt + the
+ * recovery-wrapped master key + the verifier in a single transaction (so there is
+ * never an observable half-set-up state).
  *
- * The salt is WRITE-ONCE — overwriting it would orphan every record encrypted
- * under the key derived from the old salt. If a vault already exists we return
- * its stored salt unchanged; the client compares it against the salt it just
- * generated and, on mismatch (a reinstall / second-device race), discards its
- * locally-derived key and routes to unlock instead of using a key that would
- * decrypt nothing.
+ * INVARIANT: the args carry ONLY the recovery wrap + verifier — never the PIN, the
+ * PIN salt, or the PIN wrap (those are device-local). The recovery wrap is WRITE-ONCE
+ * for the same reason the salt was: a second device that re-ran setup would generate a
+ * fresh master key and orphan everything wrapped under the first one. If a vault
+ * already exists we return the stored values unchanged; the client detects the
+ * mismatch (its locally-minted MK differs) and routes to recovery instead.
  */
 export const completeVaultSetup = mutation({
   args: {
-    vaultSalt: v.string(),
-    passphraseVerifier: encrypted,
+    recoverySalt: v.string(),
+    recoveryWrappedKey: v.string(),
+    recoveryWrapIv: v.string(),
+    vaultVerifier: encrypted,
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
@@ -72,26 +83,56 @@ export const completeVaultSetup = mutation({
       )
       .unique()
 
-    // Already initialized (completeVaultSetup writes all three fields atomically,
-    // so any existing row is fully set up). Never overwrite the write-once salt;
-    // return what's stored so the client can detect a salt mismatch.
+    // Already initialized (all fields are written atomically). Never overwrite the
+    // write-once recovery wrap; return what's stored so the client detects a mismatch.
     if (existing !== null) {
       return {
-        vaultSalt: existing.vaultSalt,
-        passphraseVerifier: existing.passphraseVerifier ?? null,
+        recoverySalt: existing.recoverySalt,
+        recoveryWrappedKey: existing.recoveryWrappedKey,
+        recoveryWrapIv: existing.recoveryWrapIv,
+        vaultVerifier: existing.vaultVerifier ?? null,
         onboardingComplete: existing.onboardingComplete ?? false,
       }
     }
 
     await ctx.db.insert("users", {
       tokenIdentifier: identity.tokenIdentifier,
-      vaultSalt: args.vaultSalt,
-      passphraseVerifier: args.passphraseVerifier,
+      recoverySalt: args.recoverySalt,
+      recoveryWrappedKey: args.recoveryWrappedKey,
+      recoveryWrapIv: args.recoveryWrapIv,
+      vaultVerifier: args.vaultVerifier,
       onboardingComplete: true,
     })
+
+    // Start the 14-day trial — but never clobber a pay-before-onboard grant.
+    const ent = await ctx.db
+      .query("entitlements")
+      .withIndex("by_ownerId", (q) =>
+        q.eq("ownerId", identity.tokenIdentifier)
+      )
+      .unique()
+    if (ent === null) {
+      const now = Date.now()
+      await ctx.db.insert("entitlements", {
+        ownerId: identity.tokenIdentifier,
+        plan: "trial",
+        status: "trialing",
+        source: "trial",
+        currentPeriodEnd: now + TRIAL_MS,
+      })
+      await ctx.db.insert("billingEvents", {
+        ownerId: identity.tokenIdentifier,
+        source: "trial",
+        type: "trial_started",
+        plan: "trial",
+      })
+    }
+
     return {
-      vaultSalt: args.vaultSalt,
-      passphraseVerifier: args.passphraseVerifier,
+      recoverySalt: args.recoverySalt,
+      recoveryWrappedKey: args.recoveryWrappedKey,
+      recoveryWrapIv: args.recoveryWrapIv,
+      vaultVerifier: args.vaultVerifier,
       onboardingComplete: true,
     }
   },

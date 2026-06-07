@@ -26,5 +26,11 @@ export async function newInvite(): Promise<{ token: string; tokenHash: string; e
   return { token, tokenHash, expiresAt: Date.now() + INVITE_TTL_MS }
 }
 
-/** The deep link the recipient opens to redeem (app scheme `wassiya`). */
-export const inviteLink = (token: string) => `wassiya://invite/${token}`
+// Beneficiaries enroll + redeem on the WEB release portal (not the mobile app), so
+// the shared link is an https URL, not the `wassiya://` scheme. Configurable per
+// environment; falls back to the production host.
+const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL ?? "https://wassiya.app"
+
+/** The link the owner shares; the recipient opens it in a browser to redeem. */
+export const inviteLink = (token: string) =>
+  `${WEB_URL}/invite/${encodeURIComponent(token)}`

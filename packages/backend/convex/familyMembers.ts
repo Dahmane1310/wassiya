@@ -1,5 +1,10 @@
 import { v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { mutation, query, type MutationCtx } from "./_generated/server"
+import { type Id } from "./_generated/dataModel"
+import {
+  beneficiaryHasAllocation,
+  cascadeDeleteBeneficiary,
+} from "./beneficiaries"
 
 // Mirrors the `encrypted` column validator in schema.ts — only the heir's NAME
 // (PII) is encrypted; structural fields (relationship/lineage/gender/isAlive) are
@@ -22,6 +27,39 @@ const relationship = v.union(
 )
 const lineage = v.union(v.literal("full"), v.literal("paternal"), v.literal("maternal"))
 const gender = v.union(v.literal("male"), v.literal("female"))
+
+/**
+ * Every heir is a beneficiary: ensure a beneficiary row exists for `email` and link
+ * the heir to it. Dedupes against an existing same-email beneficiary (e.g. a
+ * non-heir recipient already added). The heir's encrypted `name` doubles as the
+ * beneficiary's private `label` (identical AES-GCM/master-key envelope). Returns the
+ * linked beneficiary id.
+ */
+async function linkBeneficiary(
+  ctx: MutationCtx,
+  ownerId: string,
+  heirId: Id<"familyMembers">,
+  email: string,
+  label: { ciphertext: string; iv: string }
+): Promise<Id<"beneficiaries">> {
+  const normalized = email.trim().toLowerCase()
+  const existing = await ctx.db
+    .query("beneficiaries")
+    .withIndex("by_ownerId", (q) => q.eq("ownerId", ownerId))
+    .take(200)
+  const dupe = existing.find((b) => b.contactEmail === normalized)
+  const beneficiaryId =
+    dupe?._id ??
+    (await ctx.db.insert("beneficiaries", {
+      ownerId,
+      contactEmail: normalized,
+      status: "invited",
+      label,
+    }))
+  if (dupe) await ctx.db.patch(dupe._id, { label })
+  await ctx.db.patch(heirId, { linkedBeneficiaryId: beneficiaryId })
+  return beneficiaryId
+}
 
 /** The owner's family tree (structural fields + encrypted name), newest first.
  *  `ownerId` is omitted — the caller IS the owner. */
@@ -59,6 +97,8 @@ export const addFamilyMember = mutation({
     isAlive: v.boolean(),
     parentMemberId: v.optional(v.id("familyMembers")),
     name: encrypted,
+    // Optional: when present, the heir is also enrolled as a (decrypting) beneficiary.
+    contactEmail: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
@@ -72,7 +112,12 @@ export const addFamilyMember = mutation({
         throw new Error("Invalid parent member")
       }
     }
-    return await ctx.db.insert("familyMembers", { ownerId, ...args })
+    const { contactEmail, ...heir } = args
+    const heirId = await ctx.db.insert("familyMembers", { ownerId, ...heir })
+    if (contactEmail && contactEmail.trim()) {
+      await linkBeneficiary(ctx, ownerId, heirId, contactEmail, args.name)
+    }
+    return heirId
   },
 })
 
@@ -84,6 +129,8 @@ export const updateFamilyMember = mutation({
     gender: v.optional(gender),
     isAlive: v.optional(v.boolean()),
     name: v.optional(encrypted),
+    // Optional: add/replace the heir's email → create or update the linked beneficiary.
+    contactEmail: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
@@ -94,8 +141,20 @@ export const updateFamilyMember = mutation({
     if (row === null || row.ownerId !== identity.tokenIdentifier) {
       throw new Error("Not found")
     }
-    const { id, ...patch } = args
+    const { id, contactEmail, ...patch } = args
     await ctx.db.patch(id, patch)
+
+    // Keep the linked beneficiary in sync. The heir's (possibly new) name is the
+    // beneficiary's private label.
+    const label = args.name ?? row.name
+    if (row.linkedBeneficiaryId) {
+      const bPatch: { contactEmail?: string; label?: typeof label } = {}
+      if (contactEmail && contactEmail.trim()) bPatch.contactEmail = contactEmail.trim().toLowerCase()
+      if (args.name) bPatch.label = args.name
+      if (Object.keys(bPatch).length > 0) await ctx.db.patch(row.linkedBeneficiaryId, bPatch)
+    } else if (contactEmail && contactEmail.trim()) {
+      await linkBeneficiary(ctx, row.ownerId, id, contactEmail, label)
+    }
   },
 })
 
@@ -109,6 +168,14 @@ export const removeFamilyMember = mutation({
     const row = await ctx.db.get(args.id)
     if (row === null || row.ownerId !== identity.tokenIdentifier) {
       throw new Error("Not found")
+    }
+    // Removing the heir also removes their decryption access. Block (don't silently
+    // drop) if a Wasiyyah bequest still points at the linked beneficiary.
+    if (row.linkedBeneficiaryId) {
+      if (await beneficiaryHasAllocation(ctx, row.linkedBeneficiaryId)) {
+        throw new Error("HAS_WASIYYAH_ALLOCATION")
+      }
+      await cascadeDeleteBeneficiary(ctx, row.linkedBeneficiaryId)
     }
     // Detach any children so we never leave a dangling parentMemberId edge.
     const children = await ctx.db

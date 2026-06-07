@@ -5,8 +5,7 @@ import { Icon } from "@workspace/ui-native/components/ui/icon"
 import { Text } from "@workspace/ui-native/components/ui/text"
 import { LinearGradient } from "expo-linear-gradient"
 import { useThemeColors } from "@/lib/colors"
-import { pct } from "@/lib/mock-estate"
-import { formatCurrencyAmount } from "@/lib/estate-summary"
+import { formatCurrencyAmount, pct } from "@/lib/estate-summary"
 
 /** Hero gauge: the total bequest % (sum of allocations) vs the ⅓ cap, the estate
  *  split bar, the real AED amount, and a within/at-cap status line. Editing is

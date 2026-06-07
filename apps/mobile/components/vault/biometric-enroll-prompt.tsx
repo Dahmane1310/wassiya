@@ -10,15 +10,15 @@ import { useBrandType } from "@/hooks/use-brand-type"
 import { useVault } from "@/hooks/use-vault"
 
 /**
- * One-time offer to enable biometric unlock, shown right after a successful
- * passphrase entry (the only moment the plaintext passphrase is in hand). Reused
- * by the onboarding and unlock screens.
+ * One-time offer to enable biometric unlock, shown right after the master key is in
+ * hand (onboarding, unlock, or recovery). Stores the RAW master key behind the
+ * biometric gate so future unlocks skip the PIN. The caller zeroes `mkBytes` after.
  */
 export function BiometricEnrollPrompt({
-  passphrase,
+  mkBytes,
   onDone,
 }: {
-  passphrase: string
+  mkBytes: Uint8Array<ArrayBuffer>
   onDone: () => void
 }) {
   const { t } = useTranslation()
@@ -30,7 +30,7 @@ export function BiometricEnrollPrompt({
     if (busy) return
     setBusy(true)
     try {
-      await enableBiometric(passphrase)
+      await enableBiometric(mkBytes)
     } catch {
       // Enrolling can fail (cancelled prompt / unavailable) — don't block the
       // user; they can enable it later. Proceed to the vault either way.

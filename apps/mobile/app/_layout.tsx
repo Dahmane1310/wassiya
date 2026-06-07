@@ -6,17 +6,15 @@ import { Stack } from "expo-router"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { PortalHost } from "@rn-primitives/portal"
 import * as SplashScreen from "expo-splash-screen"
+import { PaywallSheet } from "@/components/paywall/paywall-sheet"
 import {
   useFonts,
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
+  Inter_700Bold,
   Inter_800ExtraBold,
 } from "@expo-google-fonts/inter"
-import {
-  Fraunces_600SemiBold,
-  Fraunces_700Bold,
-} from "@expo-google-fonts/fraunces"
 import {
   Tajawal_400Regular,
   Tajawal_500Medium,
@@ -46,9 +44,8 @@ export default function RootLayout() {
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
+    Inter_700Bold,
     Inter_800ExtraBold,
-    Fraunces_600SemiBold,
-    Fraunces_700Bold,
     Tajawal_400Regular,
     Tajawal_500Medium,
     Tajawal_700Bold,
@@ -99,12 +96,15 @@ export default function RootLayout() {
           <Stack.Screen name="callback" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="unlock" options={{ headerShown: false }} />
+          <Stack.Screen name="recovery" options={{ headerShown: false }} />
           <Stack.Screen name="contacts" options={{ headerShown: false }} />
           {/* Authenticated tab shell (Vault · Assets · Heirs · Wasiyyah · Profile). */}
           <Stack.Screen name="(vault)" options={{ headerShown: false }} />
         </Stack>
         {/* Overlay teleport target for dialog / dropdown-menu / popover / select. */}
         <PortalHost />
+        {/* Single app-wide paywall — opened imperatively via usePaywallStore. */}
+        <PaywallSheet />
       </ConvexProviderWithAuth>
     </GestureHandlerRootView>
   )

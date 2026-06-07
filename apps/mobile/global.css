@@ -18,10 +18,10 @@
   --font-sans-semibold: Inter_600SemiBold;
   --font-heading: Inter_600SemiBold;
   --font-heading-bold: Inter_800ExtraBold;
-  /* Distinctive serif display for the brand name + hero headline (heirloom
-     gravitas). Body/UI stays Inter. Each RN weight is its own family. */
-  --font-display: Fraunces_600SemiBold;
-  --font-display-bold: Fraunces_700Bold;
+  /* English display for the brand name + hero headlines — Inter (bold weights),
+     matching the rest of the Latin UI. Each RN weight is its own family. */
+  --font-display: Inter_700Bold;
+  --font-display-bold: Inter_800ExtraBold;
   /* Arabic faces (Tajawal) — Fraunces/Inter have no Arabic glyphs. Used when the
      active language is Arabic; see hooks/use-brand-type.ts. */
   --font-display-ar: Tajawal_500Medium;

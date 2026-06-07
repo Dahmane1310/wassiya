@@ -277,3 +277,183 @@ export async function unwrapKey(
 ): Promise<Uint8Array<ArrayBuffer>> {
   return decryptBytes(wrappedKey, iv, wrappingKey)
 }
+
+// --- Asymmetric DEK wrapping (re-share a record to a beneficiary) ------------
+//
+// To make a record releasable to a beneficiary after death, the OWNER re-wraps
+// that record's raw DEK bytes under the beneficiary's PUBLIC key. The beneficiary
+// later unwraps with the private half they hold (release / onboarding slices).
+//
+// RSA-OAEP-256 directly encrypts the 32-byte DEK — no hybrid/ephemeral key, and
+// (unlike AES-GCM) RSA-OAEP is randomized internally, so there is NO IV and no
+// IV-reuse hazard. RSA-2048 OAEP-SHA256 fits ~190 plaintext bytes; 32 is ample.
+// The public key travels as base64 SPKI; verify QuickCrypto supports RSA-OAEP
+// importKey("spki")/encrypt on-device before relying on this.
+
+/** Canonical wrap-algorithm tag stored alongside each wrapped key (schema
+ *  `wrappedKeys.algorithm`) so the scheme can evolve without ambiguity. */
+export const RSA_WRAP_ALGORITHM = "RSA-OAEP-256"
+
+/** RSA modulus for generated recipient keypairs (onboarding/release slices). */
+export const RSA_MODULUS_BITS = 2048
+
+const RSA_OAEP_PARAMS = { name: "RSA-OAEP", hash: PBKDF2_HASH } as const
+
+/** Import a beneficiary's base64 SPKI public key for RSA-OAEP encryption. */
+export async function importPublicKey(spkiBase64: string): Promise<CryptoKey> {
+  return getCrypto().subtle.importKey(
+    "spki",
+    base64ToBytes(spkiBase64),
+    RSA_OAEP_PARAMS,
+    false,
+    ["encrypt"],
+  )
+}
+
+/**
+ * Wrap raw DEK bytes to a beneficiary's public key (RSA-OAEP). Returns base64
+ * ciphertext only — RSA-OAEP carries its own randomness, so there is no IV.
+ * Zero `rawDek` at the call site afterwards.
+ */
+export async function wrapKeyForPublicKey(
+  rawDek: Uint8Array<ArrayBuffer>,
+  publicKey: CryptoKey,
+): Promise<string> {
+  const cipher = await getCrypto().subtle.encrypt(RSA_OAEP_PARAMS, publicKey, rawDek)
+  return bytesToBase64(new Uint8Array(cipher))
+}
+
+/**
+ * Stable fingerprint of a base64 SPKI public key (base64 SHA-256). Stored with
+ * each wrapped key so a substituted key is detectable, and shown for out-of-band
+ * verification ("does this fingerprint match what your beneficiary read to you?").
+ */
+export async function publicKeyFingerprint(spkiBase64: string): Promise<string> {
+  const digest = await getCrypto().subtle.digest(
+    "SHA-256",
+    base64ToBytes(spkiBase64),
+  )
+  return bytesToBase64(new Uint8Array(digest))
+}
+
+// --- Recipient (beneficiary) keypair + recovery escrow ----------------------
+//
+// A beneficiary enrolls an RSA-OAEP keypair. The owner wraps asset DEKs to the
+// PUBLIC half (above); the beneficiary unwraps with the PRIVATE half at release.
+// The private key must survive for YEARS until release, so it is NOT kept only on
+// a device — it is wrapped under a high-entropy Recovery Code (like the owner's
+// master key) and escrowed server-side. The server holds public key + recovery-
+// wrapped private key + DEKs-wrapped-to-public-key and can brute-force none of it.
+
+/** Generate an extractable RSA-OAEP keypair. Returns the public key as base64
+ *  SPKI and the private key as raw PKCS#8 bytes (extractable so it can be recovery-
+ *  wrapped). Zero the returned `privateKey` once wrapped. */
+export async function generateRecipientKeyPair(): Promise<{
+  publicKey: string
+  privateKey: Uint8Array<ArrayBuffer>
+}> {
+  const { subtle } = getCrypto()
+  const pair = await subtle.generateKey(
+    {
+      name: "RSA-OAEP",
+      modulusLength: RSA_MODULUS_BITS,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: PBKDF2_HASH,
+    },
+    true,
+    ["encrypt", "decrypt"],
+  )
+  const spki = new Uint8Array(await subtle.exportKey("spki", pair.publicKey))
+  const pkcs8 = new Uint8Array(await subtle.exportKey("pkcs8", pair.privateKey))
+  return { publicKey: bytesToBase64(spki), privateKey: pkcs8 }
+}
+
+/** The server-stored beneficiary keypair envelope (zero-knowledge): public key +
+ *  its fingerprint + the recovery-wrapped private key. */
+export interface RecipientEnrollment {
+  publicKey: string // base64 SPKI — the owner wraps DEKs to this
+  keyFingerprint: string // base64 SHA-256(spki) — out-of-band verification
+  recoverySalt: string // PBKDF2 salt for the recovery-code-derived key
+  wrappedPrivateKey: string // PKCS#8 private key, AES-GCM-wrapped under that key
+  wrappedPrivateKeyIv: string
+}
+
+/**
+ * Enroll a beneficiary: mint a keypair, mint a Recovery Code, and wrap the private
+ * key under a key derived from that code. Returns the server-storable envelope plus
+ * the Recovery Code, which is shown to the beneficiary ONCE and never persisted in
+ * plaintext — losing it means an undecryptable share, so the UI must stress saving
+ * it (mirror of the owner's vault recovery flow). The raw private key is zeroed.
+ */
+export async function enrollRecipient(): Promise<{
+  enrollment: RecipientEnrollment
+  recoveryCode: string
+}> {
+  const { publicKey, privateKey } = await generateRecipientKeyPair()
+  try {
+    const recoveryCode = generateRecoveryCode()
+    const recoverySalt = generateSalt()
+    const recKey = await deriveKeyFromPassword(
+      normalizeRecoveryCode(recoveryCode),
+      recoverySalt,
+    )
+    const { wrappedKey, iv } = await wrapKey(privateKey, recKey)
+    return {
+      enrollment: {
+        publicKey,
+        keyFingerprint: await publicKeyFingerprint(publicKey),
+        recoverySalt,
+        wrappedPrivateKey: wrappedKey,
+        wrappedPrivateKeyIv: iv,
+      },
+      recoveryCode,
+    }
+  } finally {
+    privateKey.fill(0)
+  }
+}
+
+// Crockford base32 (no I/L/O/U — avoids transcription ambiguity). Recovery Codes
+// are rendered in this alphabet and normalised back through it before derivation.
+// Shared by the owner vault (mobile) and beneficiary enrollment (web).
+const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+
+function base32(bytes: Uint8Array): string {
+  let bits = 0
+  let value = 0
+  let out = ""
+  for (const byte of bytes) {
+    value = (value << 8) | byte
+    bits += 8
+    while (bits >= 5) {
+      out += CROCKFORD[(value >>> (bits - 5)) & 31]
+      bits -= 5
+    }
+  }
+  if (bits > 0) out += CROCKFORD[(value << (5 - bits)) & 31]
+  return out
+}
+
+/**
+ * Generate a high-entropy Recovery Code (160 bits) as five dash-separated groups,
+ * e.g. `4K7Q8-MN2VP-...`. Entropy comes from the CSPRNG; grouping/case is just
+ * presentation — `normalizeRecoveryCode` strips it before key derivation.
+ */
+export function generateRecoveryCode(): string {
+  const raw = generateDataKeyBytes().slice(0, 20) // 160 bits → 32 symbols
+  const sym = base32(raw)
+  return (sym.match(/.{1,5}/g) ?? [sym]).join("-")
+}
+
+/**
+ * Canonicalise a Recovery Code for PBKDF2 — applied IDENTICALLY on generation and
+ * re-entry, or the derived key won't match. Upper-cases, drops separators, and
+ * folds common confusables (O→0, I/L→1) into the canonical alphabet.
+ */
+export function normalizeRecoveryCode(code: string): string {
+  return code
+    .toUpperCase()
+    .replace(/[^0-9A-Z]/g, "")
+    .replace(/O/g, "0")
+    .replace(/[IL]/g, "1")
+}

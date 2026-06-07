@@ -1,7 +1,7 @@
-import { View } from "react-native"
+import { ActivityIndicator, View } from "react-native"
 import * as DocumentPicker from "expo-document-picker"
 import * as ImagePicker from "expo-image-picker"
-import { FileText, ImagePlus, Paperclip, Trash2 } from "lucide-react-native"
+import { Eye, FileText, ImagePlus, Paperclip, Trash2 } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import { Button } from "@workspace/ui-native/components/ui/button"
 import { Icon } from "@workspace/ui-native/components/ui/icon"
@@ -9,24 +9,32 @@ import { Text } from "@workspace/ui-native/components/ui/text"
 import { cn } from "@workspace/ui-native/lib/utils"
 import { useBrandType } from "@/hooks/use-brand-type"
 import { type Attachment } from "@/hooks/use-assets"
+import { withoutAutoLock } from "@/lib/auto-lock"
 
 /** Pick / preview / remove ONE attachment (document or photo). The file's bytes
  *  are read + encrypted only at save time (in the hook), never here. */
 export function FileAttachment({
   value,
   onChange,
+  onOpen,
+  opening = false,
 }: {
   value: Attachment
   onChange: (attachment: Attachment) => void
+  /** Open/preview the saved attachment (edit mode only — decrypts on demand). */
+  onOpen?: () => void
+  opening?: boolean
 }) {
   const { t } = useTranslation()
   const { ar, body } = useBrandType()
   const textFont = ar ? body : undefined
 
   async function pickDocument() {
-    const res = await DocumentPicker.getDocumentAsync({
-      copyToCacheDirectory: true,
-    })
+    // Suppress auto-lock: the picker backgrounds the app (a separate Activity on
+    // Android), which would otherwise lock the vault and force a PIN re-entry.
+    const res = await withoutAutoLock(() =>
+      DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true })
+    )
     if (res.canceled) return
     const a = res.assets[0]
     if (!a) return
@@ -42,13 +50,16 @@ export function FileAttachment({
   }
 
   async function pickPhoto() {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync()
-    if (!perm.granted) return
-    const res = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 1,
+    // Suppress auto-lock across the permission dialog + picker (both background us).
+    const res = await withoutAutoLock(async () => {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync()
+      if (!perm.granted) return null
+      return ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 1,
+      })
     })
-    if (res.canceled) return
+    if (!res || res.canceled) return
     const a = res.assets[0]
     if (!a) return
     onChange({
@@ -95,6 +106,21 @@ export function FileAttachment({
       >
         {name}
       </Text>
+      {value.kind === "existing" && onOpen ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          onPress={onOpen}
+          disabled={opening}
+          accessibilityLabel={t("asset.detail.openFile")}
+        >
+          {opening ? (
+            <ActivityIndicator />
+          ) : (
+            <Icon as={Eye} className="text-primary" size={18} />
+          )}
+        </Button>
+      ) : null}
       <Button
         variant="ghost"
         size="icon"

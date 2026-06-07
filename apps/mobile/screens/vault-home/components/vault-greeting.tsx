@@ -12,12 +12,13 @@ export function VaultGreeting({
   name,
   onBell,
 }: {
-  name: string
+  name?: string
   onBell: () => void
 }) {
   const { t } = useTranslation()
   const { display, tracking } = useBrandType()
   const isDark = useColorScheme() === "dark"
+  const greeting = name ? t("vaultHome.greeting", { name }) : t("vaultHome.greetingNoName")
 
   return (
     <View className="flex-row items-center justify-between">
@@ -26,7 +27,7 @@ export function VaultGreeting({
           {t("vaultHome.greetingKicker")}
         </Text>
         <Text className={cn("mt-0.5 text-[26px] text-foreground", display, tracking)}>
-          {t("vaultHome.greeting", { name })}
+          {greeting}
         </Text>
       </View>
       <View className="flex-row gap-2.5">

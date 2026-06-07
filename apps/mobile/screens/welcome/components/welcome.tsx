@@ -11,7 +11,6 @@ import { BrandMark } from "@/components/brand/brand-mark"
 import { GoldRule } from "@/components/brand/gold-rule"
 import { LanguageSwitcher } from "@/components/brand/language-switcher"
 import { ThemeSwitcher } from "@/components/brand/theme-switcher"
-import { VaultGlow } from "@/components/brand/vault-glow"
 import { ScreenContainer } from "@/components/layout/screen-container"
 import { useBrandType } from "@/hooks/use-brand-type"
 import { useAuthStore } from "@/stores/auth"
@@ -38,7 +37,7 @@ export function Welcome() {
   }
 
   return (
-    <ScreenContainer scroll background={<VaultGlow />}>
+    <ScreenContainer scroll>
       {/* Centered minimal, elevated: a serif/Tajawal hero over an atmospheric teal
           glow with a staggered entrance. Top-right switchers (mirror to the start
           corner under RTL); brand + promise centered; CTA at bottom. */}

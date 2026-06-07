@@ -94,6 +94,13 @@ function trimOne(n: number): string {
   return (Math.round(n * 10) / 10).toString()
 }
 
+/** Format a 0–1 fraction as a percent — whole when exact (33%), else one
+ *  decimal (12.5%). Used across the Fara'id / Wasiyyah share displays. */
+export function pct(x: number): string {
+  const p = x * 100
+  return (p % 1 === 0 ? p.toFixed(0) : p.toFixed(1)) + "%"
+}
+
 /** Prefix a non-negative magnitude with its currency code (omitted when blank).
  *  Callers pass an absolute value and own the sign so debts read as "−AED …". */
 export function formatCurrencyAmount(

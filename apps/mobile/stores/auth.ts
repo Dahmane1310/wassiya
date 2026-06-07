@@ -5,8 +5,6 @@ import {
   signInWithWorkOS,
   type WorkOSTokens,
 } from "@/lib/auth"
-import { clearBiometricPassphrase } from "@/lib/biometric"
-import { usePreferences } from "@/stores/preferences"
 import { useVaultStore } from "@/stores/vault"
 
 const ACCESS_KEY = "workos.accessToken"
@@ -70,12 +68,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     await persistTokens(null)
     set({ accessToken: null, refreshToken: null, isAuthenticated: false })
-    // Clear the in-memory master key + the biometric secret/flag whenever the
-    // session ends — the stored passphrase is per-account and must not leak to a
-    // different user signing in on the same device.
+    // Only drop the in-memory master key. The device PIN wrap + biometric key are
+    // NAMESPACED BY ACCOUNT (lib/pin-store, lib/biometric), so a different user
+    // signing in here can't reach this account's secrets, while this account keeps
+    // its PIN/biometric across an ordinary sign-out → sign-in (no recovery-key cliff).
     useVaultStore.getState().lock()
-    usePreferences.getState().setBiometricEnabled(false)
-    void clearBiometricPassphrase()
   },
 
   fetchAccessToken: async ({ forceRefreshToken } = {}) => {
@@ -122,4 +119,30 @@ function isExpired(jwt: string): boolean {
   } catch {
     return true
   }
+}
+
+// The JWT `sub` claim — a stable per-user id used to NAMESPACE this account's
+// device-local vault secrets (PIN wrap + biometric key). It need not equal the
+// server's `tokenIdentifier`; it only has to be stable and unique per account.
+function decodeSub(jwt: string): string | null {
+  try {
+    const payload = jwt.split(".")[1]
+    if (!payload) return null
+    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"))
+    const sub = JSON.parse(json).sub as string | undefined
+    return typeof sub === "string" && sub.length > 0 ? sub : null
+  } catch {
+    return null
+  }
+}
+
+/** The signed-in account id (JWT sub), or null. Imperative read for hooks/lib. */
+export function currentAccountId(): string | null {
+  const token = useAuthStore.getState().accessToken
+  return token ? decodeSub(token) : null
+}
+
+/** Reactive account id for components (re-renders if the token changes). */
+export function useAccountId(): string | null {
+  return useAuthStore((s) => (s.accessToken ? decodeSub(s.accessToken) : null))
 }

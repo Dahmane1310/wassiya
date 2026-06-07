@@ -8,7 +8,7 @@ import { Text } from "@workspace/ui-native/components/ui/text"
 import { cn } from "@workspace/ui-native/lib/utils"
 import { Sheet } from "@/components/ui/sheet"
 import { SheetHeader } from "@/components/ui/sheet-header"
-import { pct } from "@/lib/mock-estate"
+import { pct } from "@/lib/estate-summary"
 import type { AllocBeneficiary } from "@/screens/wasiyyah/hooks/use-wasiyyah"
 import { CapSlider } from "@/screens/wasiyyah/components/cap-slider"
 

@@ -7,6 +7,7 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server"
+import { assertEntitled } from "./lib/entitlements"
 
 // The dead-man's-switch state machine. ZERO crypto here — just timestamps + a
 // server-evaluated state. Release (pendingVerification → released) is intentionally
@@ -42,6 +43,17 @@ async function logStateChange(
     event: "switch_state_changed",
     targetTable: "switchState",
     meta: { from: from ?? "none", to },
+  })
+}
+
+/** Record a heartbeat in the audit feed. The `checkIns` table is the operational
+ *  record; this is the human-readable activity entry the owner sees on home. */
+async function logCheckIn(ctx: MutationCtx, ownerId: string) {
+  await ctx.db.insert("auditLog", {
+    ownerId,
+    actor: ownerId,
+    event: "check_in",
+    targetTable: "switchState",
   })
 }
 
@@ -106,6 +118,10 @@ export const armSwitch = mutation({
         await logStateChange(ctx, ownerId, ownerId, existing.state, "active")
       }
     } else {
+      // Entitlement is required ONLY to CREATE a switch (first arm). NEVER gate the
+      // patch branch above or any maintenance/check-in path — a lapsed trial must never
+      // stall a living owner's switch (that would auto-release their estate).
+      await assertEntitled(ctx, ownerId)
       await ctx.db.insert("switchState", {
         ownerId,
         checkInIntervalMs: args.checkInIntervalMs,
@@ -119,6 +135,59 @@ export const armSwitch = mutation({
       await logStateChange(ctx, ownerId, ownerId, null, "active")
     }
     await ctx.db.insert("checkIns", { ownerId, source: "manual" })
+  },
+})
+
+/**
+ * Edit the cadence / grace period from Settings WITHOUT counting as a check-in.
+ * Unlike `armSwitch`, this never bumps the streak or inserts a `checkIns` row — it
+ * only re-times the next deadline so a config change doesn't masquerade as a
+ * heartbeat. On an "active" row the deadline rebases on the last real check-in
+ * (`lastCheckInAt + interval`); in "grace" it rebases on `graceStartedAt + grace`.
+ * Lazily arms (insert "active") for owners who never explicitly armed.
+ */
+export const updateSwitchConfig = mutation({
+  args: { checkInIntervalMs: v.number(), gracePeriodMs: v.number() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (identity === null) {
+      throw new Error("Not authenticated")
+    }
+    const ownerId = identity.tokenIdentifier
+    const now = Date.now()
+    const existing = await loadSwitch(ctx, ownerId)
+
+    if (existing === null) {
+      // Lazy first-arm — gate it like armSwitch's create branch. The patch path below
+      // (an existing switch) is NEVER gated, so a lapsed trial can't stall a live owner.
+      await assertEntitled(ctx, ownerId)
+      await ctx.db.insert("switchState", {
+        ownerId,
+        checkInIntervalMs: args.checkInIntervalMs,
+        gracePeriodMs: args.gracePeriodMs,
+        state: "active",
+        lastCheckInAt: now,
+        nextDeadlineAt: now + args.checkInIntervalMs,
+        requireDeathVerification: true,
+        checkInStreak: 1,
+      })
+      await ctx.db.insert("checkIns", { ownerId, source: "manual" })
+      await logStateChange(ctx, ownerId, ownerId, null, "active")
+      return
+    }
+
+    // Rebase the next transition on the new config, preserving the current state.
+    const nextDeadlineAt =
+      existing.state === "active"
+        ? existing.lastCheckInAt + args.checkInIntervalMs
+        : existing.state === "grace"
+          ? (existing.graceStartedAt ?? now) + args.gracePeriodMs
+          : existing.nextDeadlineAt
+    await ctx.db.patch(existing._id, {
+      checkInIntervalMs: args.checkInIntervalMs,
+      gracePeriodMs: args.gracePeriodMs,
+      nextDeadlineAt,
+    })
   },
 })
 
@@ -139,6 +208,10 @@ export const recordCheckIn = mutation({
     const existing = await loadSwitch(ctx, ownerId)
 
     if (existing === null) {
+      // Lazy first-arm only — gated. Reaching here means there is NO switch yet, so the
+      // gate can never stall an existing armed switch. The patch path below (a real
+      // heartbeat on an existing switch) is NEVER gated.
+      await assertEntitled(ctx, ownerId)
       await ctx.db.insert("switchState", {
         ownerId,
         checkInIntervalMs: DEFAULT_INTERVAL_MS,
@@ -167,6 +240,7 @@ export const recordCheckIn = mutation({
       checkInStreak: recovered ? 1 : (existing.checkInStreak ?? 0) + 1,
     })
     await ctx.db.insert("checkIns", { ownerId, source: "manual" })
+    await logCheckIn(ctx, ownerId)
     if (recovered) {
       await logStateChange(ctx, ownerId, ownerId, existing.state, "active")
     }

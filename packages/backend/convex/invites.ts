@@ -1,19 +1,18 @@
 import { v } from "convex/values"
 import { mutation } from "./_generated/server"
 
-// Single-use enrollment tokens for beneficiary / executor account linking. Only a
-// HASH of the token is ever stored — the raw token is generated on the OWNER's
-// device, shared out-of-band, and never reaches the server (schema `invites`).
+// Single-use enrollment tokens for beneficiary account linking. Only a HASH of the
+// token is ever stored — the raw token is generated on the OWNER's device, shared
+// out-of-band, and never reaches the server (schema `invites`). Executors were
+// removed, so every invite is for a beneficiary.
 
 /**
- * Issue an invite for one of the owner's beneficiaries/executors. The client
- * generated the random token + its sha256; we store only the hash.
+ * Issue an invite for one of the owner's beneficiaries. The client generated the
+ * random token + its sha256; we store only the hash.
  */
 export const issueInvite = mutation({
   args: {
-    kind: v.union(v.literal("beneficiary"), v.literal("executor")),
-    beneficiaryId: v.optional(v.id("beneficiaries")),
-    executorId: v.optional(v.id("executors")),
+    beneficiaryId: v.id("beneficiaries"),
     tokenHash: v.string(),
     expiresAt: v.number(),
   },
@@ -24,42 +23,32 @@ export const issueInvite = mutation({
     }
     const ownerId = identity.tokenIdentifier
 
-    // Ownership-check the target, and capture its id for the audit log.
-    let targetId: string
-    if (args.kind === "beneficiary") {
-      if (!args.beneficiaryId) throw new Error("beneficiaryId required")
-      const b = await ctx.db.get(args.beneficiaryId)
-      if (b === null || b.ownerId !== ownerId) throw new Error("Not found")
-      targetId = args.beneficiaryId
-    } else {
-      if (!args.executorId) throw new Error("executorId required")
-      const e = await ctx.db.get(args.executorId)
-      if (e === null || e.ownerId !== ownerId) throw new Error("Not found")
-      targetId = args.executorId
+    const beneficiary = await ctx.db.get(args.beneficiaryId)
+    if (beneficiary === null || beneficiary.ownerId !== ownerId) {
+      throw new Error("Not found")
     }
 
     await ctx.db.insert("invites", {
       ownerId,
-      kind: args.kind,
+      kind: "beneficiary",
       beneficiaryId: args.beneficiaryId,
-      executorId: args.executorId,
       tokenHash: args.tokenHash,
       expiresAt: args.expiresAt,
     })
     await ctx.db.insert("auditLog", {
       ownerId,
       actor: ownerId,
-      event: args.kind === "beneficiary" ? "beneficiary_invited" : "executor_invited",
-      targetTable: args.kind === "beneficiary" ? "beneficiaries" : "executors",
-      targetId,
+      event: "beneficiary_invited",
+      targetTable: "beneficiaries",
+      targetId: args.beneficiaryId,
     })
   },
 })
 
 /**
- * Redeem an invite: the recipient's signed-in account is linked to the
- * beneficiary/executor. (Keypair ENROLLMENT — uploading a public key — is a
- * separate, later step; this only links the account + consumes the token.)
+ * Redeem an invite: the recipient's signed-in account is linked to the beneficiary.
+ * (Keypair ENROLLMENT — uploading a public key — is a separate, later step; this
+ * only links the account + consumes the token.)
  */
 export const redeemInvite = mutation({
   args: { tokenHash: v.string() },
@@ -76,20 +65,27 @@ export const redeemInvite = mutation({
     if (invite.consumedAt != null) throw new Error("This invite has already been used")
     if (invite.expiresAt < Date.now()) throw new Error("This invite has expired")
 
-    // Link the account only. `status: "enrolled"` is reserved for when they upload
-    // a public key (keypair enrollment — a later slice), so it stays "invited" here.
-    if (invite.kind === "beneficiary" && invite.beneficiaryId) {
-      await ctx.db.patch(invite.beneficiaryId, { linkedUserId: identity.tokenIdentifier })
-    } else if (invite.kind === "executor" && invite.executorId) {
-      await ctx.db.patch(invite.executorId, { linkedUserId: identity.tokenIdentifier })
+    if (invite.beneficiaryId) {
+      // If this user already enrolled a release keypair (named by another owner),
+      // the newly-linked beneficiary is immediately releasable → mark it enrolled
+      // so the owner's reconciliation wraps to the existing key. Otherwise it stays
+      // "invited" until the user enrolls.
+      const recipientKey = await ctx.db
+        .query("recipientKeys")
+        .withIndex("by_userId", (q) => q.eq("userId", identity.tokenIdentifier))
+        .unique()
+      await ctx.db.patch(invite.beneficiaryId, {
+        linkedUserId: identity.tokenIdentifier,
+        ...(recipientKey !== null ? { status: "enrolled" as const } : {}),
+      })
     }
     await ctx.db.patch(invite._id, { consumedAt: Date.now() })
     await ctx.db.insert("auditLog", {
       ownerId: invite.ownerId,
       actor: identity.tokenIdentifier,
-      event: invite.kind === "beneficiary" ? "beneficiary_enrolled" : "executor_invited",
-      targetTable: invite.kind === "beneficiary" ? "beneficiaries" : "executors",
-      targetId: (invite.beneficiaryId ?? invite.executorId) as string,
+      event: "beneficiary_enrolled",
+      targetTable: "beneficiaries",
+      targetId: invite.beneficiaryId as string,
     })
     return { kind: invite.kind }
   },

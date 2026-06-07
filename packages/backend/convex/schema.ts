@@ -13,22 +13,91 @@ export default defineSchema({
   users: defineTable({
     // From `ctx.auth.getUserIdentity().tokenIdentifier` — the canonical stable id.
     tokenIdentifier: v.string(),
-    // Base64 PBKDF2 salt for client-side key derivation. NOT secret — the master
-    // passphrase and derived key never reach the server (zero-knowledge).
-    vaultSalt: v.string(),
-    // Optional sentinel encrypted with the master key, used purely for a clean
-    // "wrong passphrase" UX signal on unlock. No weaker than the encrypted assets
-    // themselves (both are offline-attackable given the salt) — PBKDF2 iterations
-    // and a strong passphrase are the real protection. Omit to rely instead on the
-    // AES-GCM auth tag failing on the first real decrypt.
-    passphraseVerifier: v.optional(encrypted),
-    // "Two-Step" SSO vault-passphrase onboarding complete. SSO authenticates the
-    // account; it NEVER unlocks the vault — the local passphrase does.
+    // PIN + Recovery-Key model (zero-knowledge): a random master key (MK) is wrapped
+    // three ways. The PIN wrap lives ONLY on the device; only the RECOVERY wrap is
+    // stored here — the recovery code is high-entropy, so even with the salt + wrapped
+    // key the server cannot brute-force MK. The PIN/PIN-salt NEVER reach the server.
+    //
+    // Base64 PBKDF2 salt for the recovery-key derivation. NOT secret.
+    recoverySalt: v.string(),
+    // The master key, AES-GCM-wrapped under the recovery-key-derived key (+ its IV).
+    // This is the only server-side path back to MK (new device / forgotten PIN).
+    recoveryWrappedKey: v.string(),
+    recoveryWrapIv: v.string(),
+    // Optional sentinel encrypted with the master key — a clean integrity cross-check
+    // on recovery. No weaker than the encrypted assets; the AES-GCM auth tag on the
+    // recovery unwrap is the real proof of a correct recovery key.
+    vaultVerifier: v.optional(encrypted),
+    // "Two-Step" SSO vault onboarding complete. SSO authenticates the account; it
+    // NEVER unlocks the vault — the local PIN (or the Recovery Key) does.
     onboardingComplete: v.optional(v.boolean()),
     // The OWNER's (deceased's) gender — needed by the Fara'id engine (the spouse's
     // share depends on whether the deceased is husband or wife). Non-secret structural data.
     ownerGender: v.optional(v.union(v.literal("male"), v.literal("female"))),
   }).index("by_tokenIdentifier", ["tokenIdentifier"]),
+
+  // Per-owner subscription/entitlement state. SOURCE-AGNOSTIC: a row can come from
+  // the 14-day trial (started at vault setup), Stripe, native IAP, or a manual grant.
+  // Kept OFF the `users` table on purpose — `users` can't exist before vault setup
+  // (its recovery fields are non-optional), but a user may pay BEFORE onboarding, so
+  // entitlement must be able to exist independently. Default = no row = synthesized
+  // trial (see lib/entitlements.ts). The reactive read returns the raw
+  // `currentPeriodEnd`; the cron keeps `status` fresh (never read wall-clock in a query).
+  entitlements: defineTable({
+    ownerId: v.string(), // tokenIdentifier
+    plan: v.union(
+      v.literal("trial"),
+      v.literal("annual"),
+      v.literal("lifetime"),
+    ),
+    status: v.union(
+      v.literal("trialing"),
+      v.literal("active"),
+      v.literal("past_due"),
+      v.literal("canceled"),
+      v.literal("expired"),
+    ),
+    source: v.union(
+      v.literal("trial"),
+      v.literal("stripe"),
+      v.literal("apple"),
+      v.literal("google"),
+      v.literal("manual"),
+    ),
+    externalCustomerId: v.optional(v.string()), // Stripe customer / RevenueCat app-user id
+    externalSubscriptionId: v.optional(v.string()),
+    // The single "access ends at" anchor: trial end while `trialing`, period end while
+    // `annual`. UNDEFINED for `lifetime` — which is why the expiry sweep never touches it.
+    currentPeriodEnd: v.optional(v.number()),
+    cancelAtPeriodEnd: v.optional(v.boolean()),
+  })
+    .index("by_ownerId", ["ownerId"])
+    // Cron expiry sweep: rows of a given status whose period has elapsed.
+    .index("by_status_and_currentPeriodEnd", ["status", "currentPeriodEnd"])
+    // Future webhook: resolve owner from a processor's customer id.
+    .index("by_externalCustomerId", ["externalCustomerId"]),
+
+  // Append-only billing ledger + idempotency seam. Kept separate from `auditLog` so that
+  // table's event union stays focused on vault actions. `externalEventId` dedupes
+  // processor webhooks (e.g. a Stripe event id) so a redelivery is a no-op.
+  billingEvents: defineTable({
+    ownerId: v.optional(v.string()), // may be unknown for some raw processor events
+    source: v.union(
+      v.literal("trial"),
+      v.literal("stripe"),
+      v.literal("apple"),
+      v.literal("google"),
+      v.literal("manual"),
+    ),
+    externalEventId: v.optional(v.string()), // idempotency key
+    type: v.string(), // trial_started | granted | renewed | expired | canceled | refunded | manual_grant
+    plan: v.optional(
+      v.union(v.literal("trial"), v.literal("annual"), v.literal("lifetime")),
+    ),
+    meta: v.optional(v.record(v.string(), v.string())), // non-secret context only
+  })
+    .index("by_externalEventId", ["externalEventId"]) // dedup
+    .index("by_ownerId", ["ownerId"]),
 
   // The dead-man's-switch state machine, one row per owner. Stable config plus
   // current state; release is evaluated server-side only, never client-claimed.
@@ -50,7 +119,6 @@ export default defineSchema({
     releaseAuthorizedAt: v.optional(v.number()),
     // Layered-release config (see deathAttestations / deathVerification below).
     requireDeathVerification: v.optional(v.boolean()), // release also needs an approved cert
-    attestationThreshold: v.optional(v.number()), // N-of-M attestations to advance/shorten grace
     longstopMs: v.optional(v.number()), // backstop auto-release if verification never comes
     pendingVerificationStartedAt: v.optional(v.number()),
     // Consecutive on-time check-ins; bumped on check-in, reset to 0 when the cron
@@ -87,8 +155,12 @@ export default defineSchema({
   wrappedKeys: defineTable({
     assetId: v.id("assets"),
     beneficiaryId: v.id("beneficiaries"),
-    wrappedKey: v.string(), // DEK encrypted to beneficiary.publicKey
+    wrappedKey: v.string(), // DEK encrypted to beneficiary.publicKey (RSA-OAEP, no IV)
     algorithm: v.string(), // e.g. "RSA-OAEP-256" / "ECIES-X25519"
+    // SHA-256 of the public key (spki) this DEK was wrapped under. Binds the wrap
+    // to a specific key so a later server-side key substitution is DETECTABLE
+    // (compare against the fingerprint the owner verified out-of-band). ZK guard.
+    keyFingerprint: v.string(),
   })
     .index("by_assetId", ["assetId"])
     .index("by_beneficiaryId", ["beneficiaryId"]) // release: "all keys wrapped to me"
@@ -102,7 +174,6 @@ export default defineSchema({
   beneficiaries: defineTable({
     ownerId: v.string(),
     contactEmail: v.string(), // plaintext — invite + release notification
-    publicKey: v.optional(v.string()), // base64, set when they enroll a keypair
     status: v.union(v.literal("invited"), v.literal("enrolled")),
     linkedUserId: v.optional(v.string()), // their own tokenIdentifier once they sign up
     label: v.optional(encrypted), // owner's private note/name for them
@@ -110,6 +181,21 @@ export default defineSchema({
     .index("by_ownerId", ["ownerId"])
     .index("by_linkedUserId", ["linkedUserId"]) // a beneficiary finds vaults naming them
     .index("by_contactEmail", ["contactEmail"]), // invite/enrollment lookup
+
+  // A beneficiary-user's release keypair — ONE per person (`userId` = their WorkOS
+  // tokenIdentifier), NOT per beneficiary row, because one person can be named by
+  // several owners and must use the same key for all. The owner wraps DEKs to
+  // `publicKey`; the private half is recovery-wrapped (zero-knowledge — the server
+  // can't recover it without the beneficiary's Recovery Code) for survival across
+  // devices over the years until release.
+  recipientKeys: defineTable({
+    userId: v.string(), // beneficiary's tokenIdentifier
+    publicKey: v.string(), // base64 SPKI (RSA-OAEP)
+    keyFingerprint: v.string(), // base64 SHA-256(spki) — out-of-band verification
+    recoverySalt: v.string(),
+    wrappedPrivateKey: v.string(), // PKCS#8, AES-GCM-wrapped under the recovery key
+    wrappedPrivateKeyIv: v.string(),
+  }).index("by_userId", ["userId"]),
 
   // The family-tree graph. Structural fields are plaintext because the Fara'id
   // engine must read them (CLAUDE.md §4); identifying PII (name) is encrypted.
@@ -182,37 +268,6 @@ export default defineSchema({
     note: v.optional(v.string()),
   }).index("by_tokenIdentifier", ["tokenIdentifier"]),
 
-  // Distinct estate-administration role. May attest death + coordinate release; need not
-  // receive any inheritance. Contact email plaintext (coordination/notification).
-  executors: defineTable({
-    ownerId: v.string(),
-    contactEmail: v.string(),
-    linkedUserId: v.optional(v.string()), // their own tokenIdentifier once enrolled
-    scope: v.union(
-      v.literal("full"),
-      v.literal("debts_only"),
-      v.literal("attest_only"),
-      v.literal("coordinate"),
-    ),
-    label: v.optional(encrypted), // owner's private note/name for them
-  })
-    .index("by_ownerId", ["ownerId"])
-    .index("by_linkedUserId", ["linkedUserId"])
-    .index("by_contactEmail", ["contactEmail"]),
-
-  // N-of-M attestations from the owner's designated executors (the "trusted contacts").
-  // Restricted to executors so eligibility derives from executors.scope ("full"/"attest_only");
-  // the mutation enforces that + dedup per executor. NOTE: `note` is PLAINTEXT — an attestation
-  // is authored post-mortem, when the owner's vault master key is by definition gone, so it can
-  // NEVER use the `encrypted` (vault-key) envelope. Same reasoning for deathVerification.reviewNotes.
-  deathAttestations: defineTable({
-    ownerId: v.string(),
-    executorId: v.id("executors"),
-    attesterEmail: v.string(), // denormalized for audit/notify
-    revokedAt: v.optional(v.number()), // attestations can be withdrawn before release
-    note: v.optional(v.string()), // plaintext — no vault key exists post-mortem
-  }).index("by_ownerId", ["ownerId"]),
-
   // The admin-reviewed certificate gate. ONE active row per owner (mutation-enforced).
   // `certificateStorageId` is the SCOPED ZERO-KNOWLEDGE EXCEPTION: legal evidence the admin
   // must read, envelope-encrypted to an ops/admin key — never the owner's vault key. The vault
@@ -256,6 +311,7 @@ export default defineSchema({
       v.literal("attestation_revoked"),
       v.literal("death_cert_submitted"),
       v.literal("death_cert_reviewed"),
+      v.literal("check_in"),
       v.literal("switch_state_changed"),
       v.literal("release_authorized"),
     ),
@@ -291,18 +347,16 @@ export default defineSchema({
     .index("by_status", ["status"]) // drain the queue
     .index("by_ownerId", ["ownerId"]),
 
-  // Single-use enrollment tokens for beneficiary AND executor keypair/account setup. Only a
-  // HASH of the token is stored; the raw token is emailed once and never persisted.
+  // Single-use enrollment tokens for beneficiary keypair/account setup. Only a HASH
+  // of the token is stored; the raw token is emailed once and never persisted.
   invites: defineTable({
     ownerId: v.string(),
-    kind: v.union(v.literal("beneficiary"), v.literal("executor")),
+    kind: v.literal("beneficiary"),
     beneficiaryId: v.optional(v.id("beneficiaries")),
-    executorId: v.optional(v.id("executors")),
     tokenHash: v.string(),
     expiresAt: v.number(),
     consumedAt: v.optional(v.number()),
   })
     .index("by_tokenHash", ["tokenHash"]) // redemption lookup
-    .index("by_beneficiaryId", ["beneficiaryId"])
-    .index("by_executorId", ["executorId"]),
+    .index("by_beneficiaryId", ["beneficiaryId"]),
 })

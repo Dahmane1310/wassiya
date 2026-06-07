@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 type BrandType = {
   /** True when the active language is Arabic (RTL). */
   ar: boolean
-  /** Display family for hero headlines (Fraunces / Tajawal). */
+  /** Display family for hero headlines (Inter bold / Tajawal). */
   display: string
   /** Heavy display family for the wordmark. */
   displayBold: string
@@ -15,8 +15,8 @@ type BrandType = {
 }
 
 /**
- * Resolves the right type families for the active language. Fraunces + Inter for
- * English; Tajawal for Arabic (Fraunces/Inter have no Arabic glyphs).
+ * Resolves the right type families for the active language. Inter (UI + display)
+ * for English; Tajawal for Arabic (Inter has no Arabic glyphs).
  */
 export function useBrandType(): BrandType {
   const { i18n } = useTranslation()

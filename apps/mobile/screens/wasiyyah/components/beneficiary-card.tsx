@@ -5,7 +5,7 @@ import { Icon } from "@workspace/ui-native/components/ui/icon"
 import { Text } from "@workspace/ui-native/components/ui/text"
 import { useBrandType } from "@/hooks/use-brand-type"
 import { useThemeColors } from "@/lib/colors"
-import { pct } from "@/lib/mock-estate"
+import { pct } from "@/lib/estate-summary"
 
 const CAP_PCT = 100 / 3
 

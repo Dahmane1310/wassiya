@@ -6,32 +6,34 @@ import { Text } from "@workspace/ui-native/components/ui/text"
 import { cn } from "@workspace/ui-native/lib/utils"
 import { Pill } from "@/components/ui/pill"
 import { SectionLabel } from "@/components/ui/section-label"
+import { useVaultSetup } from "@/screens/vault-home/hooks/use-vault-setup"
 
-type Item = { done: boolean; label: string }
-
-const ITEMS: Item[] = [
-  { done: true, label: "Vault passphrase created" },
-  { done: true, label: "Beneficiaries linked" },
-  { done: false, label: "Add power of attorney document" },
-  { done: false, label: "Verify mother’s national ID" },
-]
-
-/** "Finish your vault" nudge list — completed items struck through, rest actionable. */
+/** "Finish your vault" nudge list — real setup steps (from `useVaultSetup`) with
+ *  completed items struck through and the remainder actionable. */
 export function SetupChecklist() {
   const { t } = useTranslation()
-  const remaining = ITEMS.filter((i) => !i.done).length
+  const { items, doneCount, total } = useVaultSetup()
+  const remaining = total - doneCount
+  const allDone = remaining === 0
+
   return (
     <View>
-      <SectionLabel right={<Pill tone="gold">{t("vaultHome.left", { count: remaining })}</Pill>}>
+      <SectionLabel
+        right={
+          <Pill tone={allDone ? "green" : "gold"}>
+            {allDone ? t("vaultHome.allSet") : t("vaultHome.left", { count: remaining })}
+          </Pill>
+        }
+      >
         {t("vaultHome.finishVault")}
       </SectionLabel>
       <View className="rounded-2xl border border-border bg-card px-1.5 py-0.5 shadow-sm shadow-black/5">
-        {ITEMS.map((it, i) => (
+        {items.map((it, i) => (
           <View
-            key={it.label}
+            key={it.key}
             className={cn(
               "flex-row items-center gap-3 px-3 py-3",
-              i < ITEMS.length - 1 && "border-b border-line-2"
+              i < items.length - 1 && "border-b border-line-2"
             )}
           >
             <View
@@ -52,7 +54,7 @@ export function SetupChecklist() {
                 it.done ? "text-ink-3 line-through" : "text-foreground"
               )}
             >
-              {it.label}
+              {t(`vaultHome.setup.${it.key}`)}
             </Text>
             {!it.done ? <Icon as={ChevronRight} size={17} className="text-ink-3" /> : null}
           </View>

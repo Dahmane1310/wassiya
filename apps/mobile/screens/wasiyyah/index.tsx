@@ -51,7 +51,7 @@ export function WasiyyahScreen() {
   if (loading || allocations === null || beneficiaries === null) {
     return (
       <ScreenContainer scroll edges={["top"]}>
-        <View className="flex-1 gap-5 pb-28 pt-1">
+        <View className="flex-1 gap-5 pb-6 pt-1">
           {header}
           <View className="items-center py-16">
             <ActivityIndicator />
@@ -64,7 +64,7 @@ export function WasiyyahScreen() {
   if (beneficiaries.length === 0) {
     return (
       <ScreenContainer scroll edges={["top"]}>
-        <View className="flex-1 gap-5 pb-28 pt-1">
+        <View className="flex-1 gap-5 pb-6 pt-1">
           {header}
           <View className="items-center gap-3 rounded-2xl border border-border bg-card px-5 py-10">
             <View className="h-14 w-14 items-center justify-center rounded-full bg-gold-soft">
@@ -101,7 +101,7 @@ export function WasiyyahScreen() {
 
   return (
     <ScreenContainer scroll edges={["top"]}>
-      <View className="flex-1 gap-5 pb-28 pt-1">
+      <View className="flex-1 gap-5 pb-6 pt-1">
         {header}
 
         <BequestHero total={total} cap={CAP} netAmount={netAmount} currency={currency} />

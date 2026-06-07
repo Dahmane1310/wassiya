@@ -12,6 +12,8 @@ import { ASSET_CATEGORIES, categoryIcon } from "@/lib/asset-categories"
 import { pickDetails } from "@/lib/asset-fields"
 import { type AssetCategory, type AssetKind } from "@/lib/asset-crypto"
 import { useAssets, type Attachment, type AssetDraft } from "@/hooks/use-assets"
+import { isTrialExpired } from "@/lib/entitlement-error"
+import { usePaywallStore } from "@/stores/paywall"
 import { CategoryFields, Field } from "@/screens/asset/components/category-fields"
 import { FileAttachment } from "@/screens/asset/components/file-attachment"
 import { KindToggle } from "@/screens/asset/components/kind-toggle"
@@ -38,6 +40,7 @@ export function AddAssetFlow({ onDone }: { onDone: () => void }) {
   const { t } = useTranslation()
   const c = useThemeColors()
   const { create } = useAssets()
+  const showPaywall = usePaywallStore((s) => s.show)
 
   const [step, setStep] = useState<"category" | "form">("category")
   const [kind, setKind] = useState<AssetKind>("asset")
@@ -72,6 +75,13 @@ export function AddAssetFlow({ onDone }: { onDone: () => void }) {
       await Promise.all([create(draft, attachment), new Promise((r) => setTimeout(r, 1700))])
       onDone()
     } catch (err) {
+      if (isTrialExpired(err)) {
+        onDone() // close this sheet first…
+        // …then present the paywall on the next frame: a native present() that races
+        // the add-sheet dismiss can silently no-op on iOS. (Verify on device.)
+        setTimeout(() => showPaywall(), 400)
+        return
+      }
       setError(err instanceof Error ? err.message : t("asset.error.save"))
       setBusy(false)
     }
