@@ -22,7 +22,7 @@
   "home": {
     "welcomeBack": "Welcome back",
     "vaultSecured": "Your vault is secured",
-    "vaultSecuredHint": "Everything you store stays end-to-end encrypted on this device.",
+    "vaultSecuredHint": "Everything you store stays private on this device — only you can open it.",
     "assets": "Assets",
     "people": "People",
     "checkIn": "Check-in",
@@ -44,14 +44,14 @@
     "graceTitle": "Grace period started",
     "graceCountdown": "Release in {{days}} days unless you check in",
     "graceNoteUrgent": "Check in now to re-arm your vault and stop the countdown.",
-    "graceNote": "If you miss a check-in, a {{days}}-day grace period begins before release is authorized.",
+    "graceNote": "If you miss a check-in, a {{days}}-day grace period begins before your legacy is released.",
     "netEstate": "Net estate",
     "unlockToView": "Unlock to view",
     "estateBreakdown": "{{assets}} assets − {{debts}} debts",
     "ready": "READY",
     "statAssets": "Assets",
     "statHeirs": "Heirs",
-    "statEncrypted": "Encrypted",
+    "statEncrypted": "Private",
     "finishVault": "Finish your vault",
     "left": "{{count}} left",
     "allSet": "All set",
@@ -73,7 +73,7 @@
     "wasiyyah": "− Wasiyyah (bequest, ≤⅓)",
     "pool": "= Fara’id pool to heirs",
     "heirsReceive": "Heirs receive",
-    "releaseNote": "Released only after a missed check-in + grace period. Authorized server-side.",
+    "releaseNote": "Released only after a missed check-in and grace period — and only with confirmation. Never before.",
     "unlockToPreview": "Unlock your vault to preview how your estate will be distributed.",
     "noValues": "Add estimated values to your assets to preview the distribution.",
     "noHeirs": "Add your heirs to see their legal shares.",
@@ -108,13 +108,13 @@
   },
   "vault": {
     "emptyTitle": "No assets yet",
-    "emptyBody": "Add documents, accounts, and instructions — all encrypted on this device before they ever leave it.",
-    "unlockSubhead": "Enter your vault passphrase to open your encrypted assets."
+    "emptyBody": "Add documents, accounts, and instructions — all kept private on this device before they ever leave it.",
+    "unlockSubhead": "Enter your PIN to open your private vault."
   },
   "asset": {
     "list": {
       "title": "Assets",
-      "subtitle": "{{count}} items · everything encrypted on-device",
+      "subtitle": "{{count}} items · all kept private on this device",
       "add": "Add"
     },
     "section": {
@@ -125,19 +125,19 @@
       "netEstate": "Net estate",
       "afterDebts": "after {{amount}} in debts",
       "noValues": "Add estimated values to see your net estate.",
-      "zeroKnowledge": "Zero-knowledge",
+      "zeroKnowledge": "Private to you",
       "assets": "assets",
       "debts": "debts"
     },
     "form": {
       "createTitle": "Add asset",
-      "createSub": "Encrypted on your device before it ever leaves.",
+      "createSub": "Kept private on your device before it ever leaves.",
       "chooseCategory": "Choose a category",
       "change": "Change",
-      "privateDetails": "Private details (encrypted)",
+      "privateDetails": "Private details",
       "privatePlaceholder": "Deed №, account, seed phrase…",
-      "lockNote": "Sensitive details never reach our servers in plaintext.",
-      "encryptSave": "Encrypt & save",
+      "lockNote": "Sensitive details never leave your device readable — only you can open them.",
+      "encryptSave": "Save privately",
       "editTitle": "Edit asset",
       "kindAsset": "Asset",
       "kindDebt": "Debt",
@@ -197,7 +197,7 @@
       "remove": "Remove"
     },
     "error": {
-      "load": "Couldn't decrypt this asset.",
+      "load": "Couldn't open this asset.",
       "save": "Couldn't save. Please try again."
     }
   },
@@ -227,6 +227,7 @@
     "save": "Save",
     "removeAllocation": "Remove allocation",
     "noAllocations": "No bequests yet — tap + to allocate a share to a beneficiary.",
+    "allAllocated": "Every beneficiary already has a bequest. Add more on the Contacts screen.",
     "needBeneficiariesTitle": "Add beneficiaries first",
     "needBeneficiariesBody": "Wasiyyah is allocated to your beneficiaries. Add them, then return to set each one’s share.",
     "addBeneficiaries": "Add beneficiaries",
@@ -238,8 +239,11 @@
     "title": "Heirs",
     "subtitle": "Fara’id — legal shares, computed automatically",
     "add": "Add heir",
+    "accessTitle": "Beneficiary access",
+    "accessHint": "Heirs with an email can be invited to set up their access. Add an email when creating an heir to invite them.",
+    "invite": "Invite",
     "familyTree": "Family tree",
-    "tapHint": "tap to mark living / deceased",
+    "tapHint": "tap a relative to edit or invite",
     "you": "You",
     "owner": "owner",
     "whatIf": "“What-if” scenario — shares recalculated for living relatives only.",
@@ -347,7 +351,7 @@
     "title": "Profile",
     "you": "You",
     "plan": "Lifetime · Founder",
-    "zeroKnowledge": "Zero-knowledge",
+    "zeroKnowledge": "Private to you",
     "switchTitle": "Dead-man’s switch",
     "cadence": "Check-in cadence",
     "cadenceValue": "Every 30 days",
@@ -361,13 +365,13 @@
     "executors": "Executors & trusted contacts",
     "add": "Add",
     "security": "Security",
-    "passphrase": "Vault passphrase",
-    "strong": "Strong",
+    "passphrase": "Vault PIN",
+    "strong": "Set",
     "biometric": "Biometric unlock",
     "biometricOff": "Turn off biometric unlock",
     "biometricHint": "Enable it next time you unlock.",
     "biometricUnavailable": "Not available on this device",
-    "encryption": "Encryption",
+    "encryption": "How your privacy works",
     "lockNow": "Lock vault now",
     "locked": "Vault is locked",
     "appearance": "Appearance",
@@ -383,7 +387,7 @@
     "genderSubtitle": "Required to compute the spouse’s Fara’id share.",
     "genderNotSet": "Not set",
     "release": "Release & recipients",
-    "contacts": "Bequest recipients",
+    "contacts": "Contacts",
     "general": "General",
     "lifetime": "Lifetime",
     "legal": "Legal & Sharia review",
@@ -391,7 +395,7 @@
     "replayOnboarding": "Replay onboarding",
     "help": "Help & support",
     "signOut": "Sign out",
-    "footer": "Wassiya · وصية · Encrypted on-device",
+    "footer": "Wassiya · وصية · Private to you",
     "changePin": "Change PIN",
     "changePinCurrent": "Enter your current PIN",
     "changePinNew": "Choose a new PIN",
@@ -426,14 +430,14 @@
     "execB": "2 weeks ago"
   },
   "encrypt": {
-    "title": "Encrypting on device…",
-    "body": "AES-256-GCM · random IV · master key in memory",
-    "doneTitle": "Encrypted & stored",
-    "doneBody": "Only your devices can ever decrypt this."
+    "title": "Locking it on your device…",
+    "body": "Locked on your device · only you can open it",
+    "doneTitle": "Saved & private",
+    "doneBody": "Only your devices can ever open this."
   },
   "contacts": {
-    "title": "Bequest recipients",
-    "subtitle": "Non-heir people who receive a bequest and can decrypt your vault",
+    "title": "Contacts",
+    "subtitle": "Non-heirs you leave a bequest to",
     "beneficiaries": "Recipients",
     "executors": "Executors",
     "add": "Add",
@@ -442,7 +446,7 @@
     "cantRemoveBeneficiary": "Remove this person’s bequest in Wasiyyah before removing them.",
     "addBeneficiary": "Add beneficiary",
     "addExecutor": "Add executor",
-    "beneficiarySub": "They can decrypt your vault after release.",
+    "beneficiarySub": "They can open what you leave them after release.",
     "executorSub": "They confirm your passing and coordinate release.",
     "email": "Email",
     "emailPlaceholder": "name@example.com",
@@ -456,34 +460,54 @@
     "save": "Save",
     "invited": "Invited",
     "joined": "Joined",
+    "emptyTitle": "No recipients yet",
+    "emptyBody": "Add someone who isn’t a legal heir — like a charity or a close friend — to leave them a bequest. Heirs are added on the Heirs tab.",
+    "access": "Access",
+    "invitePrompt": "They’ll get a link to set up access — they can only open what you leave them after release.",
+    "joinedNote": "They’ve joined and are ready.",
+    "sendInvite": "Send invitation",
     "inviteMessage": "I’ve added you ({{who}}) to my Wassiya estate vault. Accept your invite here: {{link}}",
     "removeTitle": "Remove this contact?",
     "removeBody": "{{who}} will no longer be part of your release. This can’t be undone.",
     "cancel": "Cancel",
     "remove": "Remove",
-    "disclaimer": "Recipients accept by signing up; they can only ever decrypt your vault after release is authorized — never before."
+    "disclaimer": "Recipients accept by signing up; they can only ever open what you leave them after release — never before."
   },
   "addHeir": {
     "title": "Add heir",
     "subtitle": "Shares are derived from the relationship",
+    "chooseRelationship": "Choose a relationship",
     "relationship": "Relationship",
     "lineage": "Lineage",
     "fullName": "Full name",
     "namePlaceholder": "e.g. Hana",
     "email": "Email (optional)",
     "emailPlaceholder": "name@example.com",
-    "emailHint": "Add an email to invite them to decrypt your vault after release. Every heir is a beneficiary.",
+    "emailHint": "Add an email to invite them to receive what you leave them after release. Every heir is a beneficiary.",
     "emailInvalid": "Enter a valid email address.",
     "note": "Their Fara’id fraction recalculates automatically across all heirs.",
     "spouseNeedsGender": "Set your own gender (Profile) before adding a spouse.",
     "cta": "Add heir"
+  },
+  "editHeir": {
+    "title": "Manage heir",
+    "emailHint": "Adding an email lets you invite them to receive what you leave them.",
+    "status": "Status",
+    "living": "Living",
+    "deceased": "Deceased",
+    "access": "Beneficiary access",
+    "addEmailToInvite": "Add an email and save to invite them to receive what you leave them.",
+    "save": "Save changes",
+    "remove": "Remove heir",
+    "removeTitle": "Remove this heir?",
+    "removeBody": "{{who}} will be removed from your family tree and the shares recalculated. This can’t be undone."
   },
   "auth": {
     "signInFailed": "Sign-in failed"
   },
   "onboarding": {
     "headline": "Create your vault PIN",
-    "security": "Your sign-in proves who you are. Your 6-digit PIN unlocks your encrypted vault on this device. You'll also get a one-time Recovery Key — the only way back in if you forget your PIN or change devices.",
+    "security": "Your sign-in proves who you are. Your 6-digit PIN opens your vault on this device. You'll also get a one-time Recovery Key — the only way back in if you forget your PIN or change devices.",
     "passphraseLabel": "Vault passphrase",
     "passphrasePlaceholder": "At least 12 characters",
     "confirmLabel": "Confirm passphrase",
@@ -517,7 +541,7 @@
   },
   "armed": {
     "title": "Your vault is armed",
-    "body": "Encrypted, listening, and ready. Add your first asset and check in to keep it active.",
+    "body": "Private, listening, and ready. Add your first asset and check in to keep it active.",
     "cta": "Enter my vault"
   },
   "unlock": {
@@ -535,7 +559,7 @@
   },
   "biometric": {
     "enrollTitle": "Unlock faster next time",
-    "enrollBody": "Use your device biometrics to open your vault with a touch — your key stays on this device, protected by your biometrics.",
+    "enrollBody": "Use Face ID or your fingerprint to open your vault with a touch — it stays on this device.",
     "enable": "Enable biometric unlock",
     "notNow": "Not now",
     "use": "Use biometrics",
@@ -561,5 +585,18 @@
     "warning": "If you lose both your PIN and this key, your vault can never be opened.",
     "saved": "I've saved my Recovery Key somewhere safe.",
     "continue": "Continue"
+  },
+  "privacy": {
+    "title": "How your privacy works",
+    "intro": "Your vault is private to you — and to no one else.",
+    "row": "How your privacy works",
+    "p1Title": "Locked on your device",
+    "p1Body": "Everything is locked privately on your device before it’s ever saved.",
+    "p2Title": "We can’t read it",
+    "p2Body": "We only ever keep the locked version. No one at Wassiya can see what’s inside.",
+    "p3Title": "Only you can open it",
+    "p3Body": "Only your PIN, your Recovery Key, or your face / fingerprint can open it.",
+    "tech": "For the technically curious: everything is sealed with strong on-device encryption (AES-256). Your key stays in memory only while the vault is open, and our servers only ever hold the locked version.",
+    "gotIt": "Got it"
   }
 }

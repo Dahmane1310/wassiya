@@ -1,0 +1,58 @@
+---
+import AppBadge from "./AppBadge.astro"
+import Icon from "./Icon.astro"
+import Pearl from "./Pearl.astro"
+import Section from "./Section.astro"
+import type { Dict } from "../i18n/types"
+
+interface Props {
+  t: Dict
+}
+const { t } = Astro.props
+---
+
+<Section>
+  <div class="reveal">
+    <div
+      class="relative overflow-hidden rounded-[var(--radius)] px-7 py-14 text-center text-white shadow-2xl md:px-16"
+      style="background:linear-gradient(150deg, var(--espresso), var(--espresso-2))"
+    >
+      <div
+        class="absolute -top-16 -end-10 h-[280px] w-[280px] rounded-full opacity-50"
+        style="background:radial-gradient(circle, color-mix(in oklch, var(--gold) 38%, transparent), transparent 70%)"
+      >
+      </div>
+      <div
+        class="absolute -bottom-20 -start-12 h-[260px] w-[260px] rounded-full opacity-35"
+        style="background:radial-gradient(circle, color-mix(in oklch, var(--green) 40%, transparent), transparent 70%)"
+      >
+      </div>
+      <div class="relative">
+        <div class="mb-6 flex justify-center"><Pearl size={64} /></div>
+        <h2
+          class="mx-auto max-w-[680px] font-semibold tracking-tight"
+          style="font-size:clamp(30px,4.6vw,50px);line-height:1.08"
+        >
+          {t.cta.title}
+        </h2>
+        <p
+          class="mx-auto mt-4 max-w-[480px] font-medium"
+          style="font-size:clamp(16px,1.4vw,18px);line-height:1.6;color:rgba(255,255,255,0.66)"
+        >
+          {t.cta.sub}
+        </p>
+        <div class="mt-8 flex flex-wrap justify-center gap-3">
+          <AppBadge kind="apple" app={t.app} big />
+          <AppBadge kind="play" app={t.app} big />
+        </div>
+        <div
+          class="mt-5.5 flex items-center justify-center gap-2"
+          style="color:rgba(255,255,255,0.55)"
+        >
+          <Icon name="shieldCheck" size={16} class="text-green" />
+          <span class="text-[13.5px] font-semibold">{t.cta.trust}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</Section>

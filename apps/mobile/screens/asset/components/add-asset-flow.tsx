@@ -8,6 +8,7 @@ import { Text } from "@workspace/ui-native/components/ui/text"
 import { EncryptAnim } from "@/components/ui/encrypt-anim"
 import { IconBadge } from "@/components/ui/icon-badge"
 import { useThemeColors, type ThemeColors } from "@/lib/colors"
+import { inputFontClass } from "@/lib/fonts"
 import { ASSET_CATEGORIES, categoryIcon } from "@/lib/asset-categories"
 import { pickDetails } from "@/lib/asset-fields"
 import { type AssetCategory, type AssetKind } from "@/lib/asset-crypto"
@@ -149,7 +150,7 @@ export function AddAssetFlow({ onDone }: { onDone: () => void }) {
           placeholder={t(`asset.namePlaceholder.${category}`)}
           placeholderTextColor={c.ink3}
           autoCapitalize="sentences"
-          className="h-full flex-1 font-sans text-[15.5px] text-foreground"
+          className={`h-full flex-1 ${inputFontClass} text-[15.5px] text-foreground`}
         />
       </Field>
 
@@ -185,7 +186,7 @@ export function AddAssetFlow({ onDone }: { onDone: () => void }) {
           placeholderTextColor={c.ink3}
           multiline
           textAlignVertical="top"
-          className="h-full flex-1 py-3 font-sans text-[15px] text-foreground"
+          className={`h-full flex-1 py-3 ${inputFontClass} text-[15px] text-foreground`}
         />
       </Field>
 

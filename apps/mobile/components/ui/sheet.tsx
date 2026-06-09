@@ -37,7 +37,10 @@ export function Sheet({
   const insets = useSafeAreaInsets()
   const { height } = useWindowDimensions()
   const c = useThemeColors()
-  const padBottom = Math.max(insets.bottom, 16)
+  // Top breathing room below the native grabber; bottom = just the safe-area inset
+  // (each sheet's content supplies its own visual padding, so don't double it up).
+  const padTop = 8
+  const padBottom = Math.max(insets.bottom, 6)
 
   useEffect(() => {
     if (open) void ref.current?.present().catch(() => {})
@@ -59,12 +62,12 @@ export function Sheet({
       {scroll ? (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: padBottom }}
+          contentContainerStyle={{ paddingTop: padTop, paddingBottom: padBottom }}
         >
           {children}
         </ScrollView>
       ) : (
-        <View style={{ paddingBottom: padBottom }}>{children}</View>
+        <View style={{ paddingTop: padTop, paddingBottom: padBottom }}>{children}</View>
       )}
     </TrueSheet>
   )

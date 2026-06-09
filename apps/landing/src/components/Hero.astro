@@ -1,26 +1,99 @@
 ---
+import AppBadge from "./AppBadge.astro"
+import Heartbeat from "./Heartbeat.astro"
+import Icon from "./Icon.astro"
+import ImagePlaceholder from "./ImagePlaceholder.astro"
+import Pearl from "./Pearl.astro"
 import { Badge } from "@workspace/ui/components/badge"
-import { buttonVariants } from "@workspace/ui/components/button"
+import type { Dict } from "../i18n/types"
+
+interface Props {
+  t: Dict
+}
+const { t } = Astro.props
 ---
 
-<section class="mx-auto flex max-w-3xl flex-col items-center gap-6 px-6 py-24 text-center sm:py-32">
-  <Badge variant="secondary">Open-source template</Badge>
-  <h1 class="text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
-    Ship full-stack apps on Convex, fast.
-  </h1>
-  <p class="text-muted-foreground max-w-2xl text-lg text-pretty">
-    A batteries-included monorepo: a Convex backend, WorkOS authentication, and
-    shared UI across a Next.js web app and an Expo mobile app.
-  </p>
-  <div class="flex flex-wrap items-center justify-center gap-3">
-    <a class={buttonVariants({ size: "lg" })} href="https://docs.convex.dev">
-      Get started
-    </a>
-    <a
-      class={buttonVariants({ variant: "outline", size: "lg" })}
-      href="https://github.com"
-    >
-      View on GitHub
-    </a>
+<section id="top" class="relative overflow-hidden px-6 pt-32 pb-16">
+  <div
+    class="pointer-events-none absolute inset-0 z-0 opacity-80"
+    style="background:radial-gradient(1100px 700px at 78% 0%, var(--hero-grad-1), transparent 60%), radial-gradient(900px 600px at 0% 100%, var(--hero-grad-2), transparent 55%)"
+  >
+  </div>
+
+  <div
+    class="relative z-[1] mx-auto grid max-w-[1180px] items-center gap-10 md:grid-cols-[1.05fr_0.95fr] md:gap-16"
+  >
+    <div class="text-center md:text-start">
+      <div class="reveal">
+        <Badge
+          variant="outline"
+          className="bg-card text-muted-foreground h-[34px] gap-2 rounded-full px-3.5 text-[13px] font-bold shadow-sm"
+        >
+          <span class="bg-green inline-block h-2 w-2 rounded-full"></span>{t.hero.badge}
+        </Badge>
+      </div>
+
+      <h1
+        class="reveal mt-5 font-semibold tracking-tight"
+        data-reveal-delay="80"
+        style="font-size:clamp(40px,6vw,66px);line-height:1.04;letter-spacing:-0.02em"
+      >
+        {t.hero.h1a}<br />{t.hero.h1b}<br /><span class="text-gold-deep">{t.hero.h1c}</span>
+      </h1>
+
+      <p
+        class="reveal text-muted-foreground mx-auto mt-5 max-w-[520px] font-medium md:mx-0"
+        data-reveal-delay="160"
+        style="font-size:clamp(16px,1.4vw,18.5px);line-height:1.6"
+      >
+        {t.hero.sub}
+      </p>
+
+      <div
+        id="download"
+        class="reveal mt-7 flex flex-wrap justify-center gap-3 md:justify-start"
+        data-reveal-delay="240"
+      >
+        <AppBadge kind="apple" app={t.app} big />
+        <AppBadge kind="play" app={t.app} big />
+      </div>
+
+      <div
+        class="reveal text-ink-3 mt-6 flex items-center justify-center gap-2.5 md:justify-start"
+        data-reveal-delay="320"
+      >
+        <Icon name="shieldCheck" size={17} class="text-green" />
+        <span class="text-[13.5px] font-semibold">{t.hero.trust}</span>
+      </div>
+    </div>
+
+    <div class="reveal relative" data-reveal-delay="200">
+      <div class="relative mx-auto max-w-[420px] md:max-w-none">
+        <div
+          class="absolute -inset-[18px] rounded-[var(--radius)] opacity-70 blur-lg"
+          style="background:linear-gradient(150deg, var(--gold-soft), var(--green-soft))"
+        >
+        </div>
+        <ImagePlaceholder caption={t.hero.slot} class="relative shadow-2xl" />
+
+        <div
+          class="bg-card border-border absolute -start-5 bottom-9 flex items-center gap-3 rounded-2xl border p-3.5 shadow-2xl"
+          style="animation:wFloat 8s ease-in-out infinite;will-change:transform"
+        >
+          <Heartbeat variant="sm" />
+          <div>
+            <div class="text-[14.5px] font-extrabold tracking-tight">{t.hero.cardTitle}</div>
+            <div class="text-ink-3 mt-px text-[12.5px] font-semibold">{t.hero.cardSub}</div>
+          </div>
+        </div>
+
+        <div
+          class="bg-card border-border absolute -end-4 top-7 rounded-2xl border p-3 shadow-2xl"
+          style="animation:wFloat 10s ease-in-out infinite 0.5s;will-change:transform"
+        >
+          <Pearl size={42} />
+        </div>
+      </div>
+    </div>
   </div>
 </section>

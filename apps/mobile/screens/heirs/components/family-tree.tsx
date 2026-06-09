@@ -12,17 +12,17 @@ const DESCENDANTS: Relationship[] = ["son", "daughter", "grandson", "granddaught
 const COLLATERALS: Relationship[] = ["brother", "sister", "other"]
 
 /** Interactive family tree, grouped into ancestor / self+spouse / descendant /
- *  sibling tiers. Tap any relative to flip living/deceased — the Fara'id donut
- *  recomputes from the living set (ephemeral what-if; doesn't persist). */
+ *  sibling tiers. Tap any relative to open their edit sheet (update details, mark
+ *  living/deceased, or invite them). */
 export function FamilyTree({
   members,
-  onToggle,
+  onSelect,
   colorFor,
   label,
   ownerInitials,
 }: {
   members: DecryptedHeir[]
-  onToggle: (id: string) => void
+  onSelect: (id: string) => void
   colorFor: (id: string) => string
   label: (h: DecryptedHeir) => string
   ownerInitials: string
@@ -36,7 +36,7 @@ export function FamilyTree({
   const collaterals = inTier(COLLATERALS)
 
   const node = (m: DecryptedHeir) => (
-    <TreeNode key={m.id} m={m} color={colorFor(m.id)} label={label(m)} onToggle={onToggle} />
+    <TreeNode key={m.id} m={m} color={colorFor(m.id)} label={label(m)} onSelect={onSelect} />
   )
 
   return (
@@ -92,17 +92,17 @@ function TreeNode({
   m,
   color,
   label,
-  onToggle,
+  onSelect,
 }: {
   m: DecryptedHeir
   color: string
   label: string
-  onToggle: (id: string) => void
+  onSelect: (id: string) => void
 }) {
   const { t } = useTranslation()
   const name = m.name ?? "—"
   return (
-    <Pressable onPress={() => onToggle(m.id)} className="w-16 items-center gap-1 active:opacity-70">
+    <Pressable onPress={() => onSelect(m.id)} className="w-16 items-center gap-1 active:opacity-70">
       <View
         className="h-[50px] w-[50px] items-center justify-center rounded-full"
         style={{

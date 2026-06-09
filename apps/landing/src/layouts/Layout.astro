@@ -1,28 +1,60 @@
 ---
 import "../styles/global.css"
+import type { Lang } from "../i18n/types"
 
 interface Props {
+  lang?: Lang
+  dir?: "ltr" | "rtl"
   title?: string
   description?: string
 }
 
 const {
-  title = "Wassiya",
-  description = "A full-stack monorepo starter: Convex backend, WorkOS auth, web + mobile.",
+  lang = "en",
+  dir = "ltr",
+  title = lang === "ar" ? "وصية — إرثك، محفوظ بأمان" : "Wassiya — Your legacy, kept safe",
+  description =
+    lang === "ar"
+      ? "خزنة مُشفّرة بمعرفة صفرية لتركتك بالكامل، تُسلَّم لأحبّائك وفق أحكام الشريعة في الوقت المناسب."
+      : "A zero-knowledge encrypted vault for your entire estate, released to your loved ones by Islamic law exactly when the time comes.",
 } = Astro.props
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang} dir={dir}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/wassiya-pearl-512.png" />
+    <link rel="apple-touch-icon" href="/wassiya-pearl-180.png" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/wassiya-pearl-512.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- No-flash theme boot: apply the saved theme before first paint. -->
+    <script is:inline>
+      try {
+        if (localStorage.getItem("wl_theme") === "dark") {
+          document.documentElement.classList.add("dark")
+        }
+      } catch (e) {}
+    </script>
   </head>
-  <body class="bg-background text-foreground min-h-svh antialiased">
+  <body class="font-sans bg-background text-foreground min-h-svh antialiased overflow-x-hidden">
     <slot />
+    <script>
+      import "../scripts/landing.ts"
+    </script>
   </body>
 </html>

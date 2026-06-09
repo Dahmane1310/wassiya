@@ -1,0 +1,84 @@
+/* Beneficiary-portal design system (Claude Design handoff). Scoped under `.portal`
+   so it never collides with the shared shadcn tokens in @workspace/ui/globals.css.
+   Wrap portal pages in <div className="portal">. Values ported from the mockup
+   (Wassiya Web.template.html). */
+.portal {
+  --bg: oklch(0.965 0.006 80);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.978 0.006 80);
+  --surface-3: oklch(0.962 0.007 80);
+  --sidebar: oklch(0.215 0.014 62);
+  --sidebar-2: oklch(0.255 0.015 64);
+  --ink: oklch(0.24 0.016 255);
+  --ink-2: oklch(0.48 0.014 255);
+  --ink-3: oklch(0.62 0.012 255);
+  --line: oklch(0.915 0.006 80);
+  --line-2: oklch(0.945 0.006 80);
+
+  --primary: oklch(0.48 0.115 245);
+  --primary-600: oklch(0.42 0.12 248);
+  --primary-soft: oklch(0.955 0.028 245);
+
+  --gold: oklch(0.7 0.105 72);
+  --gold-deep: oklch(0.56 0.1 64);
+  --gold-soft: oklch(0.96 0.03 80);
+
+  --green: oklch(0.58 0.1 162);
+  --green-soft: oklch(0.955 0.038 162);
+
+  --amber: oklch(0.72 0.13 70);
+  --amber-soft: oklch(0.96 0.05 75);
+
+  --red: oklch(0.55 0.17 25);
+  --red-soft: oklch(0.96 0.035 25);
+
+  --espresso: oklch(0.21 0.014 62);
+
+  --font-display: var(--font-spectral), Georgia, serif;
+  --font-sans: var(--font-jakarta), -apple-system, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --font-ar: var(--font-reem), sans-serif;
+
+  --r-lg: 18px;
+  --r-md: 13px;
+  --r-sm: 9px;
+  --shadow-sm: 0 1px 2px rgba(28, 30, 40, 0.05), 0 1px 3px rgba(28, 30, 40, 0.04);
+  --shadow-md: 0 2px 6px rgba(28, 30, 40, 0.05), 0 8px 24px rgba(28, 30, 40, 0.07);
+  --shadow-lg: 0 8px 24px rgba(28, 30, 40, 0.09), 0 24px 56px rgba(28, 30, 40, 0.12);
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.portal .serif { font-family: var(--font-display); }
+.portal .mono { font-family: var(--font-mono); }
+.portal .ar { font-family: var(--font-ar); }
+.portal button { font-family: inherit; }
+
+/* interaction + entrance helpers */
+.portal .press { transition: transform 0.12s ease, background 0.15s ease, box-shadow 0.2s ease; }
+.portal .press:active { transform: scale(0.97); }
+.portal .rowhover { transition: background 0.12s ease; }
+.portal .rowhover:hover { background: var(--surface-2); }
+.portal .lift { transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, border-color 0.2s ease; }
+.portal .lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: color-mix(in oklch, var(--ink) 12%, var(--line)); }
+.portal .linkrow { transition: color 0.15s ease; }
+.portal .linkrow:hover { color: var(--primary); }
+.portal .w-fade { animation: wFade 0.4s ease both; }
+.portal .w-up { animation: wUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes wFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes wUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes wPulse { 0% { transform: scale(1); opacity: 0.5; } 70% { transform: scale(2); opacity: 0; } 100% { opacity: 0; } }
+@keyframes wHeart { 0%, 100% { transform: scale(1); } 14% { transform: scale(1.06); } 28% { transform: scale(1); } 42% { transform: scale(1.04); } 56% { transform: scale(1); } }
+@keyframes wPop { 0% { transform: scale(0.7); opacity: 0; } 60% { transform: scale(1.06); } 100% { transform: scale(1); opacity: 1; } }
+
+@media (max-width: 720px) { .portal .trust-chip { display: none !important; } }
+@media (prefers-reduced-motion: reduce) {
+  .portal * { animation-duration: 0.001s !important; }
+  .portal .lift:hover { transform: none; }
+}

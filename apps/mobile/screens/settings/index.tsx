@@ -1,7 +1,7 @@
 import { useState } from "react"
-import { Linking, View } from "react-native"
+import { Alert, Linking, Pressable, View } from "react-native"
 import { useRouter } from "expo-router"
-import { useQuery } from "convex/react"
+import { useMutation, useQuery } from "convex/react"
 import { api } from "@workspace/backend/api"
 import {
   Activity,
@@ -10,6 +10,7 @@ import {
   HelpCircle,
   Key,
   Languages,
+  LockOpen,
   LogOut,
   Palette,
   RefreshCw,
@@ -31,6 +32,7 @@ import { IdentityCard } from "@/screens/settings/components/identity-card"
 import { LanguageSheet } from "@/screens/settings/components/language-sheet"
 import { ProfileGroup } from "@/screens/settings/components/profile-group"
 import { ProfileRow } from "@/screens/settings/components/profile-row"
+import { PrivacyExplainerSheet } from "@/components/privacy-explainer"
 import { SwitchConfigSheet } from "@/screens/settings/components/switch-config-sheet"
 import { ThemeSheet } from "@/screens/settings/components/theme-sheet"
 import { useAccountId, useAuthStore } from "@/stores/auth"
@@ -39,7 +41,7 @@ import { useVaultStore } from "@/stores/vault"
 
 const SUPPORT_EMAIL = "support@wassiya.app"
 
-type SheetKey = "cadence" | "grace" | "gender" | "theme" | "language" | "pin"
+type SheetKey = "cadence" | "grace" | "gender" | "theme" | "language" | "pin" | "privacy"
 
 /** Profile — identity, the dead-man's switch, inheritance, recipients, security and
  *  preferences. Every preference opens a single-select bottom sheet; theme/language
@@ -49,6 +51,7 @@ export function SettingsScreen() {
   const { t, i18n } = useTranslation()
   const router = useRouter()
   const c = useThemeColors()
+  const devRelease = useMutation(api.release.devAuthorizeRelease)
   const sw = useSwitch()
   const { lock, disableBiometric } = useVault()
   const unlocked = useVaultStore((s) => s.status === "unlocked")
@@ -99,11 +102,7 @@ export function SettingsScreen() {
             title={t("profile.ownerGender")}
             detail={ownerGender ? t(`gender.${ownerGender}`) : t("profile.genderNotSet")}
             onPress={() => setSheet("gender")}
-            last
           />
-        </ProfileGroup>
-
-        <ProfileGroup title={t("profile.release")}>
           <ProfileRow
             icon={Users}
             color={c.primary}
@@ -156,11 +155,7 @@ export function SettingsScreen() {
             title={t("profile.language")}
             detail={langLabel}
             onPress={() => setSheet("language")}
-            last
           />
-        </ProfileGroup>
-
-        <ProfileGroup title={t("profile.general")}>
           <ProfileRow
             icon={HelpCircle}
             color={c.ink2}
@@ -170,15 +165,45 @@ export function SettingsScreen() {
           />
         </ProfileGroup>
 
+        {__DEV__ ? (
+          <ProfileGroup title="Developer">
+            <ProfileRow
+              icon={LockOpen}
+              color={c.gold}
+              title="Simulate release (dev)"
+              detail="Authorize release now, skipping the timers"
+              onPress={() =>
+                void devRelease({})
+                  .then(() =>
+                    Alert.alert(
+                      "Release authorized",
+                      "Your vault is now released. Open the web portal as a beneficiary to view it."
+                    )
+                  )
+                  .catch((e: unknown) =>
+                    Alert.alert("Couldn’t release", e instanceof Error ? e.message : String(e))
+                  )
+              }
+              last
+            />
+          </ProfileGroup>
+        ) : null}
+
         <ProfileGroup>
           <ProfileRow icon={LogOut} color={c.red} title={t("profile.signOut")} danger onPress={() => void handleSignOut()} last />
         </ProfileGroup>
 
-        <Text className="text-center font-sans-medium text-[11.5px] text-ink-3">
-          {t("profile.footer")}
-        </Text>
+        <View className="items-center gap-2 pt-1">
+          <Pressable onPress={() => setSheet("privacy")} hitSlop={8} className="active:opacity-70">
+            <Text className="font-heading text-[12.5px] text-primary">{t("profile.encryption")}</Text>
+          </Pressable>
+          <Text className="text-center font-sans-medium text-[11.5px] text-ink-3">
+            {t("profile.footer")}
+          </Text>
+        </View>
       </View>
 
+      <PrivacyExplainerSheet open={sheet === "privacy"} onClose={() => setSheet(null)} />
       <SwitchConfigSheet open={sheet === "cadence"} onClose={() => setSheet(null)} kind="cadence" />
       <SwitchConfigSheet open={sheet === "grace"} onClose={() => setSheet(null)} kind="grace" />
       <GenderSheet open={sheet === "gender"} onClose={() => setSheet(null)} value={ownerGender} />

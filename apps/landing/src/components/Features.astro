@@ -1,41 +1,38 @@
 ---
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
+import IconBadge from "./IconBadge.astro"
+import Kicker from "./Kicker.astro"
+import Section from "./Section.astro"
+import { Card } from "@workspace/ui/components/card"
+import type { Dict } from "../i18n/types"
 
-const features = [
-  {
-    title: "Convex backend",
-    description:
-      "Reactive database and serverless functions in TypeScript, shared by every app in the monorepo.",
-  },
-  {
-    title: "WorkOS AuthKit",
-    description:
-      "Authentication wired end-to-end — hosted flow on web, PKCE on mobile — validated by the same backend.",
-  },
-  {
-    title: "Web + mobile",
-    description:
-      "A Next.js app and an Expo app share UI and types, so you build features once and ship everywhere.",
-  },
-]
+interface Props {
+  t: Dict
+}
+const { t } = Astro.props
 ---
 
-<section class="mx-auto max-w-5xl px-6 py-16">
-  <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+<Section>
+  <div class="reveal mx-auto max-w-[600px] text-center">
+    <Kicker center>{t.features.kicker}</Kicker>
+    <h2
+      class="mt-4 font-semibold tracking-tight"
+      style="font-size:clamp(30px,4vw,44px);line-height:1.1"
+    >
+      {t.features.title}
+    </h2>
+  </div>
+
+  <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
     {
-      features.map((feature) => (
-        <Card>
-          <CardHeader>
-            <CardTitle>{feature.title}</CardTitle>
-            <CardDescription>{feature.description}</CardDescription>
-          </CardHeader>
-        </Card>
+      t.features.items.map((f, i) => (
+        <div class="reveal" data-reveal-delay={(i % 3) * 100}>
+          <Card className="h-full rounded-[var(--radius)] p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+            <IconBadge name={f.icon} tint="var(--gold-deep)" size={50} />
+            <h3 class="mt-4.5 text-[17.5px] font-bold tracking-tight">{f.t}</h3>
+            <p class="text-muted-foreground mt-2 text-sm leading-relaxed font-medium">{f.d}</p>
+          </Card>
+        </div>
       ))
     }
   </div>
-</section>
+</Section>

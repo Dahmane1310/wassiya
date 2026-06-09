@@ -43,9 +43,26 @@ export function useHeirs() {
   async function setAlive(id: Id<"familyMembers">, isAlive: boolean): Promise<void> {
     await updateMutation({ id, isAlive })
   }
+  /** Edit an heir's details. `name` is re-encrypted; `contactEmail` (when set) links
+   *  or updates the heir's beneficiary record (server-side). Only provided fields change. */
+  async function update(
+    id: Id<"familyMembers">,
+    patch: { name?: string; contactEmail?: string; isAlive?: boolean }
+  ): Promise<void> {
+    if (!masterKey) throw new Error("Vault is locked")
+    const name =
+      patch.name !== undefined ? await encryptHeirName(patch.name.trim(), masterKey) : undefined
+    const email = patch.contactEmail?.trim()
+    await updateMutation({
+      id,
+      name,
+      contactEmail: email ? email : undefined,
+      isAlive: patch.isAlive,
+    })
+  }
   async function remove(id: Id<"familyMembers">): Promise<void> {
     await removeMutation({ id })
   }
 
-  return { rows, add, setAlive, remove }
+  return { rows, add, update, setAlive, remove }
 }

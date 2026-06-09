@@ -1,0 +1,19 @@
+---
+// Consistent section shell: vertical rhythm + centered max-width content.
+interface Props {
+  id?: string
+  muted?: boolean
+  class?: string
+}
+const { id, muted = false, class: cls } = Astro.props
+---
+
+<section
+  id={id}
+  class:list={["px-6 py-16 md:py-28", muted && "bg-secondary", cls]}
+  style="position:relative"
+>
+  <div class="mx-auto w-full max-w-[1180px]">
+    <slot />
+  </div>
+</section>

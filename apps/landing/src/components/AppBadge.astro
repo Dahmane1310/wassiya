@@ -1,0 +1,27 @@
+---
+// App-store download badge (placeholder link — wire real store URLs later).
+import Icon from "./Icon.astro"
+import type { Dict } from "../i18n/types"
+
+interface Props {
+  kind: "apple" | "play"
+  app: Dict["app"]
+  big?: boolean
+}
+const { kind, app, big = false } = Astro.props
+const h = big ? 58 : 52
+const top = kind === "apple" ? app.store : app.geton
+const bottom = kind === "apple" ? app.appstore : app.play
+---
+
+<a
+  href="#download"
+  style={`height:${h}px;padding:0 ${big ? 20 : 18}px;border-radius:13px;background:var(--espresso);color:#fff;display:inline-flex;align-items:center;gap:11px`}
+>
+  <Icon name={kind} size={big ? 27 : 24} strokeWidth={1.8} />
+  <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.15">
+    <span style="font-size:10.5px;font-weight:500;opacity:.8">{top}</span>
+    <span style={`font-size:${big ? 17 : 15.5}px;font-weight:700;letter-spacing:-.3px`}>{bottom}</span
+    >
+  </span>
+</a>

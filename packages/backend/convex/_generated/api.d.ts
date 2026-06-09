@@ -19,6 +19,7 @@ import type * as http from "../http.js";
 import type * as invites from "../invites.js";
 import type * as lib_entitlements from "../lib/entitlements.js";
 import type * as recipients from "../recipients.js";
+import type * as release from "../release.js";
 import type * as switch_ from "../switch.js";
 import type * as users from "../users.js";
 import type * as vault from "../vault.js";
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   invites: typeof invites;
   "lib/entitlements": typeof lib_entitlements;
   recipients: typeof recipients;
+  release: typeof release;
   switch: typeof switch_;
   users: typeof users;
   vault: typeof vault;

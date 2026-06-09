@@ -1,0 +1,49 @@
+---
+import Icon from "./Icon.astro"
+import Kicker from "./Kicker.astro"
+import Section from "./Section.astro"
+import { Card } from "@workspace/ui/components/card"
+import type { Dict } from "../i18n/types"
+
+interface Props {
+  t: Dict
+}
+const { t } = Astro.props
+---
+
+<Section>
+  <div class="reveal mx-auto max-w-[600px] text-center">
+    <Kicker center>{t.testi.kicker}</Kicker>
+    <h2
+      class="mt-4 font-semibold tracking-tight"
+      style="font-size:clamp(30px,4vw,44px);line-height:1.1"
+    >
+      {t.testi.title}
+    </h2>
+  </div>
+
+  <div class="mx-auto mt-12 grid max-w-[480px] gap-5 md:max-w-none md:grid-cols-3">
+    {
+      t.testi.items.map((it, i) => (
+        <div class="reveal" data-reveal-delay={i * 110}>
+          <Card className="flex h-full flex-col rounded-[var(--radius)] p-7 shadow-sm">
+            <Icon name="quote" size={30} class="text-gold opacity-60" />
+            <p class="mt-3.5 flex-1 text-lg leading-relaxed font-normal tracking-tight">{it.q}</p>
+            <div class="border-border mt-5.5 flex items-center gap-3 border-t pt-4.5">
+              <div
+                class="text-gold-deep flex h-[42px] w-[42px] items-center justify-center rounded-full text-[15px] font-extrabold"
+                style="background:color-mix(in oklch, var(--gold) 14%, var(--card));border:1px solid color-mix(in oklch, var(--gold) 22%, transparent)"
+              >
+                {it.n.slice(0, 1)}
+              </div>
+              <div>
+                <div class="text-[14.5px] font-bold">{it.n}</div>
+                <div class="text-ink-3 mt-px text-[12.5px] font-semibold">{it.r}</div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      ))
+    }
+  </div>
+</Section>

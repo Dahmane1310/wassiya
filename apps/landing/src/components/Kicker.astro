@@ -1,0 +1,14 @@
+---
+// Small uppercase eyebrow label with a gold dash, used above section titles.
+interface Props {
+  center?: boolean
+}
+const { center = false } = Astro.props
+---
+
+<div class:list={["inline-flex items-center gap-2", center && "justify-center"]}>
+  <span class="h-[1.5px] w-6 rounded bg-gold-deep"></span>
+  <span class="text-gold-deep text-[12.5px] font-extrabold tracking-[0.14em] uppercase">
+    <slot />
+  </span>
+</div>

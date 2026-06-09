@@ -1,0 +1,21 @@
+---
+import type { Dict } from "../i18n/types"
+
+interface Props {
+  t: Dict
+}
+const { t } = Astro.props
+---
+
+<div class="border-border bg-secondary border-y">
+  <div class="mx-auto grid max-w-[1180px] grid-cols-2 px-6 md:grid-cols-4">
+    {
+      t.stats.map((s, i) => (
+        <div class="reveal px-5 py-8 text-center" data-reveal-delay={i * 80}>
+          <div class="text-gold-deep text-[34px] font-semibold tracking-tight">{s.n}</div>
+          <div class="text-muted-foreground mt-1.5 text-[13px] leading-snug font-semibold">{s.l}</div>
+        </div>
+      ))
+    }
+  </div>
+</div>

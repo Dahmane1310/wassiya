@@ -1,0 +1,46 @@
+---
+import IconBadge from "./IconBadge.astro"
+import Kicker from "./Kicker.astro"
+import Section from "./Section.astro"
+import { Card } from "@workspace/ui/components/card"
+import type { Dict } from "../i18n/types"
+
+interface Props {
+  t: Dict
+}
+const { t } = Astro.props
+const icons = ["layers", "pulse", "scales"]
+const tints = ["var(--primary)", "var(--green)", "var(--gold-deep)"]
+---
+
+<Section id="how">
+  <div class="reveal mx-auto max-w-[620px] text-center">
+    <Kicker center>{t.how.kicker}</Kicker>
+    <h2
+      class="mt-4 font-semibold tracking-tight"
+      style="font-size:clamp(30px,4vw,44px);line-height:1.1"
+    >
+      {t.how.title}
+    </h2>
+    <p class="text-muted-foreground mt-3.5 text-[17px] font-medium">{t.how.sub}</p>
+  </div>
+
+  <div class="mt-14 grid gap-5 md:grid-cols-3">
+    {
+      t.how.steps.map((s, i) => (
+        <div class="reveal" data-reveal-delay={i * 120}>
+          <Card className="relative h-full rounded-[var(--radius)] p-7 shadow-sm">
+            <div
+              class="text-border absolute end-6 top-6 text-[46px] leading-none font-extrabold"
+            >
+              {i + 1}
+            </div>
+            <IconBadge name={icons[i]} tint={tints[i]} size={54} />
+            <h3 class="mt-5 text-xl font-bold tracking-tight">{s.t}</h3>
+            <p class="text-muted-foreground mt-2 text-[14.5px] leading-relaxed font-medium">{s.d}</p>
+          </Card>
+        </div>
+      ))
+    }
+  </div>
+</Section>

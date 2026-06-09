@@ -1,0 +1,110 @@
+---
+import Icon from "./Icon.astro"
+import Kicker from "./Kicker.astro"
+import Section from "./Section.astro"
+import { buttonVariants } from "@workspace/ui/components/button"
+import type { Dict } from "../i18n/types"
+
+interface Props {
+  t: Dict
+}
+const { t } = Astro.props
+---
+
+<Section id="pricing" muted>
+  <div class="reveal mx-auto max-w-[620px] text-center">
+    <Kicker center>{t.pricing.kicker}</Kicker>
+    <h2
+      class="mt-4 font-semibold tracking-tight"
+      style="font-size:clamp(30px,4vw,44px);line-height:1.1"
+    >
+      {t.pricing.title}
+    </h2>
+    <p class="text-muted-foreground mt-3.5 text-[17px] font-medium">{t.pricing.sub}</p>
+  </div>
+
+  <div class="mx-auto mt-12 grid max-w-[440px] items-stretch gap-5 md:max-w-none md:grid-cols-3">
+    {
+      t.pricing.tiers.map((p, i) => (
+        <div class="reveal" data-reveal-delay={i * 110}>
+          <div
+            class:list={[
+              "relative flex h-full flex-col rounded-[var(--radius)] border p-7 md:data-[hl]:scale-[1.03]",
+              p.hl ? "border-transparent text-white shadow-2xl" : "bg-card border-border shadow-sm",
+            ]}
+            data-hl={p.hl ? "" : undefined}
+            style={p.hl
+              ? "background:linear-gradient(165deg, var(--espresso), var(--espresso-2))"
+              : undefined}
+          >
+            {p.tag && (
+              <div class="absolute -top-3 start-1/2 -translate-x-1/2">
+                <span
+                  class="inline-flex h-[26px] items-center gap-1.5 rounded-full px-3.5 text-xs font-extrabold whitespace-nowrap text-white shadow-md"
+                  style="background:linear-gradient(180deg, var(--gold), var(--gold-deep))"
+                >
+                  <Icon name="star" size={13} />
+                  {p.tag}
+                </span>
+              </div>
+            )}
+            <div
+              class:list={[
+                "text-[13px] font-extrabold tracking-wide uppercase",
+                p.hl ? "text-gold" : "text-gold-deep",
+              ]}
+            >
+              {p.name}
+            </div>
+            <div class="mt-3 flex items-baseline gap-1.5">
+              <span class="text-[38px] font-semibold tracking-tight">{p.price}</span>
+              <span
+                class:list={["text-sm font-semibold", p.hl ? "text-white/60" : "text-ink-3"]}
+              >
+                {p.period}
+              </span>
+            </div>
+            <div class:list={["my-5.5 h-px", p.hl ? "bg-white/12" : "bg-border"]} />
+            <div class="flex flex-1 flex-col gap-3.5">
+              {p.feats.map((f) => (
+                <div class="flex items-center gap-3">
+                  <span
+                    class:list={[
+                      "text-green flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
+                      p.hl ? "bg-white/15" : "bg-green-soft",
+                    ]}
+                  >
+                    <Icon name="check" size={12} strokeWidth={3} />
+                  </span>
+                  <span
+                    class:list={["text-[14.5px] font-semibold", p.hl ? "text-white/90" : "text-muted-foreground"]}
+                  >
+                    {f}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div class="mt-6">
+              {p.hl ? (
+                <a
+                  href="#download"
+                  class="inline-flex h-[46px] w-full items-center justify-center rounded-lg text-sm font-bold text-white shadow-md"
+                  style="background:linear-gradient(180deg, var(--gold), var(--gold-deep))"
+                >
+                  {p.cta}
+                </a>
+              ) : (
+                <a
+                  href="#download"
+                  class:list={[buttonVariants({ variant: "outline", size: "lg" }), "h-[46px] w-full"]}
+                >
+                  {p.cta}
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</Section>

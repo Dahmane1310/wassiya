@@ -10,6 +10,7 @@ import { Field } from "@/components/ui/field"
 import { Sheet } from "@/components/ui/sheet"
 import { SheetHeader } from "@/components/ui/sheet-header"
 import { useThemeColors } from "@/lib/colors"
+import { inputFontClass } from "@/lib/fonts"
 import type { HeirDraft } from "@/screens/heirs/hooks/use-heirs"
 
 const RELS: { key: Relationship; icon: typeof User; lineage: boolean }[] = [
@@ -32,8 +33,11 @@ const FIXED_GENDER: Partial<Record<Relationship, Gender>> = {
   sister: "female",
 }
 
-/** Add a family member. Gender is derived from the relationship (spouse = opposite
- *  of the owner); siblings also pick a lineage. Persists via `addFamilyMember`. */
+/**
+ * Add a family member — a 2-step bottom sheet (like add-asset): pick a relationship,
+ * then fill the details. Gender is derived from the relationship (spouse = opposite
+ * of the owner); siblings also pick a lineage. Persists via `addFamilyMember`.
+ */
 export function AddHeirSheet({
   open,
   onClose,
@@ -47,28 +51,35 @@ export function AddHeirSheet({
 }) {
   const { t } = useTranslation()
   const c = useThemeColors()
+  const [step, setStep] = useState<"rel" | "details">("rel")
   const [rel, setRel] = useState<Relationship | null>(null)
   const [lineage, setLineage] = useState<Lineage>("full")
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const emailInvalid = email.trim() !== "" && !emailOk(email)
 
-  const meta = RELS.find((r) => r.key === rel)
+  const meta = rel ? RELS.find((r) => r.key === rel) : null
   const genderFor = (r: Relationship): Gender | null =>
     r === "spouse" ? (ownerGender ? (ownerGender === "male" ? "female" : "male") : null) : (FIXED_GENDER[r] ?? null)
   const gender = rel ? genderFor(rel) : null
   const spouseBlocked = rel === "spouse" && !ownerGender
+  const emailInvalid = email.trim() !== "" && !emailOk(email)
 
   const close = () => {
+    setStep("rel")
     setRel(null)
     setLineage("full")
     setName("")
     setEmail("")
     setError(null)
-    setBusy(false) // reset busy too, or a successful add leaves the button spinning
+    setBusy(false)
     onClose()
+  }
+
+  function pickRel(r: Relationship) {
+    setRel(r)
+    setStep("details")
   }
 
   async function submit() {
@@ -93,56 +104,67 @@ export function AddHeirSheet({
   return (
     <Sheet open={open} onClose={close}>
       <SheetHeader title={t("addHeir.title")} subtitle={t("addHeir.subtitle")} onClose={close} />
-      <View className="px-5 pb-3 pt-2">
-        <Text className="mb-2.5 font-sans-semibold text-[12.5px] text-ink-2">{t("addHeir.relationship")}</Text>
-        <View className="flex-row flex-wrap gap-2.5">
-          {RELS.map((r) => {
-            const on = rel === r.key
-            return (
+
+      {step === "rel" ? (
+        <View className="px-5 pb-3 pt-1">
+          <Text className="mb-3 px-1 font-sans-medium text-[13.5px] text-ink-2">
+            {t("addHeir.chooseRelationship")}
+          </Text>
+          <View className="flex-row flex-wrap gap-2.5">
+            {RELS.map((r) => (
               <Pressable
                 key={r.key}
-                onPress={() => setRel(r.key)}
+                onPress={() => pickRel(r.key)}
                 style={{ width: "31%" }}
-                className={cn(
-                  "items-center gap-1.5 rounded-2xl border py-3.5 active:opacity-80",
-                  on ? "border-gold-deep bg-gold-soft" : "border-border bg-card"
-                )}
+                className="items-center gap-2 rounded-2xl border border-border bg-card py-4 active:opacity-80"
               >
-                <r.icon size={20} color={on ? c.goldDeep : c.ink2} strokeWidth={2} />
-                <Text className={cn("font-heading text-[12.5px]", on ? "text-gold-deep" : "text-foreground")}>
-                  {t(`heirRel.${r.key}`)}
-                </Text>
+                <r.icon size={22} color={c.goldDeep} strokeWidth={2} />
+                <Text className="font-heading text-[12.5px] text-foreground">{t(`heirRel.${r.key}`)}</Text>
               </Pressable>
-            )
-          })}
+            ))}
+          </View>
         </View>
+      ) : (
+        <View className="px-5 pb-4 pt-1">
+          <View className="mb-4 flex-row items-center gap-3 rounded-2xl bg-surface-2 p-3">
+            {meta ? (
+              <View className="h-10 w-10 items-center justify-center rounded-[11px] bg-gold-soft">
+                <meta.icon size={20} color={c.goldDeep} strokeWidth={2} />
+              </View>
+            ) : null}
+            <Text className="flex-1 font-heading text-[14.5px] text-foreground">
+              {rel ? t(`heirRel.${rel}`) : ""}
+            </Text>
+            <Pressable onPress={() => setStep("rel")} hitSlop={8} className="active:opacity-70">
+              <Text className="font-heading text-[13px] text-primary">{t("asset.form.change")}</Text>
+            </Pressable>
+          </View>
 
-        {meta?.lineage ? (
-          <>
-            <Text className="mb-2 mt-4 font-sans-semibold text-[12.5px] text-ink-2">{t("addHeir.lineage")}</Text>
-            <View className="flex-row gap-2.5">
-              {LINEAGES.map((l) => {
-                const on = lineage === l
-                return (
-                  <Pressable
-                    key={l}
-                    onPress={() => setLineage(l)}
-                    className={cn(
-                      "flex-1 items-center rounded-2xl border py-2.5 active:opacity-80",
-                      on ? "border-gold-deep bg-gold-soft" : "border-border bg-card"
-                    )}
-                  >
-                    <Text className={cn("font-heading text-[12.5px]", on ? "text-gold-deep" : "text-foreground")}>
-                      {t(`heirLineage.${l}`)}
-                    </Text>
-                  </Pressable>
-                )
-              })}
-            </View>
-          </>
-        ) : null}
+          {meta?.lineage ? (
+            <>
+              <Text className="mb-2 font-sans-semibold text-[12.5px] text-ink-2">{t("addHeir.lineage")}</Text>
+              <View className="mb-4 flex-row gap-2.5">
+                {LINEAGES.map((l) => {
+                  const on = lineage === l
+                  return (
+                    <Pressable
+                      key={l}
+                      onPress={() => setLineage(l)}
+                      className={cn(
+                        "flex-1 items-center rounded-2xl border py-2.5 active:opacity-80",
+                        on ? "border-gold-deep bg-gold-soft" : "border-border bg-card"
+                      )}
+                    >
+                      <Text className={cn("font-heading text-[12.5px]", on ? "text-gold-deep" : "text-foreground")}>
+                        {t(`heirLineage.${l}`)}
+                      </Text>
+                    </Pressable>
+                  )
+                })}
+              </View>
+            </>
+          ) : null}
 
-        <View className="mt-4">
           <Field label={t("addHeir.fullName")}>
             <TextInput
               value={name}
@@ -150,51 +172,51 @@ export function AddHeirSheet({
               placeholder={t("addHeir.namePlaceholder")}
               placeholderTextColor={c.ink3}
               autoCapitalize="words"
-              className="h-full flex-1 font-sans text-[15.5px] text-foreground"
+              className={`h-full flex-1 ${inputFontClass} text-[15.5px] text-foreground`}
             />
           </Field>
+
+          <View className="mt-1">
+            <Field label={t("addHeir.email")}>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder={t("addHeir.emailPlaceholder")}
+                placeholderTextColor={c.ink3}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                className={`h-full flex-1 ${inputFontClass} text-[15.5px] text-foreground`}
+              />
+            </Field>
+            <Text className="mt-1.5 font-sans-medium text-[12px] leading-[1.4] text-ink-3">
+              {t("addHeir.emailHint")}
+            </Text>
+          </View>
+
+          {spouseBlocked ? (
+            <Text className="mt-3 font-sans-medium text-[12.5px] text-danger">{t("addHeir.spouseNeedsGender")}</Text>
+          ) : null}
+          {emailInvalid ? (
+            <Text className="mt-3 font-sans-medium text-[12.5px] text-danger">{t("addHeir.emailInvalid")}</Text>
+          ) : null}
+          {error ? <Text className="mt-3 font-sans-medium text-[12.5px] text-danger">{error}</Text> : null}
+
+          <View className="mt-4 flex-row items-center gap-2.5 rounded-2xl bg-green-soft p-3.5">
+            <Scale size={18} color={c.green} strokeWidth={1.9} />
+            <Text className="flex-1 font-sans-medium text-[12.5px] leading-[1.4] text-green">{t("addHeir.note")}</Text>
+          </View>
+
+          <Button
+            variant="gold"
+            className="mt-5 h-[54px] rounded-2xl"
+            disabled={!rel || !name.trim() || !gender || spouseBlocked || emailInvalid || busy}
+            onPress={() => void submit()}
+          >
+            {busy ? <ActivityIndicator color="white" /> : <Text className="font-heading text-white">{t("addHeir.cta")}</Text>}
+          </Button>
         </View>
-
-        <View className="mt-4">
-          <Field label={t("addHeir.email")}>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder={t("addHeir.emailPlaceholder")}
-              placeholderTextColor={c.ink3}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              className="h-full flex-1 font-sans text-[15.5px] text-foreground"
-            />
-          </Field>
-          <Text className="mt-1.5 font-sans-medium text-[12px] leading-[1.4] text-ink-3">
-            {t("addHeir.emailHint")}
-          </Text>
-        </View>
-
-        {spouseBlocked ? (
-          <Text className="mt-3 font-sans-medium text-[12.5px] text-danger">{t("addHeir.spouseNeedsGender")}</Text>
-        ) : null}
-        {emailInvalid ? (
-          <Text className="mt-3 font-sans-medium text-[12.5px] text-danger">{t("addHeir.emailInvalid")}</Text>
-        ) : null}
-        {error ? <Text className="mt-3 font-sans-medium text-[12.5px] text-danger">{error}</Text> : null}
-
-        <View className="mt-4 flex-row items-center gap-2.5 rounded-2xl bg-green-soft p-3.5">
-          <Scale size={18} color={c.green} strokeWidth={1.9} />
-          <Text className="flex-1 font-sans-medium text-[12.5px] leading-[1.4] text-green">{t("addHeir.note")}</Text>
-        </View>
-
-        <Button
-          variant="gold"
-          className="mt-5 h-[54px] rounded-2xl"
-          disabled={!rel || !name.trim() || !gender || spouseBlocked || emailInvalid || busy}
-          onPress={() => void submit()}
-        >
-          {busy ? <ActivityIndicator color="white" /> : <Text className="font-heading text-white">{t("addHeir.cta")}</Text>}
-        </Button>
-      </View>
+      )}
     </Sheet>
   )
 }

@@ -1,0 +1,66 @@
+---
+import Heartbeat from "./Heartbeat.astro"
+import Icon from "./Icon.astro"
+import Kicker from "./Kicker.astro"
+import Section from "./Section.astro"
+import type { Dict } from "../i18n/types"
+
+interface Props {
+  t: Dict
+}
+const { t } = Astro.props
+---
+
+<Section muted>
+  <div class="grid items-center gap-10 md:grid-cols-[0.95fr_1.05fr] md:gap-16">
+    <div class="reveal">
+      <Kicker>{t.sw.kicker}</Kicker>
+      <h2
+        class="mt-4 font-semibold tracking-tight"
+        style="font-size:clamp(30px,4vw,44px);line-height:1.1"
+      >
+        {t.sw.title}
+      </h2>
+      <p class="text-muted-foreground mt-3.5 text-[17px] leading-relaxed font-medium">{t.sw.sub}</p>
+      <div class="mt-7 flex flex-col gap-4">
+        {
+          t.sw.points.map((p) => (
+            <div class="flex items-start gap-3.5">
+              <div class="bg-green-soft text-green flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
+                <Icon name="check" size={16} strokeWidth={2.6} />
+              </div>
+              <div>
+                <div class="text-base font-bold tracking-tight">{p.t}</div>
+                <div class="text-muted-foreground mt-0.5 text-sm leading-snug font-medium">{p.d}</div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="reveal" data-reveal-delay={140}>
+      <div
+        class="relative overflow-hidden rounded-[var(--radius)] px-7 py-12 text-center text-white shadow-2xl"
+        style="background:linear-gradient(150deg, var(--espresso), var(--espresso-2))"
+      >
+        <div
+          class="absolute -top-12 -start-8 h-[200px] w-[200px] rounded-full opacity-40"
+          style="background:radial-gradient(circle, color-mix(in oklch, var(--green) 45%, transparent), transparent 70%)"
+        >
+        </div>
+        <div class="relative">
+          <div
+            class="inline-flex h-[30px] items-center gap-2 rounded-full px-3.5 text-xs font-bold"
+            style="background:rgba(122,200,160,0.16);color:#bfe9d4;letter-spacing:0.3px"
+          >
+            <span class="bg-green inline-block h-[7px] w-[7px] rounded-full"></span>{t.sw.armed}
+          </div>
+          <Heartbeat variant="lg" />
+          <div class="mt-1 text-2xl font-semibold tracking-tight">{t.sw.listening}</div>
+          <div class="mt-1.5 text-sm font-medium" style="color:rgba(255,255,255,0.6)">{t.sw.due}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Section>

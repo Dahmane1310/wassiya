@@ -1,0 +1,110 @@
+---
+import Icon from "./Icon.astro"
+import Pearl from "./Pearl.astro"
+import { buttonVariants } from "@workspace/ui/components/button"
+import type { Dict, Lang } from "../i18n/types"
+
+interface Props {
+  t: Dict
+  lang: Lang
+}
+const { t, lang } = Astro.props
+const otherHref = lang === "ar" ? "/" : "/ar"
+const otherLabel = lang === "ar" ? "EN" : "ع"
+const wordmark = lang === "ar" ? "وصية" : "Wassiya"
+
+const links = [
+  ["#how", t.nav.how],
+  ["#sharia", t.nav.sharia],
+  ["#security", t.nav.security],
+  ["#pricing", t.nav.pricing],
+  ["#faq", t.nav.faq],
+]
+---
+
+<header
+  data-nav
+  class="fixed inset-x-0 top-0 z-[100] transition-all data-[scrolled]:border-b data-[scrolled]:border-border data-[scrolled]:bg-background/80 data-[scrolled]:backdrop-blur-md border-b border-transparent"
+>
+  <div class="mx-auto flex h-[72px] max-w-[1180px] items-center gap-5 px-6">
+    <a href="#top" class="flex items-center gap-2.5">
+      <Pearl size={38} />
+      <span class="text-[23px] font-semibold tracking-tight">{wordmark}</span>
+    </a>
+
+    <nav class="mx-auto hidden items-center gap-1 lg:flex">
+      {
+        links.map(([href, label]) => (
+          <a
+            href={href}
+            class="text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors"
+          >
+            {label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="ms-auto flex items-center gap-2 lg:ms-0">
+      <a
+        href={otherHref}
+        title="Language"
+        class="border-border bg-card inline-flex h-10 items-center gap-1.5 rounded-xl border px-3 text-sm font-bold"
+      >
+        <Icon name="globe" size={16} />{otherLabel}
+      </a>
+      <button
+        type="button"
+        data-theme-toggle
+        title="Theme"
+        aria-pressed="false"
+        class="border-border bg-card text-muted-foreground inline-flex h-10 w-10 items-center justify-center rounded-xl border"
+      >
+        <span class="theme-moon inline-flex"><Icon name="moon" size={18} /></span>
+        <span class="theme-sun"><Icon name="sun" size={18} /></span>
+      </button>
+      <a href="#download" class:list={[buttonVariants({ size: "lg" }), "hidden h-[46px] px-5 sm:inline-flex"]}>
+        <Icon name="apple" size={17} strokeWidth={2} />{t.nav.download}
+      </a>
+      <button
+        type="button"
+        data-menu-toggle
+        aria-label="Menu"
+        aria-expanded="false"
+        class="border-border bg-card text-foreground inline-flex h-10 w-10 items-center justify-center rounded-xl border lg:hidden"
+      >
+        <Icon name="menu" size={20} />
+      </button>
+    </div>
+  </div>
+
+  <div
+    data-mobile-menu
+    class="border-border bg-background/95 hidden border-t backdrop-blur-md data-[open]:block lg:!hidden"
+  >
+    <nav class="mx-auto flex max-w-[1180px] flex-col gap-1 px-6 py-4">
+      {
+        links.map(([href, label]) => (
+          <a href={href} class="hover:bg-secondary rounded-lg px-3 py-2.5 text-base font-semibold">
+            {label}
+          </a>
+        ))
+      }
+      <a href="#download" class:list={[buttonVariants({ size: "lg" }), "mt-2 h-[46px]"]}>
+        {t.nav.download}
+      </a>
+    </nav>
+  </div>
+</header>
+
+<style is:global>
+  .theme-sun {
+    display: none;
+  }
+  .dark .theme-sun {
+    display: inline-flex;
+  }
+  .dark .theme-moon {
+    display: none;
+  }
+</style>

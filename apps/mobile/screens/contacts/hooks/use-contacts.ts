@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "convex/react"
 import { useTranslation } from "react-i18next"
 import { api } from "@workspace/backend/api"
 import { type Id } from "@workspace/backend/dataModel"
-import { decryptLabel, encryptLabel, newInvite } from "@/lib/invite"
+import { decryptLabel, encryptLabel } from "@/lib/invite"
 import { useMasterKey } from "@/stores/vault"
 
 export type Beneficiary = {
@@ -28,7 +28,6 @@ export function useContacts() {
 
   const addBeneficiaryM = useMutation(api.beneficiaries.addBeneficiary)
   const removeBeneficiaryM = useMutation(api.beneficiaries.removeBeneficiary)
-  const issueInviteM = useMutation(api.invites.issueInvite)
 
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[] | null>(null)
 
@@ -79,18 +78,10 @@ export function useContacts() {
       throw err
     }
   }
-  /** Issue an invite for a beneficiary and return the RAW token (to share). */
-  async function invite(id: Id<"beneficiaries">) {
-    const { token, tokenHash, expiresAt } = await newInvite()
-    await issueInviteM({ beneficiaryId: id, tokenHash, expiresAt })
-    return token
-  }
-
   return {
     beneficiaries,
     loading: beneficiaries === null,
     addBeneficiary,
     removeBeneficiary,
-    invite,
   }
 }

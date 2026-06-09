@@ -1,0 +1,43 @@
+---
+// The living-heartbeat motif (pulsing rings + beating disc). Two sizes:
+//   "sm" — the Hero floating "Vault armed" card
+//   "lg" — the dead-man's-switch hero card
+// Animations come from the wPulse/wHeart keyframes in global.css.
+import Icon from "./Icon.astro"
+
+interface Props {
+  variant?: "sm" | "lg"
+}
+const { variant = "sm" } = Astro.props
+const lg = variant === "lg"
+
+const box = lg ? 140 : 46
+const ring = lg ? 88 : 30
+const disc = lg ? 104 : 40
+---
+
+<div
+  style={`position:relative;width:${box}px;height:${box}px;display:flex;align-items:center;justify-content:center;flex-shrink:0;${lg ? "margin:24px auto 8px;" : ""}`}
+>
+  <span
+    style={`position:absolute;width:${ring}px;height:${ring}px;border-radius:99px;border:2px solid var(--green);animation:wPulse 4s 0s ease-out infinite;will-change:transform,opacity`}
+  ></span>
+  <span
+    style={`position:absolute;width:${ring}px;height:${ring}px;border-radius:99px;border:2px solid var(--green);animation:wPulse 4s 2s ease-out infinite;will-change:transform,opacity`}
+  ></span>
+  {
+    lg ? (
+      <div
+        style={`width:${disc}px;height:${disc}px;border-radius:99px;background:radial-gradient(circle at 38% 32%, color-mix(in oklch, var(--green) 55%, var(--espresso)), var(--espresso-2));border:1.5px solid color-mix(in oklch, var(--green) 50%, transparent);display:flex;align-items:center;justify-content:center;animation:wHeart 4s ease-in-out infinite;will-change:transform;color:#eafff4`}
+      >
+        <Icon name="heart" size={48} strokeWidth={1.6} fill="#eafff4" />
+      </div>
+    ) : (
+      <div
+        style={`width:${disc}px;height:${disc}px;border-radius:99px;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center;animation:wHeart 4s ease-in-out infinite;will-change:transform`}
+      >
+        <Icon name="pulse" size={20} strokeWidth={2.4} />
+      </div>
+    )
+  }
+</div>

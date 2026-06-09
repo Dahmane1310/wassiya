@@ -2,7 +2,44 @@ import { cn } from "@workspace/ui-native/lib/utils"
 import { Slot } from "@rn-primitives/slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import * as React from "react"
-import { Platform, Text as RNText, type Role } from "react-native"
+import { I18nManager, Platform, Text as RNText, type Role } from "react-native"
+
+// Arabic (Tajawal) faces — see global.css @theme. The Latin families (Inter) have
+// no Arabic glyphs, so under RTL EVERY text must be routed through Tajawal, not just
+// the few components that call useBrandType. We remap the family utility on the
+// final className here — one place, so all text is consistently Arabic.
+const AR_BOLD = "font-display-ar-bold" // Tajawal_700Bold
+const AR_MEDIUM = "font-display-ar" // Tajawal_500Medium
+const AR_REGULAR = "font-body-ar" // Tajawal_400Regular
+
+// Map each Latin family utility to a Tajawal weight. `font-mono` is intentionally
+// absent: it carries digits/ciphertext (ASCII), which JetBrains Mono renders fine
+// and keeps aligned, so it's left untouched.
+const AR_WEIGHT: Record<string, string> = {
+  "font-heading-bold": AR_BOLD,
+  "font-display-bold": AR_BOLD,
+  "font-display": AR_BOLD,
+  "font-heading": AR_BOLD,
+  "font-sans-semibold": AR_MEDIUM,
+  "font-sans-medium": AR_MEDIUM,
+  "font-sans": AR_REGULAR,
+}
+
+/** Replace any Inter family utility in `cls` with the matching Tajawal one (RTL
+ *  only). Last family wins, mirroring how the style is actually resolved. */
+function toArabicFont(cls: string): string {
+  const tokens = cls.split(/\s+/).filter(Boolean)
+  const rest: string[] = []
+  let weight: string | null = null
+  for (const tk of tokens) {
+    if (tk in AR_WEIGHT) weight = AR_WEIGHT[tk]!
+    else rest.push(tk)
+  }
+  const alreadyArabic = rest.some((t) => t === AR_BOLD || t === AR_MEDIUM || t === AR_REGULAR)
+  if (weight) rest.push(weight)
+  else if (!alreadyArabic && !rest.includes("font-mono")) rest.push(AR_REGULAR)
+  return rest.join(" ")
+}
 
 const textVariants = cva(
   cn(
@@ -87,9 +124,10 @@ function Text({
   }) {
   const textClass = React.useContext(TextClassContext)
   const Component = asChild ? Slot : RNText
+  const merged = cn(textVariants({ variant }), textClass, className)
   return (
     <Component
-      className={cn(textVariants({ variant }), textClass, className)}
+      className={I18nManager.isRTL ? toArabicFont(merged) : merged}
       role={variant ? ROLE[variant] : undefined}
       aria-level={variant ? ARIA_LEVEL[variant] : undefined}
       {...props}

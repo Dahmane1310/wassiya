@@ -5,3 +5,163 @@
    classes written directly in .astro markup. Add Astro files as a content
    source so those classes are generated. */
 @source "./**/*.{astro,ts,tsx}";
+
+/* ── Wassiya brand remap ─────────────────────────────────────────────────────
+   The landing is the warm Wassiya brand (bronze / sage / espresso / paper), not
+   the default trust-blue shadcn palette. We override the shared shadcn variables
+   here so Button / Card / Badge / Accordion render on-brand with no per-component
+   restyling — the same approach apps/web (.portal) and apps/mobile use. Values
+   ported from the approved landing mockup (Wassiya Landing.html). */
+:root {
+  --background: oklch(0.982 0.006 80);
+  --foreground: oklch(0.23 0.016 60);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.23 0.016 60);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.23 0.016 60);
+  --primary: oklch(0.58 0.1 66); /* bronze */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.967 0.008 80);
+  --secondary-foreground: oklch(0.23 0.016 60);
+  --muted: oklch(0.975 0.006 80);
+  --muted-foreground: oklch(0.46 0.014 60);
+  --accent: oklch(0.955 0.035 80);
+  --accent-foreground: oklch(0.58 0.1 66);
+  --destructive: oklch(0.55 0.17 25);
+  --border: oklch(0.905 0.007 80);
+  --input: oklch(0.905 0.007 80);
+  --ring: oklch(0.58 0.1 66);
+  --radius: 0.9rem;
+
+  /* brand extras (no shadcn equivalent) */
+  --ink-3: oklch(0.62 0.012 60);
+  --gold: oklch(0.74 0.105 74);
+  --gold-deep: oklch(0.58 0.1 66);
+  --gold-soft: oklch(0.955 0.035 80);
+  --green: oklch(0.6 0.1 162);
+  --green-soft: oklch(0.95 0.04 162);
+  --espresso: oklch(0.22 0.014 62);
+  --espresso-2: oklch(0.17 0.012 60);
+  --hero-grad-1: oklch(0.965 0.03 80);
+  --hero-grad-2: oklch(0.95 0.03 162);
+
+  /* Inter drives Latin; Tajawal is swapped in for RTL below. */
+  --font-sans: "Inter", -apple-system, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+.dark {
+  --background: oklch(0.17 0.009 60);
+  --foreground: oklch(0.965 0.006 80);
+  --card: oklch(0.225 0.01 62);
+  --card-foreground: oklch(0.965 0.006 80);
+  --popover: oklch(0.225 0.01 62);
+  --popover-foreground: oklch(0.965 0.006 80);
+  --primary: oklch(0.72 0.1 74); /* gold-leaning for dark */
+  --primary-foreground: oklch(0.17 0.009 60);
+  --secondary: oklch(0.205 0.01 60);
+  --secondary-foreground: oklch(0.965 0.006 80);
+  --muted: oklch(0.255 0.01 62);
+  --muted-foreground: oklch(0.76 0.012 78);
+  --accent: oklch(0.32 0.045 72);
+  --accent-foreground: oklch(0.965 0.006 80);
+  --destructive: oklch(0.62 0.17 25);
+  --border: oklch(0.31 0.009 62);
+  --input: oklch(0.31 0.009 62);
+  --ring: oklch(0.72 0.1 74);
+
+  --ink-3: oklch(0.6 0.012 72);
+  --gold: oklch(0.8 0.1 76);
+  --gold-deep: oklch(0.72 0.1 74);
+  --gold-soft: oklch(0.32 0.045 72);
+  --green: oklch(0.7 0.1 162);
+  --green-soft: oklch(0.3 0.05 162);
+  --espresso: oklch(0.12 0.008 60);
+  --espresso-2: oklch(0.1 0.006 60);
+  --hero-grad-1: oklch(0.26 0.03 75);
+  --hero-grad-2: oklch(0.24 0.03 200);
+}
+
+/* Arabic typography: swap Inter for Tajawal under RTL. */
+:root[dir="rtl"] {
+  --font-sans: "Tajawal", "Inter", sans-serif;
+}
+
+/* Expose the brand extras as Tailwind utilities (bg-gold, text-green, …). */
+@theme inline {
+  --color-ink-3: var(--ink-3);
+  --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
+  --color-gold-soft: var(--gold-soft);
+  --color-green: var(--green);
+  --color-green-soft: var(--green-soft);
+  --color-espresso: var(--espresso);
+  --color-espresso-2: var(--espresso-2);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* ── Motion ──────────────────────────────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes wPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  70% {
+    transform: scale(2);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes wHeart {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.07);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.05);
+  }
+  56% {
+    transform: scale(1);
+  }
+}
+@keyframes wFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* The landing's motion is intentionally gentle (slow heartbeat, slow float,
+   fade-up), so we keep it on even when the OS requests reduced motion — only
+   smooth-scrolling is neutralized. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

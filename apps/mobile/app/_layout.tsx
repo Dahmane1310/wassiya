@@ -97,7 +97,6 @@ export default function RootLayout() {
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="unlock" options={{ headerShown: false }} />
           <Stack.Screen name="recovery" options={{ headerShown: false }} />
-          <Stack.Screen name="contacts" options={{ headerShown: false }} />
           {/* Authenticated tab shell (Vault · Assets · Heirs · Wasiyyah · Profile). */}
           <Stack.Screen name="(vault)" options={{ headerShown: false }} />
         </Stack>

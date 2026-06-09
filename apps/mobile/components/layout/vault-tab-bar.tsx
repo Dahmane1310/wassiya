@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { Pressable, View } from "react-native"
 import { type BottomTabBarProps } from "expo-router/js-tabs"
-import { Heart, Layers, ScrollText, Shield, Users } from "lucide-react-native"
+import { CircleUser, Heart, Layers, ScrollText, Users } from "lucide-react-native"
 import { type LucideIcon } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import { Icon } from "@workspace/ui-native/components/ui/icon"
@@ -18,7 +18,7 @@ const TAB_ICONS: Record<string, LucideIcon> = {
   vault: Layers,
   people: Users,
   wasiyyah: ScrollText,
-  settings: Shield,
+  settings: CircleUser,
 }
 
 /**
@@ -37,11 +37,14 @@ export function VaultTabBar({
   const { body } = useBrandType()
   const activeKey = state.routes[state.index]?.key
 
+  // Only the five brand tabs get a bar button. Other screens that live inside the
+  // tab group purely to keep the bar visible (e.g. `contacts`, reached from Profile/
+  // Wasiyyah) are excluded here while still rendering within the Tabs navigator.
   const routes = useMemo(
     () =>
-      [...state.routes].sort(
-        (a, b) => TAB_ORDER.indexOf(a.name) - TAB_ORDER.indexOf(b.name)
-      ),
+      [...state.routes]
+        .filter((r) => TAB_ORDER.includes(r.name))
+        .sort((a, b) => TAB_ORDER.indexOf(a.name) - TAB_ORDER.indexOf(b.name)),
     [state.routes]
   )
 

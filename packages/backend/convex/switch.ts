@@ -8,6 +8,7 @@ import {
   type QueryCtx,
 } from "./_generated/server"
 import { assertEntitled } from "./lib/entitlements"
+import { authorizeRelease } from "./release"
 
 // The dead-man's-switch state machine. ZERO crypto here — just timestamps + a
 // server-evaluated state. Release (pendingVerification → released) is intentionally
@@ -291,10 +292,25 @@ export const sweepSwitch = internalMutation({
       await logStateChange(ctx, row.ownerId, "system", "grace", "pendingVerification")
     }
 
+    // pendingVerification → released (LONGSTOP backstop). The primary release path is
+    // admin approval of a death certificate (release.reviewDeathVerification); this is
+    // the safety net for owners who configured a `longstopMs` and whose verification
+    // never arrives. Only fires once the longstop has elapsed since entering pending.
+    const pending = await ctx.db
+      .query("switchState")
+      .withIndex("by_state_and_nextDeadlineAt", (q) => q.eq("state", "pendingVerification"))
+      .take(SWEEP_BATCH)
+    for (const row of pending) {
+      if (row.longstopMs == null || row.pendingVerificationStartedAt == null) continue
+      if (row.pendingVerificationStartedAt + row.longstopMs > now) continue
+      await authorizeRelease(ctx, row.ownerId, "system:longstop")
+    }
+
     // A full batch may mean more remain — continue without blowing the txn limit.
     if (
       overdueActive.length === SWEEP_BATCH ||
-      overdueGrace.length === SWEEP_BATCH
+      overdueGrace.length === SWEEP_BATCH ||
+      pending.length === SWEEP_BATCH
     ) {
       await ctx.scheduler.runAfter(0, internal.switch.sweepSwitch, {})
     }

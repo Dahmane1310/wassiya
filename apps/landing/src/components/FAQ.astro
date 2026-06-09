@@ -1,0 +1,25 @@
+---
+import FaqAccordion from "./FaqAccordion.tsx"
+import Kicker from "./Kicker.astro"
+import Section from "./Section.astro"
+import type { Dict } from "../i18n/types"
+
+interface Props {
+  t: Dict
+}
+const { t } = Astro.props
+---
+
+<Section id="faq" muted>
+  <div class="reveal mx-auto mb-12 max-w-[600px] text-center">
+    <Kicker center>{t.faq.kicker}</Kicker>
+    <h2
+      class="mt-4 font-semibold tracking-tight"
+      style="font-size:clamp(30px,4vw,44px);line-height:1.1"
+    >
+      {t.faq.title}
+    </h2>
+  </div>
+
+  <FaqAccordion items={t.faq.items} client:visible />
+</Section>

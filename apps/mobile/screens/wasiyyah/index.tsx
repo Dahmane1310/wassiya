@@ -1,12 +1,13 @@
 import { useState } from "react"
-import { ActivityIndicator, Pressable, View } from "react-native"
+import { ActivityIndicator, View } from "react-native"
 import { useRouter } from "expo-router"
-import { Plus, Users } from "lucide-react-native"
+import { Users } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import { Button } from "@workspace/ui-native/components/ui/button"
 import { Icon } from "@workspace/ui-native/components/ui/icon"
 import { Text } from "@workspace/ui-native/components/ui/text"
 import { ScreenContainer } from "@/components/layout/screen-container"
+import { Fab } from "@/components/ui/fab"
 import { ScreenHeader } from "@/components/ui/screen-header"
 import { SectionLabel } from "@/components/ui/section-label"
 import { useDecryptedAssets } from "@/hooks/use-decrypted-assets"
@@ -14,7 +15,6 @@ import { useWasiyyah } from "@/screens/wasiyyah/hooks/use-wasiyyah"
 import { BequestHero } from "@/screens/wasiyyah/components/bequest-hero"
 import { BeneficiaryCard } from "@/screens/wasiyyah/components/beneficiary-card"
 import { AllocationSheet, type Editing } from "@/screens/wasiyyah/components/allocation-sheet"
-import { OneThirdRule } from "@/screens/wasiyyah/components/one-third-rule"
 
 const CAP = 1 / 3
 
@@ -29,24 +29,11 @@ export function WasiyyahScreen() {
   const [allocOpen, setAllocOpen] = useState(false)
   const [editing, setEditing] = useState<Editing | null>(null)
 
-  const header = (
-    <ScreenHeader
-      title={t("wasiyyah.title")}
-      subtitle={t("wasiyyah.subtitle")}
-      action={
-        <Pressable
-          onPress={() => {
-            setEditing(null)
-            setAllocOpen(true)
-          }}
-          accessibilityLabel={t("wasiyyah.add")}
-          className="h-[46px] w-[46px] items-center justify-center rounded-full bg-gold-deep shadow-md shadow-black/10 active:opacity-80"
-        >
-          <Icon as={Plus} size={24} className="text-white" />
-        </Pressable>
-      }
-    />
-  )
+  const header = <ScreenHeader title={t("wasiyyah.title")} subtitle={t("wasiyyah.subtitle")} />
+  const openAdd = () => {
+    setEditing(null)
+    setAllocOpen(true)
+  }
 
   if (loading || allocations === null || beneficiaries === null) {
     return (
@@ -84,7 +71,6 @@ export function WasiyyahScreen() {
               <Text className="font-heading text-white">{t("wasiyyah.addBeneficiaries")}</Text>
             </Button>
           </View>
-          <OneThirdRule />
         </View>
       </ScreenContainer>
     )
@@ -100,7 +86,11 @@ export function WasiyyahScreen() {
   const maxFraction = editing ? CAP - (total - editing.percentage / 100) : CAP - total
 
   return (
-    <ScreenContainer scroll edges={["top"]}>
+    <ScreenContainer
+      scroll
+      edges={["top"]}
+      fab={<Fab onPress={openAdd} label={t("wasiyyah.add")} />}
+    >
       <View className="flex-1 gap-5 pb-6 pt-1">
         {header}
 
@@ -139,8 +129,6 @@ export function WasiyyahScreen() {
             ))
           )}
         </View>
-
-        <OneThirdRule />
       </View>
 
       <AllocationSheet

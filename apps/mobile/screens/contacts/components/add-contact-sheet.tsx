@@ -7,6 +7,7 @@ import { Field } from "@/components/ui/field"
 import { Sheet } from "@/components/ui/sheet"
 import { SheetHeader } from "@/components/ui/sheet-header"
 import { useThemeColors } from "@/lib/colors"
+import { inputFontClass } from "@/lib/fonts"
 
 const emailOk = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim())
 
@@ -66,7 +67,7 @@ export function AddContactSheet({
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
-            className="h-full flex-1 font-sans text-[15.5px] text-foreground"
+            className={`h-full flex-1 ${inputFontClass} text-[15.5px] text-foreground`}
           />
         </Field>
 
@@ -77,7 +78,7 @@ export function AddContactSheet({
             placeholder={t("contacts.namePlaceholder")}
             placeholderTextColor={c.ink3}
             autoCapitalize="words"
-            className="h-full flex-1 font-sans text-[15.5px] text-foreground"
+            className={`h-full flex-1 ${inputFontClass} text-[15.5px] text-foreground`}
           />
         </Field>
 

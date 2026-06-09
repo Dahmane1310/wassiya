@@ -336,6 +336,34 @@ export async function publicKeyFingerprint(spkiBase64: string): Promise<string> 
   return bytesToBase64(new Uint8Array(digest))
 }
 
+/** Import a recipient's PKCS#8 private key (base64) for RSA-OAEP decryption — the
+ *  release side. Recovered from the recovery-wrapped escrow, then used to unwrap
+ *  each asset's DEK. */
+export async function importPrivateKey(pkcs8Base64: string): Promise<CryptoKey> {
+  return getCrypto().subtle.importKey(
+    "pkcs8",
+    base64ToBytes(pkcs8Base64),
+    RSA_OAEP_PARAMS,
+    false,
+    ["decrypt"],
+  )
+}
+
+/** Unwrap a DEK that was RSA-OAEP-wrapped to the recipient's public key (the
+ *  inverse of `wrapKeyForPublicKey`). Returns raw DEK bytes — import via
+ *  `importDataKey` and zero them after use. */
+export async function unwrapDekWithPrivateKey(
+  wrappedBase64: string,
+  privateKey: CryptoKey,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const plain = await getCrypto().subtle.decrypt(
+    RSA_OAEP_PARAMS,
+    privateKey,
+    base64ToBytes(wrappedBase64),
+  )
+  return new Uint8Array(plain)
+}
+
 // --- Recipient (beneficiary) keypair + recovery escrow ----------------------
 //
 // A beneficiary enrolls an RSA-OAEP keypair. The owner wraps asset DEKs to the

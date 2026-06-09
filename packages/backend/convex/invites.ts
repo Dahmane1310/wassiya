@@ -1,5 +1,6 @@
 import { v } from "convex/values"
 import { mutation } from "./_generated/server"
+import { authKit } from "./auth"
 
 // Single-use enrollment tokens for beneficiary account linking. Only a HASH of the
 // token is ever stored — the raw token is generated on the OWNER's device, shared
@@ -26,6 +27,14 @@ export const issueInvite = mutation({
     const beneficiary = await ctx.db.get(args.beneficiaryId)
     if (beneficiary === null || beneficiary.ownerId !== ownerId) {
       throw new Error("Not found")
+    }
+
+    // Capture the owner's display name (server-side, from their own WorkOS profile) so
+    // the beneficiary can see WHO named them on the web portal. Owner-consented.
+    const owner = await authKit.getAuthUser(ctx)
+    const ownerName = [owner?.firstName, owner?.lastName].filter(Boolean).join(" ").trim()
+    if (ownerName) {
+      await ctx.db.patch(args.beneficiaryId, { ownerName })
     }
 
     await ctx.db.insert("invites", {

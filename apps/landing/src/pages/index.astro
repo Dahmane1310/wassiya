@@ -1,16 +1,6 @@
 ---
-import CTA from "../components/CTA.astro"
-import Features from "../components/Features.astro"
-import Footer from "../components/Footer.astro"
-import Hero from "../components/Hero.astro"
-import Layout from "../layouts/Layout.astro"
+import LandingPage from "../components/LandingPage.astro"
+import { en } from "../i18n"
 ---
 
-<Layout>
-  <main>
-    <Hero />
-    <Features />
-    <CTA />
-  </main>
-  <Footer />
-</Layout>
+<LandingPage t={en} lang="en" />

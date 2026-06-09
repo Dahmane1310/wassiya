@@ -1,0 +1,83 @@
+---
+// The Wassiya brand mark: a luminous pearl cradled in a scallop shell.
+// Ported from the approved mockup (Wassiya Landing.html → <Pearl/>). Pure SVG,
+// no client JS. Each instance gets a unique gradient id so multiple marks on a
+// page don't collide.
+interface Props {
+  size?: number
+  class?: string
+}
+const { size = 40, class: cls } = Astro.props
+
+const id = "pl" + Math.random().toString(36).slice(2, 8)
+
+const palette = {
+  bg: ["#e7c477", "#b9863a"],
+  glow: "rgba(255,255,255,.28)",
+  sf: "rgba(255,255,255,0.12)",
+  ss: "rgba(255,255,255,0.46)",
+  rib: "rgba(255,255,255,0.5)",
+  p: ["#ffffff", "#f3e7cf", "#dcc59a"],
+  spec: "rgba(255,255,255,0.95)",
+  occ: "rgba(120,86,30,0.16)",
+}
+
+const hinge = { x: 60, y: 91 }
+const R = 43
+const a0 = 210
+const a1 = 330
+const N = 6
+const pt = (d: number, r: number) => ({
+  x: hinge.x + r * Math.cos((d * Math.PI) / 180),
+  y: hinge.y + r * Math.sin((d * Math.PI) / 180),
+})
+const v: { x: number; y: number }[] = []
+for (let i = 0; i <= N; i++) v.push(pt(a0 + ((a1 - a0) * i) / N, R))
+let rim = ""
+for (let i = 0; i < N; i++) {
+  const mA = a0 + ((a1 - a0) * (i + 0.5)) / N
+  const pk = pt(mA, R + 5.5)
+  rim += `Q ${pk.x.toFixed(1)} ${pk.y.toFixed(1)} ${v[i + 1].x.toFixed(1)} ${v[i + 1].y.toFixed(1)} `
+}
+const shell = `M${hinge.x} ${hinge.y} L${v[0].x.toFixed(1)} ${v[0].y.toFixed(1)} ${rim}Z`
+const ribs = v
+  .map((p2) => {
+    const r = { x: hinge.x + (p2.x - hinge.x) * 0.93, y: hinge.y + (p2.y - hinge.y) * 0.93 }
+    return `M${hinge.x} ${hinge.y} L${r.x.toFixed(1)} ${r.y.toFixed(1)}`
+  })
+  .join(" ")
+---
+
+<svg
+  width={size}
+  height={size}
+  viewBox="0 0 120 120"
+  class={cls}
+  style="display:block;border-radius:24.5%"
+  aria-hidden="true"
+>
+  <defs>
+    <linearGradient id={id + "b"} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color={palette.bg[0]}></stop>
+      <stop offset="1" stop-color={palette.bg[1]}></stop>
+    </linearGradient>
+    <radialGradient id={id + "g"} cx="32%" cy="22%" r="82%">
+      <stop offset="0" stop-color={palette.glow}></stop>
+      <stop offset="0.62" stop-color="rgba(0,0,0,0)"></stop>
+    </radialGradient>
+    <radialGradient id={id + "p"} cx="39%" cy="33%" r="70%">
+      <stop offset="0" stop-color={palette.p[0]}></stop>
+      <stop offset="0.5" stop-color={palette.p[1]}></stop>
+      <stop offset="1" stop-color={palette.p[2]}></stop>
+    </radialGradient>
+  </defs>
+  <rect width="120" height="120" fill={`url(#${id}b)`}></rect>
+  <rect width="120" height="120" fill={`url(#${id}g)`}></rect>
+  <path d={shell} fill={palette.sf} stroke={palette.ss} stroke-width="2.6" stroke-linejoin="round"
+  ></path>
+  <path d={ribs} fill="none" stroke={palette.rib} stroke-width="2" stroke-linecap="round"></path>
+  <ellipse cx="60" cy="69" rx="12" ry="3.4" fill={palette.occ}></ellipse>
+  <circle cx="60" cy="53" r="15.5" fill={`url(#${id}p)`}></circle>
+  <circle cx="54.5" cy="47" r="4.4" fill={palette.spec} opacity="0.9"></circle>
+  <circle cx="65" cy="58.5" r="1.8" fill={palette.spec} opacity="0.4"></circle>
+</svg>

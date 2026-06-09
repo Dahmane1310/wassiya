@@ -1,4 +1,5 @@
 import { v } from "convex/values"
+import { computeFaraid, type Heir as EngineHeir } from "@workspace/faraid"
 import { mutation, query } from "./_generated/server"
 
 // A beneficiary-user's release keypair — one per person (`userId` = WorkOS
@@ -23,6 +24,142 @@ export const getMyRecipientStatus = query({
       .withIndex("by_userId", (q) => q.eq("userId", identity.tokenIdentifier))
       .unique()
     return { enrolled: row !== null, keyFingerprint: row?.keyFingerprint ?? null }
+  },
+})
+
+/**
+ * The owners who named the current user as a beneficiary — the web portal's "People
+ * who named you". One person (recipient keypair) can be named by many owners. For
+ * each, returns the owner's display name, their switch status, the beneficiary's role
+ * + relationship + legal share (live Fara'id pre-release, frozen `releaseDistribution`
+ * after), and how many items are reserved. Asset CONTENTS stay sealed until release —
+ * only name/relation/share are surfaced (per the product decision). All structural
+ * inputs (family tree) are plaintext by design, so no ciphertext is exposed.
+ */
+export const listMyBenefactors = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      beneficiaryId: v.id("beneficiaries"),
+      ownerId: v.string(),
+      ownerName: v.string(),
+      status: v.union(
+        v.literal("active"),
+        v.literal("grace"),
+        v.literal("pending"),
+        v.literal("released"),
+      ),
+      role: v.union(v.literal("heir"), v.literal("recipient")),
+      relationship: v.union(v.string(), v.null()),
+      shareLabel: v.union(v.string(), v.null()),
+      nextDeadlineAt: v.union(v.number(), v.null()),
+      graceStartedAt: v.union(v.number(), v.null()),
+      gracePeriodMs: v.union(v.number(), v.null()),
+      releaseAuthorizedAt: v.union(v.number(), v.null()),
+      itemCount: v.number(),
+    }),
+  ),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (identity === null) return []
+    const me = identity.tokenIdentifier
+    const rows = await ctx.db
+      .query("beneficiaries")
+      .withIndex("by_linkedUserId", (q) => q.eq("linkedUserId", me))
+      .take(100)
+
+    const out: Array<{
+      beneficiaryId: (typeof rows)[number]["_id"]
+      ownerId: string
+      ownerName: string
+      status: "active" | "grace" | "pending" | "released"
+      role: "heir" | "recipient"
+      relationship: string | null
+      shareLabel: string | null
+      nextDeadlineAt: number | null
+      graceStartedAt: number | null
+      gracePeriodMs: number | null
+      releaseAuthorizedAt: number | null
+      itemCount: number
+    }> = []
+
+    for (const b of rows) {
+      const ownerId = b.ownerId
+      const sw = await ctx.db
+        .query("switchState")
+        .withIndex("by_ownerId", (q) => q.eq("ownerId", ownerId))
+        .unique()
+      const raw = sw?.state ?? "active"
+      const status =
+        raw === "grace" ? "grace" : raw === "pendingVerification" ? "pending" : raw === "released" ? "released" : "active"
+
+      const fam = await ctx.db
+        .query("familyMembers")
+        .withIndex("by_ownerId", (q) => q.eq("ownerId", ownerId))
+        .take(200)
+      const myHeir = fam.find((f) => f.linkedBeneficiaryId === b._id) ?? null
+      const role: "heir" | "recipient" = myHeir ? "heir" : "recipient"
+
+      let shareLabel: string | null = null
+      if (status === "released") {
+        const dist = await ctx.db
+          .query("releaseDistribution")
+          .withIndex("by_ownerId", (q) => q.eq("ownerId", ownerId))
+          .take(300)
+        const mine = dist.find(
+          (d) => (myHeir && d.familyMemberId === myHeir._id) || d.beneficiaryId === b._id,
+        )
+        if (mine) shareLabel = `${mine.fractionNumerator}/${mine.fractionDenominator}`
+      } else if (myHeir) {
+        const owner = await ctx.db
+          .query("users")
+          .withIndex("by_tokenIdentifier", (q) => q.eq("tokenIdentifier", ownerId))
+          .unique()
+        const res = computeFaraid({
+          deceasedGender: owner?.ownerGender ?? undefined,
+          heirs: fam
+            .filter((f) => f.relationship !== "other")
+            .map<EngineHeir>((f) => ({
+              id: f._id,
+              relationship: f.relationship,
+              lineage: f.lineage ?? undefined,
+              gender: f.gender,
+              isAlive: f.isAlive,
+            })),
+        })
+        if (res.status === "ok") {
+          const s = res.shares.find((x) => x.heirId === myHeir._id)
+          if (s) shareLabel = `${s.numerator}/${s.denominator}`
+        }
+      } else {
+        const alloc = await ctx.db
+          .query("wasiyyahAllocations")
+          .withIndex("by_beneficiaryId", (q) => q.eq("beneficiaryId", b._id))
+          .first()
+        if (alloc) shareLabel = `${alloc.percentage}% bequest`
+      }
+
+      const wraps = await ctx.db
+        .query("wrappedKeys")
+        .withIndex("by_beneficiaryId", (q) => q.eq("beneficiaryId", b._id))
+        .take(500)
+
+      out.push({
+        beneficiaryId: b._id,
+        ownerId,
+        ownerName: b.ownerName ?? "Someone",
+        status,
+        role,
+        relationship: myHeir?.relationship ?? null,
+        shareLabel,
+        nextDeadlineAt: sw?.nextDeadlineAt ?? null,
+        graceStartedAt: sw?.graceStartedAt ?? null,
+        gracePeriodMs: sw?.gracePeriodMs ?? null,
+        releaseAuthorizedAt: sw?.releaseAuthorizedAt ?? null,
+        itemCount: wraps.length,
+      })
+    }
+    return out
   },
 })
 

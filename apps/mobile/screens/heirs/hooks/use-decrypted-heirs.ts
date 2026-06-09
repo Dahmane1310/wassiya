@@ -14,12 +14,14 @@ export type DecryptedHeir = {
   gender: Gender
   isAlive: boolean
   name: string | null
+  /** The linked beneficiary (set when the heir has an email) — invitable + decrypts. */
+  linkedBeneficiaryId: Id<"beneficiaries"> | null
 }
 
 /** Decrypts heir names on render (mirror of `useDecryptedAssets`). The structural
  *  fields don't need decryption — only the name is PII. */
 export function useDecryptedHeirs() {
-  const { rows, add, setAlive, remove } = useHeirs()
+  const { rows, add, update, setAlive, remove } = useHeirs()
   const masterKey = useMasterKey()
   const [heirs, setHeirs] = useState<DecryptedHeir[] | null>(null)
 
@@ -44,6 +46,7 @@ export function useDecryptedHeirs() {
           gender: r.gender,
           isAlive: r.isAlive,
           name,
+          linkedBeneficiaryId: r.linkedBeneficiaryId,
         }
       })
     ).then((next) => {
@@ -58,6 +61,7 @@ export function useDecryptedHeirs() {
     heirs,
     loading: rows === undefined || !masterKey || heirs === null,
     add,
+    update,
     setAlive,
     remove,
   }

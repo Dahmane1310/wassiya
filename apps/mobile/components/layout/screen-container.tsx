@@ -17,6 +17,8 @@ type ScreenContainerProps = {
   className?: string
   /** Classes for the inner content wrapper / scroll content container. */
   contentClassName?: string
+  /** Floating action button, anchored bottom-right above the tab bar / safe area. */
+  fab?: React.ReactNode
 }
 
 /**
@@ -32,6 +34,7 @@ export function ScreenContainer({
   background,
   className,
   contentClassName,
+  fab,
 }: ScreenContainerProps) {
   const insets = useSafeAreaInsets()
 
@@ -54,17 +57,37 @@ export function ScreenContainer({
     </View>
   ) : null
 
+  // Anchor the FAB bottom-right, clearing the bottom safe-area (the tab bar owns it
+  // on tab screens, so `bottom` edge is usually unset → just a fixed offset).
+  const fabLayer = fab ? (
+    <View
+      pointerEvents="box-none"
+      style={{
+        position: "absolute",
+        right: 20,
+        bottom: (edges.includes("bottom") ? insets.bottom : 0) + 20,
+      }}
+    >
+      {fab}
+    </View>
+  ) : null
+
   if (scroll) {
+    // Extra bottom padding so scrolled content can clear the floating FAB.
+    const scrollInset = fab
+      ? { ...inset, paddingBottom: (inset.paddingBottom ?? 0) + 88 }
+      : inset
     return (
       <View className={cn("flex-1 bg-background", className)}>
         {backgroundLayer}
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={inset}
+          contentContainerStyle={scrollInset}
           contentContainerClassName={cn("grow px-6", contentClassName)}
         >
           {children}
         </ScrollView>
+        {fabLayer}
       </View>
     )
   }
@@ -73,6 +96,7 @@ export function ScreenContainer({
     <View className={cn("flex-1 bg-background", className)} style={inset}>
       {backgroundLayer}
       <View className={cn("flex-1 px-6", contentClassName)}>{children}</View>
+      {fabLayer}
     </View>
   )
 }

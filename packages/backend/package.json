@@ -20,6 +20,7 @@
   "dependencies": {
     "@convex-dev/workos-authkit": "^0.2.6",
     "@workos-inc/node": "^9.3.1",
+    "@workspace/faraid": "workspace:*",
     "convex": "^1.39.1"
   },
   "devDependencies": {

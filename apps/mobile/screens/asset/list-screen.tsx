@@ -1,11 +1,11 @@
 import { useState } from "react"
-import { Pressable, SectionList, View } from "react-native"
-import { Plus, Vault } from "lucide-react-native"
+import { SectionList, View } from "react-native"
+import { Vault } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import { type Id } from "@workspace/backend/dataModel"
-import { Icon } from "@workspace/ui-native/components/ui/icon"
 import { EmptyState } from "@/components/layout/empty-state"
 import { ScreenContainer } from "@/components/layout/screen-container"
+import { Fab } from "@/components/ui/fab"
 import { ScreenHeader } from "@/components/ui/screen-header"
 import {
   useDecryptedAssets,
@@ -47,15 +47,6 @@ export function AssetListScreen() {
       <ScreenHeader
         title={t("asset.list.title")}
         subtitle={t("asset.list.subtitle", { count })}
-        action={
-          <Pressable
-            onPress={onAdd}
-            accessibilityLabel={t("asset.list.add")}
-            className="h-[46px] w-[46px] items-center justify-center rounded-full bg-primary shadow-md shadow-primary/30 active:opacity-80"
-          >
-            <Icon as={Plus} className="text-primary-foreground" size={24} />
-          </Pressable>
-        }
       />
     </View>
   )
@@ -109,14 +100,14 @@ export function AssetListScreen() {
         )}
         ItemSeparatorComponent={() => <View className="h-3" />}
         stickySectionHeadersEnabled={false}
-        contentContainerClassName="pb-8"
+        contentContainerClassName="pb-28"
         showsVerticalScrollIndicator={false}
       />
     )
   }
 
   return (
-    <ScreenContainer edges={["top"]}>
+    <ScreenContainer edges={["top"]} fab={<Fab onPress={onAdd} label={t("asset.list.add")} />}>
       {renderContent()}
       <AddAssetSheet open={showAdd} onClose={() => setShowAdd(false)} />
       <EditAssetSheet

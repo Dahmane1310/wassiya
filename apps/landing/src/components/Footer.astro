@@ -1,19 +1,53 @@
 ---
-const year = new Date().getFullYear()
+import Icon from "./Icon.astro"
+import Pearl from "./Pearl.astro"
+import type { Dict, Lang } from "../i18n/types"
+
+interface Props {
+  t: Dict
+  lang: Lang
+}
+const { t, lang } = Astro.props
+const wordmark = lang === "ar" ? "وصية" : "Wassiya"
 ---
 
-<footer class="border-t">
-  <div
-    class="text-muted-foreground mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-6 py-8 text-sm sm:flex-row"
-  >
-    <span>© {year} Wassiya</span>
-    <nav class="flex gap-4">
-      <a class="hover:text-foreground transition-colors" href="https://docs.convex.dev">
-        Docs
-      </a>
-      <a class="hover:text-foreground transition-colors" href="https://github.com">
-        GitHub
-      </a>
-    </nav>
+<footer class="border-border bg-secondary border-t px-6 pt-14 pb-9">
+  <div class="mx-auto max-w-[1180px]">
+    <div class="grid gap-10 sm:grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <Pearl size={38} />
+          <span class="text-[23px] font-semibold">{wordmark}</span>
+        </div>
+        <div class="text-muted-foreground mt-4 max-w-[240px] text-lg leading-snug font-normal italic">
+          {t.footer.tagline}
+        </div>
+      </div>
+      {
+        t.footer.cols.map((c) => (
+          <div>
+            <div class="text-ink-3 text-[13px] font-extrabold tracking-wide uppercase">{c.h}</div>
+            <div class="mt-4 flex flex-col gap-2.5">
+              {c.links.map((l) => (
+                <a
+                  href="#top"
+                  class="text-muted-foreground hover:text-gold-deep text-[14.5px] font-semibold transition-colors"
+                >
+                  {l}
+                </a>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+    <div
+      class="border-border mt-12 flex flex-wrap items-center justify-between gap-4 border-t pt-6"
+    >
+      <span class="text-ink-3 text-[13px] font-medium">{t.footer.rights}</span>
+      <span class="text-ink-3 inline-flex items-center gap-1.5 text-[12.5px] font-bold">
+        <Icon name="shieldCheck" size={15} class="text-green" /> Zero-knowledge
+      </span>
+    </div>
   </div>
 </footer>

@@ -1,0 +1,18 @@
+---
+import Icon from "./Icon.astro"
+
+interface Props {
+  name: string
+  tint?: string
+  size?: number
+  radius?: number
+}
+const { name, tint = "var(--gold-deep)", size = 52, radius = 16 } = Astro.props
+---
+
+<div
+  class="flex shrink-0 items-center justify-center"
+  style={`width:${size}px;height:${size}px;border-radius:${radius}px;background:color-mix(in oklch, ${tint} 12%, var(--card));color:${tint};border:1px solid color-mix(in oklch, ${tint} 20%, transparent)`}
+>
+  <Icon name={name} size={Math.round(size * 0.46)} strokeWidth={1.8} />
+</div>

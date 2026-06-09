@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { ActivityIndicator, Pressable, View } from "react-native"
-import { AlertTriangle, Info, Plus, ShieldCheck, Users } from "lucide-react-native"
+import { AlertTriangle, ShieldCheck, Users } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "@workspace/backend/api"
@@ -10,6 +10,7 @@ import { Text } from "@workspace/ui-native/components/ui/text"
 import { cn } from "@workspace/ui-native/lib/utils"
 import { EmptyState } from "@/components/layout/empty-state"
 import { ScreenContainer } from "@/components/layout/screen-container"
+import { Fab } from "@/components/ui/fab"
 import { Pill } from "@/components/ui/pill"
 import { ScreenHeader } from "@/components/ui/screen-header"
 import { SectionLabel } from "@/components/ui/section-label"
@@ -18,6 +19,7 @@ import { pct } from "@/lib/estate-summary"
 import { useDecryptedHeirs, type DecryptedHeir } from "@/screens/heirs/hooks/use-decrypted-heirs"
 import { AddHeirSheet } from "@/screens/flows/add-heir-sheet"
 import { Donut } from "@/screens/heirs/components/donut"
+import { EditHeirSheet } from "@/screens/heirs/components/edit-heir-sheet"
 import { FamilyTree } from "@/screens/heirs/components/family-tree"
 
 /** Heirs — interactive family tree wired to the REAL Fara'id engine
@@ -27,11 +29,11 @@ export function HeirsScreen() {
   const { t } = useTranslation()
   const c = useThemeColors()
   const palette = heirPalette(c)
-  const { heirs, loading, add } = useDecryptedHeirs()
+  const { heirs, loading, add, update, remove } = useDecryptedHeirs()
   const currentUser = useQuery(api.users.currentUser)
   const setOwnerGender = useMutation(api.users.setOwnerGender)
 
-  const [override, setOverride] = useState<Record<string, boolean>>({})
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [showAddHeir, setShowAddHeir] = useState(false)
 
@@ -45,27 +47,23 @@ export function HeirsScreen() {
   }
 
   const ownerGender = currentUser?.ownerGender ?? null
-  const header = (
-    <ScreenHeader
-      title={t("heirs.title")}
-      subtitle={t("heirs.subtitle")}
-      action={
-        <Pressable
-          onPress={() => setShowAddHeir(true)}
-          accessibilityLabel={t("heirs.add")}
-          className="h-[46px] w-[46px] items-center justify-center rounded-full bg-gold-deep shadow-md shadow-black/10 active:opacity-80"
-        >
-          <Icon as={Plus} size={24} className="text-white" />
-        </Pressable>
-      }
-    />
-  )
+  const header = <ScreenHeader title={t("heirs.title")} subtitle={t("heirs.subtitle")} />
   const sheet = (
     <AddHeirSheet
       open={showAddHeir}
       onClose={() => setShowAddHeir(false)}
       add={add}
       ownerGender={ownerGender}
+    />
+  )
+  const editSheet = (
+    <EditHeirSheet
+      open={editingId !== null}
+      onClose={() => setEditingId(null)}
+      heir={heirs?.find((h) => h.id === editingId) ?? null}
+      relLabel={relLabel}
+      update={update}
+      remove={remove}
     />
   )
 
@@ -86,61 +84,41 @@ export function HeirsScreen() {
       return <EmptyState icon={Users} title={t("heirs.emptyTitle")} body={t("heirs.emptyBody")} />
     }
 
-    const effective = heirs.map((h) => ({ ...h, isAlive: override[h.id] ?? h.isAlive }))
-  const idx = new Map<string, number>(heirs.map((h, i) => [h.id, i]))
-  const colorFor = (id: string) => palette[(idx.get(id) ?? 0) % palette.length]!
-  const ownerInitials =
-    ((currentUser?.firstName?.[0] ?? "") + (currentUser?.lastName?.[0] ?? "")).toUpperCase() || "•"
+    const idx = new Map<string, number>(heirs.map((h, i) => [h.id, i]))
+    const colorFor = (id: string) => palette[(idx.get(id) ?? 0) % palette.length]!
+    const ownerInitials =
+      ((currentUser?.firstName?.[0] ?? "") + (currentUser?.lastName?.[0] ?? "")).toUpperCase() || "•"
 
-  const hasSpouse = effective.some((h) => h.relationship === "spouse" && h.isAlive)
-  const result = computeFaraid({
-    deceasedGender: ownerGender ?? undefined,
-    heirs: effective.map<EngineHeir>((h) => ({
-      id: h.id,
-      relationship: h.relationship,
-      lineage: h.lineage ?? undefined,
-      gender: h.gender,
-      isAlive: h.isAlive,
-    })),
-  })
+    const hasSpouse = heirs.some((h) => h.relationship === "spouse" && h.isAlive)
+    const result = computeFaraid({
+      deceasedGender: ownerGender ?? undefined,
+      heirs: heirs.map<EngineHeir>((h) => ({
+        id: h.id,
+        relationship: h.relationship,
+        lineage: h.lineage ?? undefined,
+        gender: h.gender,
+        isAlive: h.isAlive,
+      })),
+    })
 
-  const isDefault = Object.keys(override).length === 0
-  const toggle = (id: string) =>
-    setOverride((o) => ({
-      ...o,
-      [id]: !(o[id] ?? heirs.find((h) => h.id === id)?.isAlive ?? true),
-    }))
-
-  const shareMap =
-    result.status === "ok"
-      ? new Map(result.shares.map((s) => [s.heirId, s]))
-      : new Map<string, never>()
-  const donutData = effective
-    .filter((h) => h.relationship !== "other")
-    .map((h) => ({ id: h.id, color: colorFor(h.id), value: shareMap.get(h.id)?.fraction ?? 0 }))
-  const legend = result.status === "ok" ? [...result.shares].sort((a, b) => b.fraction - a.fraction) : []
+    const shareMap =
+      result.status === "ok"
+        ? new Map(result.shares.map((s) => [s.heirId, s]))
+        : new Map<string, never>()
+    const donutData = heirs
+      .filter((h) => h.relationship !== "other")
+      .map((h) => ({ id: h.id, color: colorFor(h.id), value: shareMap.get(h.id)?.fraction ?? 0 }))
+    const legend = result.status === "ok" ? [...result.shares].sort((a, b) => b.fraction - a.fraction) : []
 
     return (
       <>
         <FamilyTree
-          members={effective}
-          onToggle={toggle}
+          members={heirs}
+          onSelect={(id) => setEditingId(id)}
           colorFor={colorFor}
           label={relLabel}
           ownerInitials={ownerInitials}
         />
-
-        {!isDefault ? (
-          <View className="flex-row items-center gap-2.5 rounded-2xl border border-gold/30 bg-gold-soft px-3.5 py-3">
-            <Icon as={Info} size={18} className="text-gold-deep" />
-            <Text className="flex-1 font-sans-medium text-[13px] leading-[1.35] text-gold-deep">
-              {t("heirs.whatIf")}
-            </Text>
-            <Pressable onPress={() => setOverride({})} className="active:opacity-70">
-              <Text className="font-heading text-[13px] text-gold-deep">{t("heirs.reset")}</Text>
-            </Pressable>
-          </View>
-        ) : null}
 
         <View>
           <SectionLabel right={<Pill tone="blue">{t("heirs.ifFiredToday")}</Pill>}>
@@ -226,12 +204,17 @@ export function HeirsScreen() {
   }
 
   return (
-    <ScreenContainer scroll edges={["top"]}>
+    <ScreenContainer
+      scroll
+      edges={["top"]}
+      fab={<Fab onPress={() => setShowAddHeir(true)} label={t("heirs.add")} />}
+    >
       <View className="flex-1 gap-4 pb-6 pt-1">
         {header}
         {renderContent()}
       </View>
       {sheet}
+      {editSheet}
     </ScreenContainer>
   )
 }

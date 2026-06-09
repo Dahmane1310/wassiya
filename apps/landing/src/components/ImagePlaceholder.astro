@@ -1,0 +1,31 @@
+---
+// Fillable image slot. Drop a real photo into apps/landing/public and pass its
+// path as `src` to replace the placeholder. Until then it shows a captioned
+// muted panel (the design's empty state).
+interface Props {
+  caption?: string
+  src?: string
+  alt?: string
+  aspect?: string
+  class?: string
+}
+const { caption = "Drop an image", src, alt = "", aspect = "4 / 5", class: cls } = Astro.props
+---
+
+{
+  src ? (
+    <img
+      src={src}
+      alt={alt}
+      class={cls}
+      style={`display:block;width:100%;aspect-ratio:${aspect};object-fit:cover;border-radius:var(--radius)`}
+    />
+  ) : (
+    <div
+      class={cls}
+      style={`display:flex;align-items:center;justify-content:center;text-align:center;width:100%;aspect-ratio:${aspect};border-radius:var(--radius);background:var(--muted);border:1px dashed var(--border);color:var(--muted-foreground);padding:24px;font-size:14px;font-weight:500`}
+    >
+      {caption}
+    </div>
+  )
+}

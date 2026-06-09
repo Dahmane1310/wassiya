@@ -177,6 +177,10 @@ export default defineSchema({
     status: v.union(v.literal("invited"), v.literal("enrolled")),
     linkedUserId: v.optional(v.string()), // their own tokenIdentifier once they sign up
     label: v.optional(encrypted), // owner's private note/name for them
+    // Owner's display name, captured server-side from the owner's WorkOS profile when
+    // they issue the invite (owner consents by naming them). Plaintext so the
+    // beneficiary can see WHO named them on the web portal. Not secret estate data.
+    ownerName: v.optional(v.string()),
   })
     .index("by_ownerId", ["ownerId"])
     .index("by_linkedUserId", ["linkedUserId"]) // a beneficiary finds vaults naming them
