@@ -15,7 +15,7 @@ export function Logo({ size = 34 }: { size?: number }) {
         alignItems: "center",
         justifyContent: "center",
         fontFamily: "var(--font-display)",
-        fontWeight: 600,
+        fontWeight: 800,
         fontSize: size * 0.52,
         letterSpacing: -0.5,
         boxShadow: "var(--shadow-sm)",

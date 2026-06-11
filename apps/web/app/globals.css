@@ -3,7 +3,7 @@
    Wrap portal pages in <div className="portal">. Values ported from the mockup
    (Wassiya Web.template.html). */
 .portal {
-  --bg: oklch(0.965 0.006 80);
+  --bg: oklch(0.982 0.006 80);
   --surface: oklch(1 0 0);
   --surface-2: oklch(0.978 0.006 80);
   --surface-3: oklch(0.962 0.007 80);
@@ -15,16 +15,21 @@
   --line: oklch(0.915 0.006 80);
   --line-2: oklch(0.945 0.006 80);
 
-  --primary: oklch(0.48 0.115 245);
-  --primary-600: oklch(0.42 0.12 248);
-  --primary-soft: oklch(0.955 0.028 245);
+  --primary: oklch(0.58 0.1 66);
+  --primary-600: oklch(0.5 0.105 64);
+  --primary-soft: oklch(0.955 0.035 80);
+
+  /* "Released" status family — the only place blue survives the bronze rebrand. */
+  --blue: oklch(0.48 0.115 245);
+  --blue-600: oklch(0.42 0.12 248);
+  --blue-soft: oklch(0.955 0.028 245);
 
   --gold: oklch(0.7 0.105 72);
-  --gold-deep: oklch(0.56 0.1 64);
+  --gold-deep: oklch(0.58 0.1 66);
   --gold-soft: oklch(0.96 0.03 80);
 
-  --green: oklch(0.58 0.1 162);
-  --green-soft: oklch(0.955 0.038 162);
+  --green: oklch(0.6 0.1 160);
+  --green-soft: oklch(0.95 0.04 160);
 
   --amber: oklch(0.72 0.13 70);
   --amber-soft: oklch(0.96 0.05 75);
@@ -34,10 +39,10 @@
 
   --espresso: oklch(0.21 0.014 62);
 
-  --font-display: var(--font-spectral), Georgia, serif;
-  --font-sans: var(--font-jakarta), -apple-system, system-ui, sans-serif;
+  --font-display: var(--font-inter), -apple-system, system-ui, sans-serif;
+  --font-sans: var(--font-inter), -apple-system, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
-  --font-ar: var(--font-reem), sans-serif;
+  --font-ar: var(--font-tajawal), sans-serif;
 
   --r-lg: 18px;
   --r-md: 13px;

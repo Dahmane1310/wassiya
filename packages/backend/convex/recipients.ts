@@ -57,6 +57,17 @@ export const listMyBenefactors = query({
       gracePeriodMs: v.union(v.number(), v.null()),
       releaseAuthorizedAt: v.union(v.number(), v.null()),
       itemCount: v.number(),
+      // The owner's death-report case, if any. `rejectedReason` is the
+      // reviewer's note — only exposed when the report was rejected, so the
+      // submitter knows what to fix before sending a corrected one.
+      deathCase: v.union(
+        v.null(),
+        v.object({
+          status: v.string(),
+          rejectedReason: v.union(v.string(), v.null()),
+          submittedAt: v.union(v.number(), v.null()),
+        }),
+      ),
     }),
   ),
   handler: async (ctx) => {
@@ -81,6 +92,11 @@ export const listMyBenefactors = query({
       gracePeriodMs: number | null
       releaseAuthorizedAt: number | null
       itemCount: number
+      deathCase: {
+        status: string
+        rejectedReason: string | null
+        submittedAt: number | null
+      } | null
     }> = []
 
     for (const b of rows) {
@@ -144,6 +160,11 @@ export const listMyBenefactors = query({
         .withIndex("by_beneficiaryId", (q) => q.eq("beneficiaryId", b._id))
         .take(500)
 
+      const dv = await ctx.db
+        .query("deathVerification")
+        .withIndex("by_ownerId", (q) => q.eq("ownerId", ownerId))
+        .unique()
+
       out.push({
         beneficiaryId: b._id,
         ownerId,
@@ -157,6 +178,15 @@ export const listMyBenefactors = query({
         gracePeriodMs: sw?.gracePeriodMs ?? null,
         releaseAuthorizedAt: sw?.releaseAuthorizedAt ?? null,
         itemCount: wraps.length,
+        deathCase:
+          dv === null
+            ? null
+            : {
+                status: dv.status,
+                rejectedReason:
+                  dv.status === "rejected" ? (dv.reviewNotes ?? null) : null,
+                submittedAt: dv.submittedAt ?? dv._creationTime,
+              },
       })
     }
     return out

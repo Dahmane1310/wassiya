@@ -1,9 +1,4 @@
-import {
-  Spectral,
-  Plus_Jakarta_Sans,
-  JetBrains_Mono,
-  Reem_Kufi,
-} from "next/font/google"
+import { Inter, JetBrains_Mono, Tajawal } from "next/font/google"
 
 import "@workspace/ui/globals.css"
 import "./globals.css"
@@ -11,21 +6,16 @@ import { ConvexClientProvider } from "@/components/convex-client-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@workspace/ui/lib/utils"
 
-// Beneficiary-portal type system (Claude Design handoff): Spectral serif for
-// legacy/headings, Plus Jakarta Sans for UI, JetBrains Mono for ciphertext,
-// Reem Kufi for Arabic. Exposed as CSS variables consumed by app/globals.css.
-const spectral = Spectral({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-spectral",
-})
-const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta" })
+// Wassiya brand type system (shared with mobile and landing): Inter for Latin
+// UI and headings, Tajawal for Arabic, JetBrains Mono for ciphertext. Exposed
+// as CSS variables consumed by app/globals.css.
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" })
-const reemKufi = Reem_Kufi({
-  subsets: ["arabic", "latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-reem",
+// Tajawal is not a variable font — weights must be listed explicitly.
+const tajawal = Tajawal({
+  subsets: ["arabic"],
+  weight: ["400", "500", "700"],
+  variable: "--font-tajawal",
 })
 
 export default function RootLayout({
@@ -39,10 +29,9 @@ export default function RootLayout({
       suppressHydrationWarning
       className={cn(
         "antialiased",
-        spectral.variable,
-        jakarta.variable,
+        inter.variable,
         jetbrains.variable,
-        reemKufi.variable,
+        tajawal.variable,
       )}
     >
       <body>

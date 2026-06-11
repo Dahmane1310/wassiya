@@ -1,0 +1,15 @@
+/* Arabic typography: swap Inter for Tajawal under RTL (same convention as the
+   landing site). The attribute selector outbeats next/font's variable class, so
+   the override cascades into Tailwind's font-sans utility. Mono (ids, hashes)
+   intentionally stays JetBrains Mono in both languages. */
+html[dir="rtl"] {
+  --font-sans: var(--font-tajawal), "Inter", sans-serif;
+}
+
+/* Tajawal is cursive-joined — letter-spacing breaks the joins. */
+
+html[dir="rtl"] .tracking-tight,
+html[dir="rtl"] .tracking-wider,
+html[dir="rtl"] .tracking-wide {
+  letter-spacing: 0;
+}

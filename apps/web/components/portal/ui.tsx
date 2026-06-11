@@ -35,7 +35,7 @@ export function Btn({
   const S = { sm: { h: 36, fs: 13.5, px: 14, r: 10 }, md: { h: 44, fs: 14.5, px: 18, r: 12 }, lg: { h: 52, fs: 16, px: 24, r: 14 } }[size]
   const V: Record<BtnVariant, CSSProperties> = {
     primary: { background: "var(--espresso)", color: "#fff", boxShadow: "var(--shadow-sm)" },
-    blue: { background: "var(--primary)", color: "#fff", boxShadow: "0 6px 14px -6px var(--primary)" },
+    blue: { background: "var(--blue)", color: "#fff", boxShadow: "0 6px 14px -6px var(--blue)" },
     gold: { background: "var(--gold-deep)", color: "#fff", boxShadow: "0 6px 14px -6px var(--gold-deep)" },
     green: { background: "var(--green)", color: "#fff", boxShadow: "0 6px 14px -7px var(--green)" },
     soft: { background: "var(--surface-3)", color: "var(--ink)" },
@@ -101,7 +101,7 @@ export function Pill({
   const T: Record<Tone, { bg: string; fg: string }> = {
     neutral: { bg: "var(--surface-3)", fg: "var(--ink-2)" },
     green: { bg: "var(--green-soft)", fg: "var(--green)" },
-    blue: { bg: "var(--primary-soft)", fg: "var(--primary)" },
+    blue: { bg: "var(--blue-soft)", fg: "var(--blue)" },
     gold: { bg: "var(--gold-soft)", fg: "var(--gold-deep)" },
     amber: { bg: "var(--amber-soft)", fg: "oklch(0.5 0.13 60)" },
     red: { bg: "var(--red-soft)", fg: "var(--red)" },
@@ -198,14 +198,26 @@ export function Modal({ open, onClose, children, width = 460 }: { open: boolean;
   )
 }
 
-export type StatusKey = "active" | "grace" | "pending" | "released"
+export type StatusKey = "active" | "grace" | "pending" | "released" | "rejected"
 export const STATUS: Record<StatusKey, { label: string; tone: Tone; icon: IconName; desc: string }> = {
   active: { label: "Active & healthy", tone: "green", icon: "pulse", desc: "Checking in regularly. Nothing for you to do." },
   grace: { label: "Check-in overdue", tone: "amber", icon: "clock", desc: "A check-in was missed — a grace period is counting down." },
   pending: { label: "Awaiting verification", tone: "gold", icon: "file", desc: "Grace has lapsed. A death certificate is being reviewed." },
   released: { label: "Released to you", tone: "blue", icon: "lockOpen", desc: "The instructions left for you are ready to view." },
+  // Display-only overlay: the switch may still be counting down, but the
+  // submitted report was reviewed and couldn't be approved.
+  rejected: { label: "Report needs another look", tone: "red", icon: "alert", desc: "The report couldn't be approved — see the note and submit again." },
+}
+
+/** The status to DISPLAY: a rejected death report overlays the switch state
+ *  (unless the estate has already been released). */
+export function displayStatus(
+  status: Exclude<StatusKey, "rejected">,
+  deathCase: { status: string } | null,
+): StatusKey {
+  return status !== "released" && deathCase?.status === "rejected" ? "rejected" : status
 }
 
 export function toneColor(tone: Tone): string {
-  return tone === "green" ? "var(--green)" : tone === "amber" ? "oklch(0.55 0.13 60)" : tone === "blue" ? "var(--primary)" : tone === "gold" ? "var(--gold-deep)" : "var(--ink-3)"
+  return tone === "green" ? "var(--green)" : tone === "amber" ? "oklch(0.55 0.13 60)" : tone === "blue" ? "var(--blue)" : tone === "gold" ? "var(--gold-deep)" : "var(--ink-3)"
 }

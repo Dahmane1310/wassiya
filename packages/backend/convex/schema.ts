@@ -75,7 +75,10 @@ export default defineSchema({
     // Cron expiry sweep: rows of a given status whose period has elapsed.
     .index("by_status_and_currentPeriodEnd", ["status", "currentPeriodEnd"])
     // Future webhook: resolve owner from a processor's customer id.
-    .index("by_externalCustomerId", ["externalCustomerId"]),
+    .index("by_externalCustomerId", ["externalCustomerId"])
+    // Admin-panel server-side filters.
+    .index("by_plan", ["plan"])
+    .index("by_status_and_plan", ["status", "plan"]),
 
   // Append-only billing ledger + idempotency seam. Kept separate from `auditLog` so that
   // table's event union stays focused on vault actions. `externalEventId` dedupes
@@ -262,20 +265,30 @@ export default defineSchema({
     fractionDenominator: v.number(),
   }).index("by_ownerId", ["ownerId"]),
 
-  // The source of "admin-ness" for the death-verification review flow. `users` has no role
-  // field and apps/admin uses the same WorkOS auth as every other user, so a reviewer's
-  // authority must come from somewhere explicit: membership in this server-checked allowlist.
-  // The first row is seeded out-of-band (dashboard / seed mutation).
+  // The source of "admin-ness" for the back-office. `users` has no role field and
+  // apps/admin uses the same WorkOS auth as every other user, so authority must come
+  // from membership in this server-checked allowlist. Two roles: ONE "superadmin"
+  // (bootstrapped from the SUPERADMIN_EMAIL deployment env var, manages other admins)
+  // and "admin" (everything else). New admins are invited BY EMAIL — the row starts
+  // with `email` only and `tokenIdentifier` is filled in on their first sign-in
+  // (activation), after which every check is a pure by_tokenIdentifier lookup.
   admins: defineTable({
-    tokenIdentifier: v.string(),
+    tokenIdentifier: v.optional(v.string()), // absent until the invite is activated
+    email: v.optional(v.string()), // lowercase; invite key + display
+    role: v.optional(
+      v.union(v.literal("superadmin"), v.literal("admin")), // undefined = "admin"
+    ),
     addedBy: v.optional(v.string()),
     note: v.optional(v.string()),
-  }).index("by_tokenIdentifier", ["tokenIdentifier"]),
+  })
+    .index("by_tokenIdentifier", ["tokenIdentifier"])
+    .index("by_email", ["email"]),
 
   // The admin-reviewed certificate gate. ONE active row per owner (mutation-enforced).
-  // `certificateStorageId` is the SCOPED ZERO-KNOWLEDGE EXCEPTION: legal evidence the admin
-  // must read, envelope-encrypted to an ops/admin key — never the owner's vault key. The vault
-  // payload itself stays untouched zero-knowledge.
+  // `certificateStorageId` is the SCOPED ZERO-KNOWLEDGE EXCEPTION: the certificate is
+  // legal evidence an admin must read, so it is stored PLAINTEXT in private Convex
+  // storage — reachable ONLY via the admin-gated signed URL (release.getCertUrl). It
+  // is deliberately NOT vault-encrypted; the vault payload itself stays zero-knowledge.
   deathVerification: defineTable({
     ownerId: v.string(),
     status: v.union(
@@ -285,12 +298,18 @@ export default defineSchema({
       v.literal("rejected"), // not a valid death event
     ),
     certificateStorageId: v.optional(v.id("_storage")),
-    certificateKeyAlgorithm: v.optional(v.string()), // ops-key wrap algorithm
+    // Resubmission PATCHES this row, so `_creationTime` goes stale — this is the
+    // real submission time. The approve guard compares the owner's last check-in
+    // against it (a check-in AFTER the report is evidence of life).
+    submittedAt: v.optional(v.number()),
+    // Reported by the submitter — reviewer context, plaintext non-secret.
+    dateOfDeath: v.optional(v.number()),
+    submitterRole: v.optional(v.string()), // free-text, e.g. "son, named executor"
     submittedByKind: v.optional(
       v.union(v.literal("executor"), v.literal("beneficiary")),
     ),
     submittedByEmail: v.optional(v.string()),
-    reviewedBy: v.optional(v.string()), // admin tokenIdentifier
+    reviewedBy: v.optional(v.string()), // admin tokenIdentifier | "system"
     reviewedAt: v.optional(v.number()),
     reviewNotes: v.optional(v.string()),
   })
@@ -318,11 +337,20 @@ export default defineSchema({
       v.literal("check_in"),
       v.literal("switch_state_changed"),
       v.literal("release_authorized"),
+      // Admin-panel actions (actor is "admin:<tokenIdentifier>").
+      v.literal("entitlement_granted"),
+      v.literal("entitlement_revoked"),
+      v.literal("death_review_reopened"),
+      v.literal("admin_added"),
+      v.literal("admin_removed"),
     ),
     targetTable: v.optional(v.string()),
     targetId: v.optional(v.string()),
     meta: v.optional(v.record(v.string(), v.string())), // non-secret context only
-  }).index("by_ownerId", ["ownerId"]),
+  })
+    .index("by_ownerId", ["ownerId"])
+    .index("by_event", ["event"]) // admin audit viewer's event filter
+    .index("by_ownerId_and_event", ["ownerId", "event"]), // both filters at once
 
   // Outbox queue drained by an action once an email/push provider is chosen. `payload` holds
   // non-secret template variables only.
@@ -349,7 +377,11 @@ export default defineSchema({
     payload: v.optional(v.record(v.string(), v.string())),
   })
     .index("by_status", ["status"]) // drain the queue
-    .index("by_ownerId", ["ownerId"]),
+    .index("by_ownerId", ["ownerId"])
+    // Admin-panel server-side filters/search.
+    .index("by_kind", ["kind"])
+    .index("by_status_and_kind", ["status", "kind"])
+    .index("by_recipientEmail", ["recipientEmail"]),
 
   // Single-use enrollment tokens for beneficiary keypair/account setup. Only a HASH
   // of the token is stored; the raw token is emailed once and never persisted.

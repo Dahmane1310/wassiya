@@ -24,7 +24,7 @@ export function initialsOf(name: string): string {
 }
 
 // Deterministic avatar tint from a string (so each benefactor keeps a stable hue).
-const TINTS = ["var(--primary)", "var(--gold-deep)", "var(--green)", "oklch(0.52 0.11 285)", "oklch(0.52 0.06 255)"]
+const TINTS = ["var(--primary)", "var(--blue)", "var(--green)", "oklch(0.52 0.11 285)", "oklch(0.52 0.06 255)"]
 export function tintFor(seed: string): string {
   let h = 0
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0

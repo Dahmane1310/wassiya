@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useQuery } from "convex/react"
 import { api } from "@workspace/backend/api"
-import { Avatar, Btn, Card, IconBadge, Page, Pill, SectionTitle, STATUS, toneColor } from "./ui"
+import { Avatar, Btn, Card, displayStatus, IconBadge, Page, Pill, SectionTitle, STATUS, toneColor } from "./ui"
 import { Icon } from "./icon"
 import { daysFromNow, initialsOf, relPast, tintFor } from "./format"
 import { ReportDeath } from "./report-death"
@@ -27,14 +27,26 @@ export function BenefactorDetail({ id }: { id: string }) {
       </Page>
     )
   }
-  const s = STATUS[b.status]
+  const shown = displayStatus(b.status, b.deathCase)
+  const s = STATUS[shown]
+  const rejected = shown === "rejected"
+  const underReview = b.deathCase?.status === "under_review"
   const graceDays = b.graceStartedAt != null && b.gracePeriodMs != null ? daysFromNow(b.graceStartedAt + b.gracePeriodMs) : null
   const roleLabel = b.relationship ? `their ${b.relationship}` : b.role === "heir" ? "a legal heir" : "a named recipient"
   const timeline = [
     { done: true, label: `Named you as ${roleLabel}`, when: "" },
     { done: true, label: "Your key is set up", when: "ready" },
     { done: b.status !== "active", label: "Check-in missed → grace period", when: b.status === "active" ? "—" : "recently" },
-    { done: b.status === "pending" || b.status === "released", label: "Death verification", when: b.status === "released" ? "approved" : b.status === "pending" ? "under review" : "—" },
+    {
+      done: b.status === "released",
+      label: "Death verification",
+      when:
+        b.status === "released" ? "approved"
+        : rejected ? "needs another look"
+        : b.status === "pending" && b.deathCase?.status === "under_review" ? "under review"
+        : b.status === "pending" ? "waiting for a report"
+        : "—",
+    },
     { done: b.status === "released", label: "Legacy released to you", when: b.status === "released" ? relPast(b.releaseAuthorizedAt) : "—" },
   ]
 
@@ -63,20 +75,53 @@ export function BenefactorDetail({ id }: { id: string }) {
       </Card>
 
       {b.status === "released" && (
-        <Card pad={22} style={{ marginBottom: 16, border: "1px solid color-mix(in oklch, var(--primary) 25%, white)" }}>
+        <Card pad={22} style={{ marginBottom: 16, border: "1px solid color-mix(in oklch, var(--blue) 25%, white)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 13, background: "var(--primary-soft)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="lockOpen" size={24} /></div>
+            <div style={{ width: 48, height: 48, borderRadius: 13, background: "var(--blue-soft)", color: "var(--blue)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="lockOpen" size={24} /></div>
             <div style={{ flex: 1 }}><div style={{ fontSize: 15.5, fontWeight: 700 }}>Your inheritance is ready</div><div style={{ fontSize: 13, color: "var(--ink-3)", fontWeight: 500, marginTop: 1 }}>Opened privately on your device — only your key can.</div></div>
             <Btn variant="blue" icon="lockOpen" onClick={() => setShowRelease(true)}>View what was left</Btn>
           </div>
         </Card>
       )}
 
-      {(b.status === "grace" || b.status === "pending") && (
+      {rejected && (
+        <Card pad={22} style={{ marginBottom: 16, background: "color-mix(in oklch, var(--red-soft) 60%, white)", borderColor: "color-mix(in oklch, var(--red) 22%, var(--line))" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 13, background: "var(--red-soft)", color: "var(--red)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="alert" size={23} /></div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 15.5, fontWeight: 700 }}>The report couldn&apos;t be approved</div>
+              <div style={{ fontSize: 13, color: "var(--ink-2)", fontWeight: 500, marginTop: 2, lineHeight: 1.5 }}>A reviewer looked at the report{b.deathCase?.submittedAt ? ` from ${relPast(b.deathCase.submittedAt)}` : ""} and couldn&apos;t approve it. You can submit a corrected one.</div>
+              {b.deathCase?.rejectedReason && (
+                <div style={{ marginTop: 10, padding: "10px 13px", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 11, fontSize: 13, color: "var(--ink-2)", fontWeight: 500, lineHeight: 1.5 }}>
+                  <span style={{ fontWeight: 700, color: "var(--ink)" }}>Reviewer&apos;s note: </span>
+                  {b.deathCase.rejectedReason}
+                </div>
+              )}
+            </div>
+          </div>
+          <div style={{ marginTop: 14 }}><Btn variant="gold" icon="upload" onClick={() => setShowReport(true)}>Submit a corrected report</Btn></div>
+        </Card>
+      )}
+
+      {underReview && b.status !== "released" && (
+        <Card pad={22} style={{ marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 13, background: "var(--gold-soft)", color: "var(--gold-deep)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="file" size={23} /></div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 15.5, fontWeight: 700 }}>Report under review</div>
+              <div style={{ fontSize: 13, color: "var(--ink-2)", fontWeight: 500, marginTop: 2, lineHeight: 1.5 }}>
+                The death report{b.deathCase?.submittedAt ? ` from ${relPast(b.deathCase.submittedAt)}` : ""} is being checked by a reviewer. You&apos;ll be emailed the outcome — nothing more is needed from you right now.
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {!rejected && !underReview && b.status !== "released" && (
         <Card pad={22} style={{ marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
             <div style={{ width: 48, height: 48, borderRadius: 13, background: "var(--amber-soft)", color: "oklch(0.5 0.13 60)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="file" size={23} /></div>
-            <div style={{ flex: 1 }}><div style={{ fontSize: 15.5, fontWeight: 700 }}>Report a death</div><div style={{ fontSize: 13, color: "var(--ink-2)", fontWeight: 500, marginTop: 2, lineHeight: 1.5 }}>If {b.ownerName.split(" ")[0]} has passed, you can report it and submit a death certificate. Nothing is released on your word alone — a reviewer must approve it.</div></div>
+            <div style={{ flex: 1 }}><div style={{ fontSize: 15.5, fontWeight: 700 }}>Report a death</div><div style={{ fontSize: 13, color: "var(--ink-2)", fontWeight: 500, marginTop: 2, lineHeight: 1.5 }}>If {b.ownerName.split(" ")[0]} has passed, you can report it and submit a death certificate — even if check-ins look healthy. Nothing is released on your word alone — a reviewer must approve it.</div></div>
           </div>
           <div style={{ marginTop: 14 }}><Btn variant="gold" icon="upload" onClick={() => setShowReport(true)}>Report &amp; submit certificate</Btn></div>
         </Card>

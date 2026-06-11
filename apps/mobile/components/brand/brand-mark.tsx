@@ -1,7 +1,7 @@
-import { View } from "react-native"
-import { ShieldCheck } from "lucide-react-native"
-import { Icon } from "@workspace/ui-native/components/ui/icon"
+import { Text } from "react-native"
+import { LinearGradient } from "expo-linear-gradient"
 import { cn } from "@workspace/ui-native/lib/utils"
+import { useThemeColors } from "@/lib/colors"
 
 type BrandMarkProps = {
   /** Width/height of the square mark in px. */
@@ -11,36 +11,44 @@ type BrandMarkProps = {
 }
 
 /**
- * The Wassiya brand mark: a teal "vault tile" carrying a gold protection glyph.
- * v1 is composed from a themed tile + a Lucide icon so it adapts to light/dark
- * for free via the `bg-primary` / `text-gold` tokens. The corner radius scales
- * with `size`. (Follow-up: a bespoke sealed-vault SVG glyph.)
+ * The Wassiya brand mark: the unified W-square monogram (placeholder until the
+ * real mark is designed) — same spec as the web logo.tsx and landing WMark.
+ * LinearGradient needs concrete colors, so the gold pair comes from
+ * useThemeColors() (theme-aware hex mirror of the tokens). The "W" is raw RN
+ * Text with an explicit Inter family: a brand glyph, not copy, so it must NOT
+ * swap to Tajawal under RTL like the ui-native Text wrapper would.
  */
 export function BrandMark({
   size = 72,
   className,
   accessibilityLabel = "Wassiya",
 }: BrandMarkProps) {
+  const c = useThemeColors()
   return (
-    <View
+    <LinearGradient
+      colors={[c.gold, c.goldDeep]}
+      start={{ x: 0.15, y: 0 }}
+      end={{ x: 0.85, y: 1 }}
       accessibilityRole="image"
       accessibilityLabel={accessibilityLabel}
-      className={cn(
-        "border-gold/25 items-center justify-center border bg-primary",
-        className
-      )}
+      className={cn("items-center justify-center", className)}
       style={{
         width: size,
         height: size,
-        borderRadius: Math.round(size * 0.28),
+        borderRadius: Math.round(size * 0.26),
       }}
     >
-      {/* `size` prop overrides the icon's default size class; `text-gold` sets color. */}
-      <Icon
-        as={ShieldCheck}
-        className="text-gold"
-        size={Math.round(size * 0.5)}
-      />
-    </View>
+      <Text
+        allowFontScaling={false}
+        style={{
+          fontFamily: "Inter_800ExtraBold",
+          fontSize: Math.round(size * 0.52),
+          color: "#fff",
+          letterSpacing: -0.5,
+        }}
+      >
+        W
+      </Text>
+    </LinearGradient>
   )
 }

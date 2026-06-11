@@ -59,7 +59,7 @@ export const getEntitlement = query({
  * Idempotent on `externalEventId`: a redelivered processor event is a no-op. Upserts the
  * entitlements row to an active paid plan and appends a billing-ledger row.
  */
-async function applyGrant(
+export async function applyGrant(
   ctx: MutationCtx,
   args: {
     ownerId: string

@@ -7,8 +7,10 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server"
+import { resolveProfile } from "./lib/adminAuth"
 import { assertEntitled } from "./lib/entitlements"
-import { authorizeRelease } from "./release"
+import { enqueueNotification } from "./lib/notify"
+import { authorizeRelease, autoResolveDeathCase } from "./release"
 
 // The dead-man's-switch state machine. ZERO crypto here — just timestamps + a
 // server-evaluated state. Release (pendingVerification → released) is intentionally
@@ -117,6 +119,9 @@ export const armSwitch = mutation({
       })
       if (recovered) {
         await logStateChange(ctx, ownerId, ownerId, existing.state, "active")
+        // Alive — any death report still under review is stale and must not
+        // stay approvable.
+        await autoResolveDeathCase(ctx, ownerId, now)
       }
     } else {
       // Entitlement is required ONLY to CREATE a switch (first arm). NEVER gate the
@@ -229,9 +234,6 @@ export const recordCheckIn = mutation({
     }
 
     const recovered = existing.state !== "active"
-    // TODO(release): once release ships, recovering from "pendingVerification" must
-    // also clear recorded death attestations + reset deathVerification, so a
-    // recover-then-re-lapse can't reuse stale attestations to short-circuit release.
     await ctx.db.patch(existing._id, {
       state: "active",
       lastCheckInAt: now,
@@ -244,6 +246,10 @@ export const recordCheckIn = mutation({
     await logCheckIn(ctx, ownerId)
     if (recovered) {
       await logStateChange(ctx, ownerId, ownerId, existing.state, "active")
+      // The owner is alive — auto-reject any death report still under review so
+      // a stale case can't be approved later (it would release a living owner's
+      // estate). The submitter is notified and can re-report if needed.
+      await autoResolveDeathCase(ctx, ownerId, now)
     }
   },
 })
@@ -274,6 +280,16 @@ export const sweepSwitch = internalMutation({
         checkInStreak: 0,
       })
       await logStateChange(ctx, row.ownerId, "system", "active", "grace")
+      // Warn the owner their grace countdown started (skip if profile unknown).
+      const profile = await resolveProfile(ctx, row.ownerId)
+      if (profile?.email) {
+        await enqueueNotification(ctx, {
+          ownerId: row.ownerId,
+          recipientEmail: profile.email,
+          kind: "heartbeat_warning",
+          payload: { graceEndsAt: String(now + row.gracePeriodMs) },
+        })
+      }
     }
 
     // grace → pendingVerification (grace lapsed). Just-graced rows have a future

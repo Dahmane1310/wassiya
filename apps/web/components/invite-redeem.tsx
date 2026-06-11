@@ -67,7 +67,7 @@ function SignInPanel({ token }: { token: string }) {
           <h2 className="serif" style={{ fontSize: 27, fontWeight: 600, letterSpacing: -0.3, margin: 0 }}>Accept your invitation</h2>
           <p style={{ fontSize: 14, color: "var(--ink-2)", marginTop: 8, fontWeight: 500, lineHeight: 1.5 }}>Sign in or create an account to continue. Signing in gets you into your account; a separate step keeps your legacy private to you.</p>
           <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 11 }}>
-            <Btn variant="blue" size="lg" full onClick={() => (window.location.href = `/sign-in?returnTo=${returnTo}`)}>Sign in</Btn>
+            <Btn variant="gold" size="lg" full onClick={() => (window.location.href = `/sign-in?returnTo=${returnTo}`)}>Sign in</Btn>
             <Btn variant="ghost" size="lg" full onClick={() => (window.location.href = `/sign-up?returnTo=${returnTo}`)}>Create account</Btn>
           </div>
           <div style={{ marginTop: 18, fontSize: 11.5, color: "var(--ink-3)", textAlign: "center", fontWeight: 500, lineHeight: 1.5 }}>By continuing you agree to Wassiya&apos;s Terms &amp; Privacy. We can never see what&apos;s inside.</div>
@@ -142,7 +142,7 @@ function EnrollFlow({ token }: { token: string }) {
             ))}
           </div>
           {error && <div style={{ marginBottom: 12, fontSize: 13, color: "var(--red)", fontWeight: 600, textAlign: "center" }}>{error}</div>}
-          <Btn variant="blue" size="lg" full icon="key" onClick={start}>Set up my key</Btn>
+          <Btn variant="gold" size="lg" full icon="key" onClick={start}>Set up my key</Btn>
           <div style={{ marginTop: 14, textAlign: "center" }}><PrivacyLink /></div>
         </Card>
       </Centered>
@@ -180,7 +180,7 @@ function EnrollFlow({ token }: { token: string }) {
           <label style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13.5, fontWeight: 600, cursor: "pointer", marginBottom: 16, lineHeight: 1.4 }}>
             <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} style={{ width: 18, height: 18, marginTop: 1, flexShrink: 0 }} /> I&apos;ve saved it, and I understand it&apos;s the only copy and can never be recovered.
           </label>
-          <Btn variant="blue" size="lg" full disabled={!saved} onClick={() => setStep("fingerprint")}>Continue</Btn>
+          <Btn variant="gold" size="lg" full disabled={!saved} onClick={() => setStep("fingerprint")}>Continue</Btn>
         </Card>
       </Centered>
     )
@@ -194,7 +194,7 @@ function EnrollFlow({ token }: { token: string }) {
           <h1 className="serif" style={{ fontSize: 24, fontWeight: 600, letterSpacing: -0.3, margin: "8px 0 0", textAlign: "center" }}>Confirm it&apos;s really you</h1>
           <p style={{ fontSize: 14, color: "var(--ink-2)", lineHeight: 1.6, marginTop: 8, fontWeight: 500, textAlign: "center" }}>Read this verification code to the person who entrusted you — in person or on a call — so they know it&apos;s really you, and that no one stepped in.</p>
           <div className="mono" style={{ background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: 13, padding: 18, textAlign: "center", fontSize: 16, fontWeight: 700, letterSpacing: 0.5, margin: "18px 0", wordBreak: "break-all" }}>{fingerprint}</div>
-          <Btn variant="blue" size="lg" full icon="check" onClick={() => setStep("done")}>Done — they confirmed it matches</Btn>
+          <Btn variant="gold" size="lg" full icon="check" onClick={() => setStep("done")}>Done — they confirmed it matches</Btn>
         </Card>
       </Centered>
     )

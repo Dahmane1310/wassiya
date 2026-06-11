@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useQuery } from "convex/react"
 import { type FunctionReturnType } from "convex/server"
 import { api } from "@workspace/backend/api"
-import { Avatar, Card, Page, Pill, SectionTitle, STATUS, toneColor } from "./ui"
+import { Avatar, Card, displayStatus, Page, Pill, SectionTitle, STATUS, toneColor } from "./ui"
 import { Icon } from "./icon"
 import { daysFromNow, initialsOf, relPast, tintFor } from "./format"
 import { PrivacyLink } from "./privacy-explainer"
@@ -31,9 +31,9 @@ export function Home() {
       <KeyStatusCard enrolled={keyStatus?.enrolled ?? false} fingerprint={keyStatus?.keyFingerprint ?? null} />
 
       {released > 0 && (
-        <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 11, padding: "14px 18px", background: "linear-gradient(150deg, var(--primary-soft), color-mix(in oklch, var(--primary-soft) 50%, white))", border: "1px solid color-mix(in oklch, var(--primary) 20%, white)", borderRadius: 14 }}>
-          <Icon name="lockOpen" size={20} style={{ color: "var(--primary)", flexShrink: 0 }} />
-          <div style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: "var(--primary-600)" }}>{released} legacy {released === 1 ? "has" : "have"} been released to you and {released === 1 ? "is" : "are"} ready to view.</div>
+        <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 11, padding: "14px 18px", background: "linear-gradient(150deg, var(--blue-soft), color-mix(in oklch, var(--blue-soft) 50%, white))", border: "1px solid color-mix(in oklch, var(--blue) 20%, white)", borderRadius: 14 }}>
+          <Icon name="lockOpen" size={20} style={{ color: "var(--blue)", flexShrink: 0 }} />
+          <div style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: "var(--blue-600)" }}>{released} legacy {released === 1 ? "has" : "have"} been released to you and {released === 1 ? "is" : "are"} ready to view.</div>
         </div>
       )}
 
@@ -85,19 +85,22 @@ function KeyStatusCard({ enrolled, fingerprint }: { enrolled: boolean; fingerpri
 }
 
 function BenefactorCard({ b }: { b: Benefactor }) {
-  const s = STATUS[b.status]
+  const shown = displayStatus(b.status, b.deathCase)
+  const s = STATUS[shown]
   const graceDays = b.graceStartedAt != null && b.gracePeriodMs != null ? daysFromNow(b.graceStartedAt + b.gracePeriodMs) : null
   const meta =
-    b.status === "active" ? `Next check-in in ${daysFromNow(b.nextDeadlineAt) ?? 0} days`
+    shown === "rejected" ? "Reviewed — see the note"
+    : b.status === "active" ? `Next check-in in ${daysFromNow(b.nextDeadlineAt) ?? 0} days`
     : b.status === "grace" ? `Grace ends in ${graceDays ?? 0} days`
     : b.status === "released" ? `Released ${relPast(b.releaseAuthorizedAt)}`
     : "Under review"
   const footer =
     b.status === "released" ? { tone: "blue" as const, icon: "lockOpen" as const, text: "Ready to view — open to see what was left for you" }
+    : shown === "rejected" ? { tone: "red" as const, icon: "alert" as const, text: "The report couldn't be approved — open to see why and submit again" }
     : b.status === "grace" ? { tone: "amber" as const, icon: "info" as const, text: "You can report a death to begin verification" }
     : null
-  const fbg = footer ? (footer.tone === "blue" ? "var(--primary-soft)" : "var(--amber-soft)") : undefined
-  const ffg = footer ? (footer.tone === "blue" ? "var(--primary-600)" : "oklch(0.5 0.13 60)") : undefined
+  const fbg = footer ? (footer.tone === "blue" ? "var(--blue-soft)" : footer.tone === "red" ? "var(--red-soft)" : "var(--amber-soft)") : undefined
+  const ffg = footer ? (footer.tone === "blue" ? "var(--blue-600)" : footer.tone === "red" ? "var(--red)" : "oklch(0.5 0.13 60)") : undefined
 
   return (
     <Link href={`/benefactor/${b.beneficiaryId}`} style={{ display: "block" }}>

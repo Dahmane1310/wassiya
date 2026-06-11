@@ -202,6 +202,9 @@
       "death_cert_reviewed": "روجعت شهادة وفاة",
       "switch_state_changed": "تحدّثت مفتاح الأمان",
       "release_authorized": "تم تفويض الإفصاح",
+      "entitlement_granted": "حُدّثت الخطة من قِبل الدعم",
+      "entitlement_revoked": "أُنهيت الخطة من قِبل الدعم",
+      "death_review_reopened": "أُعيد بلاغ الوفاة إلى المراجعة",
       "unknown": "نشاط في الخزنة"
     }
   },

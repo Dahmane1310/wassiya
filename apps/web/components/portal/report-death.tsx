@@ -22,6 +22,7 @@ export function ReportDeath({
 }) {
   const [step, setStep] = useState<0 | 1 | 2>(0)
   const [role, setRole] = useState("")
+  const [dateOfDeath, setDateOfDeath] = useState("")
   const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
@@ -29,6 +30,18 @@ export function ReportDeath({
   const generateUrl = useMutation(api.release.generateCertUploadUrl)
   const submit = useMutation(api.release.submitDeathReport)
   const first = ownerName.split(" ")[0]
+
+  const MAX_FILE_BYTES = 10 * 1024 * 1024
+
+  function pickFile(f: File | null) {
+    setError("")
+    if (f && f.size > MAX_FILE_BYTES) {
+      setFile(null)
+      setError("That file is larger than 10 MB — please use a smaller photo or PDF.")
+      return
+    }
+    setFile(f)
+  }
 
   async function doSubmit() {
     setBusy(true)
@@ -42,7 +55,13 @@ export function ReportDeath({
         const { storageId } = (await res.json()) as { storageId: Id<"_storage"> }
         certificateStorageId = storageId
       }
-      await submit({ beneficiaryId: beneficiaryId as Id<"beneficiaries">, certificateStorageId, role: role.trim() || undefined })
+      const dod = dateOfDeath ? new Date(`${dateOfDeath}T00:00:00`).getTime() : undefined
+      await submit({
+        beneficiaryId: beneficiaryId as Id<"beneficiaries">,
+        certificateStorageId,
+        role: role.trim() || undefined,
+        dateOfDeath: dod !== undefined && !Number.isNaN(dod) ? dod : undefined,
+      })
       setStep(2)
     } catch {
       setError("Couldn't submit. Please try again.")
@@ -65,13 +84,16 @@ export function ReportDeath({
       {step === 1 && (
         <div style={{ padding: 28 }}>
           <h2 className="serif" style={{ fontSize: 22, fontWeight: 600, letterSpacing: -0.3, margin: 0 }}>Upload the certificate</h2>
-          <input ref={fileRef} type="file" accept="image/*,application/pdf" style={{ display: "none" }} onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          <input ref={fileRef} type="file" accept="image/*,application/pdf" style={{ display: "none" }} onChange={(e) => pickFile(e.target.files?.[0] ?? null)} />
           <button className="press" onClick={() => fileRef.current?.click()} style={{ width: "100%", border: "1.5px dashed var(--line)", borderRadius: 14, padding: 34, textAlign: "center", color: "var(--ink-3)", marginTop: 16, background: "var(--surface)" }}>
             <Icon name={file ? "check" : "upload"} size={30} style={{ margin: "0 auto 10px", color: file ? "var(--green)" : "var(--ink-3)" }} />
             <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink-2)" }}>{file ? file.name : "Choose the death certificate"}</div>
-            <div style={{ fontSize: 12.5, marginTop: 3 }}>PDF or photo · sent securely</div>
+            <div style={{ fontSize: 12.5, marginTop: 3 }}>PDF or photo · up to 10 MB · sent securely</div>
           </button>
-          <div style={{ marginTop: 16 }}><Field label="Your relationship / role" value={role} onChange={setRole} placeholder="e.g. son, named executor" /></div>
+          <div style={{ marginTop: 16 }}>
+            <Field label="Date of passing (if known)" type="date" value={dateOfDeath} onChange={setDateOfDeath} />
+            <Field label="Your relationship / role" value={role} onChange={setRole} placeholder="e.g. son, named executor" />
+          </div>
           {error && <div style={{ fontSize: 13, color: "var(--red)", fontWeight: 600, marginBottom: 8 }}>{error}</div>}
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}><Btn variant="ghost" onClick={() => setStep(0)}>Back</Btn><Btn variant="gold" icon="upload" disabled={busy} onClick={doSubmit}>{busy ? "Submitting…" : "Submit for review"}</Btn></div>
         </div>

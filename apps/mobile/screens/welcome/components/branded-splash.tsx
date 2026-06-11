@@ -3,8 +3,9 @@ import { BrandMark } from "@/components/brand/brand-mark"
 import { ScreenContainer } from "@/components/layout/screen-container"
 
 /**
- * Shown while auth tokens hydrate. No Text on purpose — it renders before fonts
- * could matter and we don't want a system→brand font flash.
+ * Shown while auth tokens hydrate. The root layout gates rendering on fonts
+ * being loaded, so the BrandMark's "W" glyph is safe from a system→brand font
+ * flash here.
  */
 export function BrandedSplash() {
   return (

@@ -24,4 +24,14 @@ crons.interval(
   {}
 )
 
+// Email the notification outbox (pending → sent/failed via Resend). 10 minutes
+// keeps grace warnings timely without hammering the API; the drain is indexed
+// (by_status), batched, and a no-op until RESEND_API_KEY/EMAIL_FROM are set.
+crons.interval(
+  "drain notification outbox",
+  { minutes: 10 },
+  internal.notificationSender.drainNotifications,
+  {}
+)
+
 export default crons

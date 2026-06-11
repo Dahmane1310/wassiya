@@ -103,6 +103,9 @@
       "death_cert_reviewed": "Death certificate reviewed",
       "switch_state_changed": "Dead-man’s switch updated",
       "release_authorized": "Release authorized",
+      "entitlement_granted": "Plan updated by support",
+      "entitlement_revoked": "Plan ended by support",
+      "death_review_reopened": "Death report back in review",
       "unknown": "Vault activity"
     }
   },

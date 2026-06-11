@@ -6,34 +6,12 @@
    source so those classes are generated. */
 @source "./**/*.{astro,ts,tsx}";
 
-/* ── Wassiya brand remap ─────────────────────────────────────────────────────
-   The landing is the warm Wassiya brand (bronze / sage / espresso / paper), not
-   the default trust-blue shadcn palette. We override the shared shadcn variables
-   here so Button / Card / Badge / Accordion render on-brand with no per-component
-   restyling — the same approach apps/web (.portal) and apps/mobile use. Values
-   ported from the approved landing mockup (Wassiya Landing.html). */
+/* ── Wassiya brand extras ────────────────────────────────────────────────────
+   The warm "Living Vault" shadcn tokens (paper / bronze / sage / espresso) now
+   ship as the defaults in @workspace/ui/globals.css, so the landing only adds
+   the brand extras that have no shadcn equivalent. Values ported from the
+   approved landing mockup (Wassiya Landing.html). */
 :root {
-  --background: oklch(0.982 0.006 80);
-  --foreground: oklch(0.23 0.016 60);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.23 0.016 60);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.23 0.016 60);
-  --primary: oklch(0.58 0.1 66); /* bronze */
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.967 0.008 80);
-  --secondary-foreground: oklch(0.23 0.016 60);
-  --muted: oklch(0.975 0.006 80);
-  --muted-foreground: oklch(0.46 0.014 60);
-  --accent: oklch(0.955 0.035 80);
-  --accent-foreground: oklch(0.58 0.1 66);
-  --destructive: oklch(0.55 0.17 25);
-  --border: oklch(0.905 0.007 80);
-  --input: oklch(0.905 0.007 80);
-  --ring: oklch(0.58 0.1 66);
-  --radius: 0.9rem;
-
-  /* brand extras (no shadcn equivalent) */
   --ink-3: oklch(0.62 0.012 60);
   --gold: oklch(0.74 0.105 74);
   --gold-deep: oklch(0.58 0.1 66);
@@ -51,25 +29,6 @@
 }
 
 .dark {
-  --background: oklch(0.17 0.009 60);
-  --foreground: oklch(0.965 0.006 80);
-  --card: oklch(0.225 0.01 62);
-  --card-foreground: oklch(0.965 0.006 80);
-  --popover: oklch(0.225 0.01 62);
-  --popover-foreground: oklch(0.965 0.006 80);
-  --primary: oklch(0.72 0.1 74); /* gold-leaning for dark */
-  --primary-foreground: oklch(0.17 0.009 60);
-  --secondary: oklch(0.205 0.01 60);
-  --secondary-foreground: oklch(0.965 0.006 80);
-  --muted: oklch(0.255 0.01 62);
-  --muted-foreground: oklch(0.76 0.012 78);
-  --accent: oklch(0.32 0.045 72);
-  --accent-foreground: oklch(0.965 0.006 80);
-  --destructive: oklch(0.62 0.17 25);
-  --border: oklch(0.31 0.009 62);
-  --input: oklch(0.31 0.009 62);
-  --ring: oklch(0.72 0.1 74);
-
   --ink-3: oklch(0.6 0.012 72);
   --gold: oklch(0.8 0.1 76);
   --gold-deep: oklch(0.72 0.1 74);
