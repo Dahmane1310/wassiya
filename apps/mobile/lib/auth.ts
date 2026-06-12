@@ -10,13 +10,20 @@ const workos = new WorkOS(undefined, { clientId })
 
 export type WorkOSTokens = { accessToken: string; refreshToken: string }
 
+export type OAuthProvider = "GoogleOAuth" | "AppleOAuth" | "authkit"
+
 // Runs the full PKCE sign-in: build the authorization URL (+ code verifier),
-// open the hosted WorkOS page, capture the `code` from the deep-link callback,
-// then exchange code + verifier for tokens. No API key required.
-export async function signInWithWorkOS(): Promise<WorkOSTokens> {
+// open the provider's consent page in the browser, capture the `code` from the
+// deep-link callback, then exchange code + verifier for tokens. No API key
+// required. "GoogleOAuth"/"AppleOAuth" go PROVIDER-DIRECT (no WorkOS
+// interstitial); email/password and email-code auth use native screens via the
+// Convex proxy instead (lib/auth-proxy.ts).
+export async function signInWithWorkOS(
+  provider: OAuthProvider = "authkit"
+): Promise<WorkOSTokens> {
   const { url, codeVerifier } =
     await workos.userManagement.getAuthorizationUrlWithPKCE({
-      provider: "authkit",
+      provider,
       clientId,
       redirectUri,
     })

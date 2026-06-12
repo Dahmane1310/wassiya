@@ -11,6 +11,7 @@ import { resolveProfile } from "./lib/adminAuth"
 import { assertEntitled } from "./lib/entitlements"
 import { enqueueNotification } from "./lib/notify"
 import { authorizeRelease, autoResolveDeathCase } from "./release"
+import { getEnabledUser, requireEnabledUser } from "./lib/account"
 
 // The dead-man's-switch state machine. ZERO crypto here — just timestamps + a
 // server-evaluated state. Release (pendingVerification → released) is intentionally
@@ -69,7 +70,7 @@ async function logCheckIn(ctx: MutationCtx, ownerId: string) {
 export const getSwitchState = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await getEnabledUser(ctx)
     if (identity === null) {
       return null
     }
@@ -97,10 +98,7 @@ export const getSwitchState = query({
 export const armSwitch = mutation({
   args: { checkInIntervalMs: v.number(), gracePeriodMs: v.number() },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const ownerId = identity.tokenIdentifier
     const now = Date.now()
     const existing = await loadSwitch(ctx, ownerId)
@@ -155,10 +153,7 @@ export const armSwitch = mutation({
 export const updateSwitchConfig = mutation({
   args: { checkInIntervalMs: v.number(), gracePeriodMs: v.number() },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const ownerId = identity.tokenIdentifier
     const now = Date.now()
     const existing = await loadSwitch(ctx, ownerId)
@@ -205,10 +200,7 @@ export const updateSwitchConfig = mutation({
 export const recordCheckIn = mutation({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const ownerId = identity.tokenIdentifier
     const now = Date.now()
     const existing = await loadSwitch(ctx, ownerId)

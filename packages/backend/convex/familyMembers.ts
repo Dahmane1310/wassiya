@@ -5,6 +5,7 @@ import {
   beneficiaryHasAllocation,
   cascadeDeleteBeneficiary,
 } from "./beneficiaries"
+import { getEnabledUser, requireEnabledUser } from "./lib/account"
 
 // Mirrors the `encrypted` column validator in schema.ts — only the heir's NAME
 // (PII) is encrypted; structural fields (relationship/lineage/gender/isAlive) are
@@ -66,7 +67,7 @@ async function linkBeneficiary(
 export const listFamilyMembers = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await getEnabledUser(ctx)
     if (identity === null) {
       return []
     }
@@ -101,10 +102,7 @@ export const addFamilyMember = mutation({
     contactEmail: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const ownerId = identity.tokenIdentifier
     if (args.parentMemberId) {
       const parent = await ctx.db.get(args.parentMemberId)
@@ -133,10 +131,7 @@ export const updateFamilyMember = mutation({
     contactEmail: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const row = await ctx.db.get(args.id)
     if (row === null || row.ownerId !== identity.tokenIdentifier) {
       throw new Error("Not found")
@@ -161,10 +156,7 @@ export const updateFamilyMember = mutation({
 export const removeFamilyMember = mutation({
   args: { id: v.id("familyMembers") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const row = await ctx.db.get(args.id)
     if (row === null || row.ownerId !== identity.tokenIdentifier) {
       throw new Error("Not found")

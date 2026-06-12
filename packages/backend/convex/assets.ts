@@ -2,6 +2,7 @@ import { v } from "convex/values"
 import { mutation, query, type MutationCtx } from "./_generated/server"
 import { type Id } from "./_generated/dataModel"
 import { assertEntitled } from "./lib/entitlements"
+import { getEnabledUser, requireEnabledUser } from "./lib/account"
 
 // Mirrors the `encrypted` column validator in schema.ts / vault.ts — base64
 // AES-GCM ciphertext + the 12-byte IV it was sealed with. Stored opaquely.
@@ -43,7 +44,7 @@ export const listAssets = query({
   args: {},
   returns: v.array(v.object(assetFields)),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await getEnabledUser(ctx)
     if (identity === null) {
       return []
     }
@@ -78,7 +79,7 @@ export const getAsset = query({
     v.object({ ...assetFields, fileUrl: v.union(v.string(), v.null()) }),
   ),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await getEnabledUser(ctx)
     if (identity === null) {
       return null
     }
@@ -110,10 +111,7 @@ export const generateUploadUrl = mutation({
   args: {},
   returns: v.string(),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     return await ctx.storage.generateUploadUrl()
   },
 })
@@ -129,10 +127,7 @@ export const createAsset = mutation({
   },
   returns: v.id("assets"),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const ownerId = identity.tokenIdentifier
     // Trial/paid gate: creating an asset is blocked once the trial lapses (read-only vault).
     await assertEntitled(ctx, ownerId)
@@ -172,10 +167,7 @@ export const updateAsset = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const ownerId = identity.tokenIdentifier
     // Trial/paid gate: editing is blocked once the trial lapses (read-only vault).
     await assertEntitled(ctx, ownerId)
@@ -219,10 +211,7 @@ export const deleteAsset = mutation({
   args: { assetId: v.id("assets") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const ownerId = identity.tokenIdentifier
     const row = await ctx.db.get(args.assetId)
     if (row === null || row.ownerId !== ownerId) {

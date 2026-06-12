@@ -7,6 +7,7 @@ import {
   Receipt,
   ScrollText,
   ShieldCheck,
+  UserCheck,
   Users,
   type LucideIcon,
 } from "lucide-react"
@@ -37,7 +38,10 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     labelKey: "nav.groups.people",
-    items: [{ titleKey: "nav.users", href: "/users", icon: Users }],
+    items: [
+      { titleKey: "nav.users", href: "/users", icon: Users },
+      { titleKey: "nav.beneficiaries", href: "/beneficiaries", icon: UserCheck },
+    ],
   },
   {
     labelKey: "nav.groups.revenue",

@@ -50,6 +50,9 @@ importers:
       i18next:
         specifier: ^26.3.0
         version: 26.3.0(typescript@5.9.3)
+      iron-session:
+        specifier: ^8.0.4
+        version: 8.0.4
       lucide-react:
         specifier: ^1.17.0
         version: 1.17.0(react@19.2.4)
@@ -320,6 +323,9 @@ importers:
       convex:
         specifier: ^1.39.1
         version: 1.39.1(react@19.2.4)
+      iron-session:
+        specifier: ^8.0.4
+        version: 8.0.4
       lucide-react:
         specifier: ^1.17.0
         version: 1.17.0(react@19.2.4)

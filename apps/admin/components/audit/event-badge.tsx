@@ -25,6 +25,10 @@ const EVENTS: Record<string, { className?: string }> = {
   entitlement_revoked: { className: "text-destructive" },
   admin_added: {},
   admin_removed: { className: "text-destructive" },
+  account_created: {},
+  account_updated: {},
+  account_disabled: { className: "text-destructive" },
+  account_enabled: { className: "text-green-700 dark:text-green-400" },
 }
 
 /** The full known-event list — drives the audit page's filter dropdown. */

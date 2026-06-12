@@ -3,6 +3,7 @@ import { computeFaraid, type Heir as EngineHeir } from "@workspace/faraid"
 import { mutation, query, type MutationCtx } from "./_generated/server"
 import { getAdminRow, requireAdmin } from "./lib/adminAuth"
 import { enqueueNotification } from "./lib/notify"
+import { getEnabledUser, requireEnabledUser } from "./lib/account"
 
 // Death verification + release authorization. Flow: any enrolled beneficiary of an
 // owner submits a death certificate → an admin reviews it → on approval the switch
@@ -14,8 +15,7 @@ export const generateCertUploadUrl = mutation({
   args: {},
   returns: v.string(),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) throw new Error("Not authenticated")
+    const identity = await requireEnabledUser(ctx)
     return await ctx.storage.generateUploadUrl()
   },
 })
@@ -34,8 +34,7 @@ export const submitDeathReport = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) throw new Error("Not authenticated")
+    const identity = await requireEnabledUser(ctx)
     const beneficiary = await ctx.db.get(args.beneficiaryId)
     if (beneficiary === null || beneficiary.linkedUserId !== identity.tokenIdentifier) {
       throw new Error("Not found")
@@ -271,7 +270,7 @@ export const getReleasedLegacy = query({
     }),
   ),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await getEnabledUser(ctx)
     if (identity === null) return null
     const me = identity.tokenIdentifier
     const sw = await ctx.db

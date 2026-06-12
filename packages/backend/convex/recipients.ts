@@ -1,6 +1,7 @@
 import { v } from "convex/values"
 import { computeFaraid, type Heir as EngineHeir } from "@workspace/faraid"
 import { mutation, query } from "./_generated/server"
+import { getEnabledUser, isAccountDisabled, requireEnabledUser } from "./lib/account"
 
 // A beneficiary-user's release keypair — one per person (`userId` = WorkOS
 // tokenIdentifier). The PRIVATE half is recovery-wrapped client-side before it
@@ -9,21 +10,34 @@ import { mutation, query } from "./_generated/server"
 // to the old one. Key rotation / re-enrollment is a separate owner-driven flow.
 
 /** Whether the current user has enrolled a release keypair (+ its fingerprint for
- *  display). Drives the web enrollment page (skip if already enrolled). */
+ *  display). Drives the web enrollment page (skip if already enrolled). This is the
+ *  portal GATE query: it carries the explicit `disabled` flag (support-disabled
+ *  account) instead of throwing — the portal shows a disabled state; every other
+ *  function rejects via lib/account.ts. */
 export const getMyRecipientStatus = query({
   args: {},
   returns: v.object({
     enrolled: v.boolean(),
     keyFingerprint: v.union(v.string(), v.null()),
+    disabled: v.boolean(),
   }),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) return { enrolled: false, keyFingerprint: null }
+    if (identity === null) {
+      return { enrolled: false, keyFingerprint: null, disabled: false }
+    }
+    if (await isAccountDisabled(ctx, identity.tokenIdentifier)) {
+      return { enrolled: false, keyFingerprint: null, disabled: true }
+    }
     const row = await ctx.db
       .query("recipientKeys")
       .withIndex("by_userId", (q) => q.eq("userId", identity.tokenIdentifier))
       .unique()
-    return { enrolled: row !== null, keyFingerprint: row?.keyFingerprint ?? null }
+    return {
+      enrolled: row !== null,
+      keyFingerprint: row?.keyFingerprint ?? null,
+      disabled: false,
+    }
   },
 })
 
@@ -71,7 +85,7 @@ export const listMyBenefactors = query({
     }),
   ),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await getEnabledUser(ctx)
     if (identity === null) return []
     const me = identity.tokenIdentifier
     const rows = await ctx.db
@@ -209,10 +223,7 @@ export const enrollKeypair = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const userId = identity.tokenIdentifier
     const existing = await ctx.db
       .query("recipientKeys")

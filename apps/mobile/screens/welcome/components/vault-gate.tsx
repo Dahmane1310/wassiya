@@ -4,6 +4,7 @@ import { useQuery } from "convex/react"
 import { api } from "@workspace/backend/api"
 import { hasPinWrap } from "@/lib/pin-store"
 import { useAccountId } from "@/stores/auth"
+import { AccountDisabled } from "@/screens/welcome/components/account-disabled"
 import { BrandedSplash } from "@/screens/welcome/components/branded-splash"
 
 /**
@@ -33,6 +34,10 @@ export function VaultGate() {
 
   if (status === undefined || localPin === null) {
     return <BrandedSplash />
+  }
+  // Support-disabled account: every backend call is blocked, so route nowhere.
+  if (status.disabled) {
+    return <AccountDisabled />
   }
   if (!status.onboardingComplete || !status.recoveryWrappedKey) {
     return <Redirect href="/onboarding" />

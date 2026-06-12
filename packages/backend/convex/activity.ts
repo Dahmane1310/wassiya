@@ -1,5 +1,6 @@
 import { v } from "convex/values"
 import { query } from "./_generated/server"
+import { getEnabledUser } from "./lib/account"
 
 // Read side of the append-only `auditLog` (written by assets / invites / switch).
 // Owner-scoped via `getUserIdentity()` — never a client-passed id — and bounded,
@@ -24,7 +25,7 @@ export const listActivity = query({
     })
   ),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await getEnabledUser(ctx)
     if (identity === null) {
       return []
     }

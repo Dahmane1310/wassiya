@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { ActivityIndicator, Alert, View } from "react-native"
-import { ArrowLeft, ArrowRight } from "lucide-react-native"
+import { useRouter } from "expo-router"
+import { Mail } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated"
 import { Button } from "@workspace/ui-native/components/ui/button"
@@ -13,26 +14,29 @@ import { LanguageSwitcher } from "@/components/brand/language-switcher"
 import { ThemeSwitcher } from "@/components/brand/theme-switcher"
 import { ScreenContainer } from "@/components/layout/screen-container"
 import { useBrandType } from "@/hooks/use-brand-type"
+import { type OAuthProvider } from "@/lib/auth"
 import { useAuthStore } from "@/stores/auth"
 
-/** The unauthenticated entry hero: brand, promise, and the sign-in CTA. */
+/** The unauthenticated entry hero: brand, promise, and the sign-in choices —
+ *  Google/Apple (provider-direct browser flow) or our native email screens. */
 export function Welcome() {
   const { t } = useTranslation()
+  const router = useRouter()
   const { display, body, tracking, ar } = useBrandType()
   const signIn = useAuthStore((s) => s.signIn)
-  const [busy, setBusy] = useState(false)
+  const [busy, setBusy] = useState<OAuthProvider | null>(null)
 
-  async function onSignIn() {
-    setBusy(true)
+  async function onSignIn(provider: OAuthProvider) {
+    setBusy(provider)
     try {
-      await signIn()
+      await signIn(provider)
     } catch (err) {
       Alert.alert(
         t("auth.signInFailed"),
         err instanceof Error ? err.message : String(err)
       )
     } finally {
-      setBusy(false)
+      setBusy(null)
     }
   }
 
@@ -84,8 +88,9 @@ export function Welcome() {
           </Animated.View>
         </View>
 
-        {/* Calls to action — both enter the same WorkOS flow (it handles new and
-            returning users); the secondary reassures existing owners. */}
+        {/* Sign-in choices: Google/Apple open the provider directly in the
+            browser (PKCE, no hosted interstitial); email uses our native
+            screens via the backend proxy. All handle new AND returning users. */}
         <Animated.View
           entering={FadeInUp.delay(440).duration(700)}
           className="gap-5"
@@ -95,32 +100,44 @@ export function Welcome() {
               variant="vault"
               size="lg"
               className="h-[54px] rounded-2xl"
-              onPress={() => void onSignIn()}
-              disabled={busy}
-              accessibilityLabel={t("welcome.continue")}
+              onPress={() => void onSignIn("GoogleOAuth")}
+              disabled={busy !== null}
+              accessibilityLabel={t("welcome.continueGoogle")}
             >
-              {busy ? (
+              {busy === "GoogleOAuth" ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <>
-                  {/* In English keep the button's medium weight; in Arabic route
-                      through Tajawal so the glyphs aren't tofu on Android. */}
-                  <Text className={cn("font-heading text-white", ar ? body : undefined)}>
-                    {t("welcome.continue")}
-                  </Text>
-                  <Icon as={ar ? ArrowLeft : ArrowRight} className="text-white" />
-                </>
+                /* In English keep the button's medium weight; in Arabic route
+                   through Tajawal so the glyphs aren't tofu on Android. */
+                <Text className={cn("font-heading text-white", ar ? body : undefined)}>
+                  {t("welcome.continueGoogle")}
+                </Text>
               )}
             </Button>
             <Button
-              variant="link"
-              onPress={() => void onSignIn()}
-              disabled={busy}
-              accessibilityLabel={t("welcome.haveVault")}
+              variant="outline"
+              size="lg"
+              className="h-[54px] rounded-2xl"
+              onPress={() => void onSignIn("AppleOAuth")}
+              disabled={busy !== null}
+              accessibilityLabel={t("welcome.continueApple")}
             >
-              <Text className={ar ? body : undefined}>
-                {t("welcome.haveVault")}
-              </Text>
+              {busy === "AppleOAuth" ? (
+                <ActivityIndicator />
+              ) : (
+                <Text className={ar ? body : undefined}>{t("welcome.continueApple")}</Text>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-[54px] rounded-2xl"
+              onPress={() => router.push("/auth")}
+              disabled={busy !== null}
+              accessibilityLabel={t("welcome.continueEmail")}
+            >
+              <Icon as={Mail} className="text-foreground" />
+              <Text className={ar ? body : undefined}>{t("welcome.continueEmail")}</Text>
             </Button>
           </View>
 

@@ -1,6 +1,7 @@
 import { v } from "convex/values"
 import { mutation } from "./_generated/server"
 import { authKit } from "./auth"
+import { requireEnabledUser } from "./lib/account"
 
 // Single-use enrollment tokens for beneficiary account linking. Only a HASH of the
 // token is ever stored — the raw token is generated on the OWNER's device, shared
@@ -18,10 +19,7 @@ export const issueInvite = mutation({
     expiresAt: v.number(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const ownerId = identity.tokenIdentifier
 
     const beneficiary = await ctx.db.get(args.beneficiaryId)
@@ -62,10 +60,7 @@ export const issueInvite = mutation({
 export const redeemInvite = mutation({
   args: { tokenHash: v.string() },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const invite = await ctx.db
       .query("invites")
       .withIndex("by_tokenHash", (q) => q.eq("tokenHash", args.tokenHash))

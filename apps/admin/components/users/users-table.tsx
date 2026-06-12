@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { usePaginatedQuery } from "convex/react"
+import { usePaginatedQuery, useQuery } from "convex/react"
 import { type ColumnDef } from "@tanstack/react-table"
 import { type TFunction } from "i18next"
 import { useTranslation } from "react-i18next"
@@ -21,9 +21,11 @@ type UserRow = {
   _creationTime: number
   email: string | null
   name: string | null
-  onboardingComplete: boolean
+  /** "invited" = admin-created account, no vault yet; otherwise a real owner row. */
+  stage: "invited" | "onboarding" | "active"
   switchState: string | null
-  entitlement: { plan: string; status: string }
+  entitlement: { plan: string; status: string } | null
+  disabled: boolean
 }
 
 function buildColumns(t: TFunction): ColumnDef<UserRow>[] {
@@ -35,7 +37,14 @@ function buildColumns(t: TFunction): ColumnDef<UserRow>[] {
       header: ({ column }) => <DataTableColumnHeader column={column} title={t("users.colUser")} />,
       cell: ({ row }) => (
         <div>
-          <div className="font-medium">{row.original.email ?? t("users.unknownEmail")}</div>
+          <div className="flex items-center gap-2 font-medium">
+            {row.original.email ?? t("users.unknownEmail")}
+            {row.original.disabled && (
+              <Badge variant="secondary" className="bg-destructive/10 text-destructive border-transparent">
+                {t("users.disabledBadge")}
+              </Badge>
+            )}
+          </div>
           {row.original.name !== null && (
             <div className="text-muted-foreground text-xs">{row.original.name}</div>
           )}
@@ -43,15 +52,23 @@ function buildColumns(t: TFunction): ColumnDef<UserRow>[] {
       ),
     },
     {
-      id: "onboarded",
-      meta: { label: t("users.colOnboarded") },
-      accessorFn: (u) => u.onboardingComplete,
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t("users.colOnboarded")} />,
+      id: "stage",
+      meta: { label: t("users.colStage") },
+      accessorFn: (u) => u.stage,
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t("users.colStage")} />,
       cell: ({ row }) =>
-        row.original.onboardingComplete ? (
-          <Badge variant="secondary" className="border-transparent bg-green-600/10 text-green-700 dark:text-green-400">{t("common.yes")}</Badge>
+        row.original.stage === "invited" ? (
+          <Badge variant="secondary" className="border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400">
+            {t("users.stageInvited")}
+          </Badge>
+        ) : row.original.stage === "active" ? (
+          <Badge variant="secondary" className="border-transparent bg-green-600/10 text-green-700 dark:text-green-400">
+            {t("users.vaultSetUp")}
+          </Badge>
         ) : (
-          <Badge variant="outline" className="text-muted-foreground">{t("common.no")}</Badge>
+          <Badge variant="outline" className="text-muted-foreground">
+            {t("users.stageOnboarding")}
+          </Badge>
         ),
     },
     {
@@ -59,19 +76,28 @@ function buildColumns(t: TFunction): ColumnDef<UserRow>[] {
       meta: { label: t("users.colSwitch") },
       accessorFn: (u) => u.switchState ?? "",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t("users.colSwitch")} />,
-      cell: ({ row }) => <StateBadge state={row.original.switchState} />,
+      cell: ({ row }) =>
+        row.original.stage === "invited" ? (
+          <span className="text-muted-foreground">—</span>
+        ) : (
+          <StateBadge state={row.original.switchState} />
+        ),
     },
     {
       id: "entitlement",
       meta: { label: t("users.colEntitlement") },
-      accessorFn: (u) => `${u.entitlement.plan} ${u.entitlement.status}`,
+      accessorFn: (u) =>
+        u.entitlement === null ? "" : `${u.entitlement.plan} ${u.entitlement.status}`,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t("users.colEntitlement")} />,
-      cell: ({ row }) => (
-        <EntitlementBadge
-          plan={row.original.entitlement.plan}
-          status={row.original.entitlement.status}
-        />
-      ),
+      cell: ({ row }) =>
+        row.original.entitlement === null ? (
+          <span className="text-muted-foreground">—</span>
+        ) : (
+          <EntitlementBadge
+            plan={row.original.entitlement.plan}
+            status={row.original.entitlement.status}
+          />
+        ),
     },
     {
       id: "joined",
@@ -94,11 +120,42 @@ export function UsersTable({ toolbar }: { toolbar?: React.ReactNode }) {
     { order },
     { initialNumItems: 50 },
   )
+  // Admin-created accounts awaiting vault setup have no `users` row, so they
+  // can't come from the paginated query — merge them in by creation time.
+  const provisioned = useQuery(api.admin.users.listProvisionedAccounts)
+
+  const rows = useMemo<UserRow[]>(() => {
+    const owners: UserRow[] = results.map((u) => ({
+      tokenIdentifier: u.tokenIdentifier,
+      _creationTime: u._creationTime,
+      email: u.email,
+      name: u.name,
+      stage: u.onboardingComplete ? "active" : "onboarding",
+      switchState: u.switchState,
+      entitlement: u.entitlement,
+      disabled: u.disabled,
+    }))
+    const invited: UserRow[] = (provisioned ?? []).map((p) => ({
+      tokenIdentifier: p.accountId,
+      _creationTime: p.createdAt,
+      email: p.email,
+      name: p.name,
+      stage: "invited",
+      switchState: null,
+      entitlement: null,
+      disabled: false,
+    }))
+    return [...owners, ...invited].sort((a, b) =>
+      order === "desc"
+        ? b._creationTime - a._creationTime
+        : a._creationTime - b._creationTime,
+    )
+  }, [results, provisioned, order])
 
   return (
     <DataTable
       columns={columns}
-      data={results}
+      data={rows}
       labels={labels}
       viewOptions
       exportName="users"

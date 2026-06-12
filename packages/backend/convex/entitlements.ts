@@ -8,6 +8,7 @@ import {
 } from "./_generated/server"
 import { type Doc } from "./_generated/dataModel"
 import { loadEntitlement, TRIAL_MS } from "./lib/entitlements"
+import { getEnabledUser, requireEnabledUser } from "./lib/account"
 
 // Subscription / entitlement API. The MODEL is try-then-pay: a 14-day trial starts at
 // vault setup (see vault.completeVaultSetup), then the vault is read-only until the user
@@ -39,7 +40,7 @@ const sourceValidator = v.union(
 export const getEntitlement = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await getEnabledUser(ctx)
     if (identity === null) {
       return null
     }
@@ -163,10 +164,7 @@ export const devSetEntitlement = mutation({
     if (process.env.ALLOW_DEV_ENTITLEMENT !== "true") {
       throw new Error("dev entitlement simulation is disabled")
     }
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const ownerId = identity.tokenIdentifier
     const now = Date.now()
 
@@ -270,10 +268,7 @@ async function alreadyProcessed(
 export const linkPurchaseId = mutation({
   args: { rcAppUserId: v.string() },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const ownerId = identity.tokenIdentifier
     const existing = await ctx.db
       .query("entitlements")

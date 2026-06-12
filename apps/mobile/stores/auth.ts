@@ -3,14 +3,23 @@ import { create } from "zustand"
 import {
   refreshWorkOSTokens,
   signInWithWorkOS,
+  type OAuthProvider,
   type WorkOSTokens,
 } from "@/lib/auth"
+import { proxyRefresh } from "@/lib/auth-proxy"
 import { useVaultStore } from "@/stores/vault"
 
 const ACCESS_KEY = "workos.accessToken"
 const REFRESH_KEY = "workos.refreshToken"
+const MODE_KEY = "workos.authMode"
 // Refresh slightly before expiry to avoid races on the boundary.
 const EXPIRY_SKEW_MS = 30_000
+
+// How this session was minted decides how it REFRESHES: PKCE (browser OAuth)
+// sessions refresh as a public client; proxy (native email/password/code via
+// the Convex backend) sessions were minted confidentially and refresh through
+// the same proxy.
+export type AuthMode = "pkce" | "proxy"
 
 type AuthState = {
   isLoading: boolean
@@ -20,9 +29,12 @@ type AuthState = {
   // Zustand persist middleware (a single JSON blob can exceed iOS's ~2KB/key).
   accessToken: string | null
   refreshToken: string | null
+  authMode: AuthMode
 
   hydrate: () => Promise<void>
-  signIn: () => Promise<void>
+  signIn: (provider?: OAuthProvider) => Promise<void>
+  // Entry point for the native auth screens (tokens minted by the proxy).
+  signInWithTokens: (tokens: WorkOSTokens) => Promise<void>
   signOut: () => Promise<void>
   // Bridge for Convex's ConvexProviderWithAuth.
   fetchAccessToken: (opts?: {
@@ -30,13 +42,15 @@ type AuthState = {
   }) => Promise<string | null>
 }
 
-async function persistTokens(tokens: WorkOSTokens | null) {
+async function persistTokens(tokens: WorkOSTokens | null, mode?: AuthMode) {
   if (tokens) {
     await SecureStore.setItemAsync(ACCESS_KEY, tokens.accessToken)
     await SecureStore.setItemAsync(REFRESH_KEY, tokens.refreshToken)
+    if (mode) await SecureStore.setItemAsync(MODE_KEY, mode)
   } else {
     await SecureStore.deleteItemAsync(ACCESS_KEY)
     await SecureStore.deleteItemAsync(REFRESH_KEY)
+    await SecureStore.deleteItemAsync(MODE_KEY)
   }
 }
 
@@ -45,24 +59,36 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   accessToken: null,
   refreshToken: null,
+  authMode: "pkce",
 
   // Load persisted tokens on launch. Call once (see app/_layout.tsx).
   hydrate: async () => {
     try {
       const accessToken = await SecureStore.getItemAsync(ACCESS_KEY)
       const refreshToken = await SecureStore.getItemAsync(REFRESH_KEY)
+      const mode = await SecureStore.getItemAsync(MODE_KEY)
       if (accessToken && refreshToken) {
-        set({ accessToken, refreshToken, isAuthenticated: true })
+        set({
+          accessToken,
+          refreshToken,
+          authMode: mode === "proxy" ? "proxy" : "pkce",
+          isAuthenticated: true,
+        })
       }
     } finally {
       set({ isLoading: false })
     }
   },
 
-  signIn: async () => {
-    const tokens = await signInWithWorkOS()
-    await persistTokens(tokens)
-    set({ ...tokens, isAuthenticated: true })
+  signIn: async (provider) => {
+    const tokens = await signInWithWorkOS(provider)
+    await persistTokens(tokens, "pkce")
+    set({ ...tokens, authMode: "pkce", isAuthenticated: true })
+  },
+
+  signInWithTokens: async (tokens) => {
+    await persistTokens(tokens, "proxy")
+    set({ ...tokens, authMode: "proxy", isAuthenticated: true })
   },
 
   signOut: async () => {
@@ -76,13 +102,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   fetchAccessToken: async ({ forceRefreshToken } = {}) => {
-    const { accessToken, refreshToken } = get()
+    const { accessToken, refreshToken, authMode } = get()
     if (!accessToken || !refreshToken) return null
 
     if (forceRefreshToken || isExpired(accessToken)) {
       try {
-        const refreshed = await refreshWorkOSTokens(refreshToken)
-        await persistTokens(refreshed)
+        const refreshed =
+          authMode === "proxy"
+            ? await proxyRefresh(refreshToken)
+            : await refreshWorkOSTokens(refreshToken)
+        await persistTokens(refreshed, authMode)
         set({ ...refreshed })
         return refreshed.accessToken
       } catch {

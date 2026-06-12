@@ -56,6 +56,7 @@
     "review": "مراجعة الوفيات",
     "releases": "الإفصاحات",
     "users": "المستخدمون",
+    "beneficiaries": "المستفيدون",
     "entitlements": "الاشتراكات",
     "billing": "الفوترة",
     "notifications": "الإشعارات",
@@ -64,7 +65,10 @@
     "brand": "وصية",
     "brandSub": "الإدارة"
   },
-  "roles": { "superadmin": "مشرف أعلى", "admin": "مشرف" },
+  "roles": {
+    "superadmin": "مشرف أعلى",
+    "admin": "مشرف"
+  },
   "switchStates": {
     "active": "نشط",
     "grace": "مهلة",
@@ -73,13 +77,59 @@
     "paused": "متوقف مؤقتاً",
     "noSwitch": "لا مفتاح"
   },
-  "plans": { "trial": "تجريبي", "annual": "سنوي", "lifetime": "مدى الحياة" },
+  "plans": {
+    "trial": "تجريبي",
+    "annual": "سنوي",
+    "lifetime": "مدى الحياة"
+  },
   "entStatus": {
     "trialing": "تجريبي",
     "active": "نشط",
     "past_due": "متأخر السداد",
     "canceled": "ملغى",
     "expired": "منتهٍ"
+  },
+  "auth": {
+    "signInTitle": "تسجيل الدخول إلى إدارة وصية",
+    "signInSubtitle": "لوحة العمليات — لحسابات المشرفين فقط.",
+    "signUpTitle": "إنشاء حساب المشرف",
+    "signUpSubtitle": "استخدم البريد الذي أُرسلت إليه دعوتك.",
+    "verifyTitle": "تحقق من بريدك",
+    "verifyBody": "أرسلنا رمزاً من 6 أرقام إلى {{email}} للتأكد أنه أنت.",
+    "resetTitle": "إعادة تعيين كلمة المرور",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "newPassword": "كلمة المرور الجديدة",
+    "passwordHint": "10 أحرف على الأقل تجعلها قوية.",
+    "codeLabel": "الرمز المكوّن من 6 أرقام الذي أرسلناه",
+    "codeHint": "أُرسل إلى {{email}}. قد يستغرق وصوله دقيقة.",
+    "signIn": "تسجيل الدخول",
+    "createAccount": "إنشاء حساب",
+    "confirm": "تأكيد",
+    "emailCode": "أرسلوا لي رمزاً",
+    "useCode": "أرسلوا لي رمزاً بدلاً من ذلك",
+    "usePassword": "استخدام كلمة مرور بدلاً من ذلك",
+    "forgot": "نسيت كلمة المرور؟",
+    "noAccount": "لا حساب بعد؟",
+    "haveAccount": "لديك حساب بالفعل؟",
+    "orEmail": "أو بالبريد",
+    "continueGoogle": "المتابعة عبر Google",
+    "continueApple": "المتابعة عبر Apple",
+    "sendReset": "إرسال رابط إعادة التعيين",
+    "saveSignIn": "حفظ وتسجيل الدخول",
+    "resetSent": "إن وُجد حساب للبريد {{email}}، فرابط إعادة التعيين في طريقه إليك.",
+    "backToSignIn": "العودة إلى تسجيل الدخول",
+    "errors": {
+      "invalid_credentials": "البريد أو كلمة المرور غير متطابقين.",
+      "user_not_found": "لم نجد حساباً بهذا البريد.",
+      "invalid_one_time_code": "الرمز غير مطابق — تحقق منه وحاول مجدداً.",
+      "magic_auth_code_expired": "انتهت صلاحية الرمز — أرسل واحداً جديداً.",
+      "email_verification_code_expired": "انتهت صلاحية الرمز — أرسل واحداً جديداً.",
+      "password_strength_error": "اختر كلمة مرور أقوى — الأطول أفضل.",
+      "user_creation_error": "تعذّر إنشاء الحساب — قد يكون البريد مستخدماً بالفعل.",
+      "password_reset_token_expired": "انتهت صلاحية الرابط — اطلب واحداً جديداً.",
+      "auth_failed": "حدث خطأ ما. حاول مجدداً."
+    }
   },
   "accessDenied": {
     "title": "لا صلاحية إشراف",
@@ -125,7 +175,7 @@
   },
   "review": {
     "title": "التحقق من الوفاة",
-    "subtitle": "راجع شهادات الوفاة المقدَّمة. الموافقة تُفصح عن التركة — ولا يمكن التراجع عنها.",
+    "subtitle": "شهادات الوفاة المقدَّمة. الموافقة لا رجعة فيها.",
     "tabUnderReview": "قيد المراجعة",
     "tabApproved": "مقبولة",
     "tabRejected": "مرفوضة",
@@ -186,7 +236,7 @@
   },
   "releases": {
     "title": "الإفصاحات",
-    "subtitle": "تركات بانتظار الإفصاح — بما فيها مؤقتات الإفصاح التلقائي دون قرار بشري — وتوزيعات التركات المُفصح عنها.",
+    "subtitle": "تركات بانتظار الإفصاح وأخرى مُفصح عنها.",
     "tabPending": "بانتظار الإفصاح",
     "tabReleased": "مُفصح عنها",
     "colOwner": "المالك",
@@ -214,11 +264,8 @@
   },
   "users": {
     "title": "المستخدمون",
-    "subtitle": "كل مالكي الخزائن. محتويات الخزنة مشفّرة بمعرفة صفرية — تظهر هنا الحالات والأعداد فقط.",
-    "tabOwners": "المالكون",
-    "tabBeneficiaries": "المستفيدون",
+    "subtitle": "كل مالكي الخزائن — المحتويات تبقى مشفّرة.",
     "colUser": "المستخدم",
-    "colOnboarded": "أكمل الإعداد",
     "colSwitch": "المفتاح",
     "colEntitlement": "الاشتراك",
     "colJoined": "تاريخ الانضمام",
@@ -235,7 +282,57 @@
     "noVault": "لا خزنة بعد",
     "onboardingIncomplete": "الإعداد غير مكتمل",
     "lastSignIn": "آخر تسجيل دخول {{date}}",
-    "backToUsers": "العودة إلى المستخدمين"
+    "backToUsers": "العودة إلى المستخدمين",
+    "createUser": "إنشاء مستخدم",
+    "createTitle": "إنشاء حساب مستخدم",
+    "createBody": "بدون كلمة مرور — يسجّل الدخول برمز يُرسل إلى بريده.",
+    "emailLabel": "البريد الإلكتروني",
+    "firstNameLabel": "الاسم الأول",
+    "lastNameLabel": "اسم العائلة",
+    "createSubmit": "إنشاء الحساب",
+    "createdTitle": "أُنشئ حساب لـ {{email}}",
+    "createdBody": "يمكنه تسجيل الدخول الآن برمز يُرسل إلى بريده. سيظهر في هذا الجدول بعد إعداد خزنته — وحتى ذلك الحين ابحث عنه بالبريد.",
+    "createdDone": "تم",
+    "createdView": "عرض المستخدم",
+    "createFailed": "تعذّر إنشاء الحساب",
+    "emailInUse": "يوجد حساب بهذا البريد بالفعل",
+    "editName": "تعديل الاسم",
+    "editNameTitle": "تعديل الاسم",
+    "editNameBody": "يصحّح اسم العرض في الحساب. لا يمكن تغيير البريد هنا.",
+    "editNameSubmit": "حفظ الاسم",
+    "nameUpdated": "تم تحديث الاسم",
+    "updateFailed": "تعذّر تحديث الاسم",
+    "disableAccount": "تعطيل الحساب",
+    "disableTitle": "تعطيل هذا الحساب؟",
+    "disableBody": "يحظر كل وصول ويوقف مفتاح تسجيل الحضور مؤقتًا. تبقى بيانات الخزنة ويمكن إعادة تفعيل الحساب لاحقًا.",
+    "disableReasonLabel": "السبب (اختياري)",
+    "disableReasonPlaceholder": "مثل: بلاغ احتيال",
+    "disableConfirm": "تعطيل",
+    "disabledToast": "تم تعطيل الحساب",
+    "disableBlocked": "لا يمكن التعطيل الآن — حالة وفاة قيد المراجعة أو تركة مُفصح عنها",
+    "disableFailed": "تعذّر تعطيل الحساب",
+    "disabledBadge": "معطَّل",
+    "disabledMeta": "عُطّل في {{date}}",
+    "enableAccount": "إعادة تفعيل",
+    "enableTitle": "إعادة تفعيل هذا الحساب؟",
+    "enableBody": "يعيد تسجيل الدخول والوصول إلى الخزنة. يبقى مفتاح تسجيل الحضور موقوفًا حتى تستأنفه.",
+    "enableConfirm": "إعادة تفعيل",
+    "enabledToast": "أُعيد تفعيل الحساب",
+    "enableFailed": "تعذّرت إعادة تفعيل الحساب",
+    "colStage": "المرحلة",
+    "stageInvited": "مدعو",
+    "stageOnboarding": "قيد الإعداد",
+    "tabOverview": "نظرة عامة",
+    "tabPeople": "المستفيدون",
+    "tabBilling": "الفوترة",
+    "tabActivity": "النشاط",
+    "glanceSwitch": "المفتاح",
+    "glancePlan": "الخطة",
+    "glanceEstate": "التركة"
+  },
+  "beneficiaries": {
+    "title": "المستفيدون",
+    "subtitle": "من سُمّي لاستلام خزنة."
   },
   "userSwitch": {
     "title": "مفتاح الأمان",
@@ -272,8 +369,6 @@
     "implicitTrial": "تجربة ضمنية منذ التسجيل — لا سجل فوترة بعد."
   },
   "userVault": {
-    "title": "الخزنة",
-    "zk": "معرفة صفرية",
     "assets": "أصول",
     "family": "العائلة",
     "wasiyyah": "الوصية",
@@ -309,14 +404,17 @@
   },
   "beneficiaryLookup": {
     "placeholder": "بريد المستفيد (مطابقة تامة)…",
-    "intro": "أدخل البريد الذي دُعي به المستفيد لعرض كل خزنة سمّته، وحالة تسجيله، وبصمة مفتاحه.",
+    "intro": "أدخل بريد المستفيد للبحث.",
     "noResult": "لا مستفيد بالبريد {{email}}",
     "namedBy": "سمّاه",
-    "fingerprint": "بصمة المفتاح"
+    "fingerprint": "بصمة المفتاح",
+    "colBeneficiary": "المستفيد",
+    "colStatus": "الحالة",
+    "colNamed": "تاريخ التسمية"
   },
   "entitlements": {
     "title": "الاشتراكات",
-    "subtitle": "سجلات الفوترة لكل المالكين. المنح والإلغاءات تُدوَّن في الدفتر وسجل التدقيق.",
+    "subtitle": "الخطط والاستحقاقات لكل المالكين.",
     "ownerIdPlaceholder": "معرّف المالك (مطابقة تامة)…",
     "allStatuses": "كل الحالات",
     "allPlans": "كل الخطط",
@@ -346,7 +444,7 @@
   },
   "billing": {
     "title": "الفوترة",
-    "subtitle": "دفتر إلحاقي لكل أحداث الفوترة — تجارب ومنح وتجديدات وإلغاءات — لدعم الاسترداد والنزاعات.",
+    "subtitle": "دفتر إلحاقي لكل أحداث الفوترة.",
     "colWhen": "الوقت",
     "colOwner": "المالك",
     "colEvent": "الحدث",
@@ -356,7 +454,7 @@
   },
   "audit": {
     "title": "سجل التدقيق",
-    "subtitle": "سجل إلحاقي لكل إجراءات الخزنة والمفتاح والمشرفين.",
+    "subtitle": "كل إجراءات الخزنة والمفتاح والمشرفين.",
     "ownerIdPlaceholder": "معرّف المالك (مطابقة تامة)…",
     "allEvents": "كل الأحداث",
     "fromDate": "من تاريخ",
@@ -387,12 +485,16 @@
       "entitlement_granted": "مُنحت خطة",
       "entitlement_revoked": "أُلغيت خطة",
       "admin_added": "أُضيف مشرف",
-      "admin_removed": "أُزيل مشرف"
+      "admin_removed": "أُزيل مشرف",
+      "account_created": "أُنشئ الحساب",
+      "account_updated": "حُدّث الحساب",
+      "account_disabled": "عُطّل الحساب",
+      "account_enabled": "أُعيد تفعيل الحساب"
     }
   },
   "admins": {
     "title": "المشرفون",
-    "subtitle": "من يمكنه استخدام هذه اللوحة. تُفعَّل الدعوات عند أول تسجيل دخول.",
+    "subtitle": "من يمكنه استخدام هذه اللوحة.",
     "add": "إضافة مشرف",
     "addTitle": "إضافة مشرف",
     "addBody": "تُفعَّل الصلاحية تلقائياً عند أول تسجيل دخول بهذا البريد (الموثَّق).",
@@ -420,7 +522,7 @@
   },
   "notifications": {
     "title": "الإشعارات",
-    "subtitle": "قائمة البريد الصادر. يمكن إعادة محاولة الفاشل؛ تُصرَّف القائمة كل بضع دقائق.",
+    "subtitle": "قائمة البريد الصادر.",
     "tabAll": "الكل",
     "tabPending": "معلّقة",
     "tabSent": "مرسلة",
@@ -444,6 +546,10 @@
       "death_review_result": "نتيجة مراجعة وفاة",
       "release_notice": "إخطار إفصاح"
     },
-    "statuses": { "pending": "معلّق", "sent": "مرسل", "failed": "فاشل" }
+    "statuses": {
+      "pending": "معلّق",
+      "sent": "مرسل",
+      "failed": "فاشل"
+    }
   }
 }

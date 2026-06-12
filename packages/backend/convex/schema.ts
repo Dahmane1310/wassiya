@@ -343,6 +343,10 @@ export default defineSchema({
       v.literal("death_review_reopened"),
       v.literal("admin_added"),
       v.literal("admin_removed"),
+      v.literal("account_created"),
+      v.literal("account_updated"),
+      v.literal("account_disabled"),
+      v.literal("account_enabled"),
     ),
     targetTable: v.optional(v.string()),
     targetId: v.optional(v.string()),
@@ -365,6 +369,7 @@ export default defineSchema({
       v.literal("attestation_request"),
       v.literal("death_review_result"),
       v.literal("release_notice"),
+      v.literal("password_reset"),
     ),
     status: v.union(
       v.literal("pending"),
@@ -382,6 +387,27 @@ export default defineSchema({
     .index("by_kind", ["kind"])
     .index("by_status_and_kind", ["status", "kind"])
     .index("by_recipientEmail", ["recipientEmail"]),
+
+  // Admin-provisioned accounts awaiting vault setup. A `users` row can't exist
+  // before onboarding, so this snapshot keeps the created account visible in the
+  // panel. `vault.completeVaultSetup` deletes the row once the vault exists.
+  provisionedAccounts: defineTable({
+    accountId: v.string(), // full tokenIdentifier
+    email: v.string(),
+    name: v.union(v.string(), v.null()),
+    createdBy: v.string(), // "admin:<tokenIdentifier>"
+  }).index("by_accountId", ["accountId"]),
+
+  // Support-disabled accounts (reversible "soft delete"). The WorkOS account and
+  // ALL vault data survive; while a row exists here, every owner/beneficiary-facing
+  // function rejects with ACCOUNT_DISABLED (lib/account.ts). Re-enable = delete the
+  // row — same identity, so the vault is reachable again. Disabling also pauses the
+  // dead-man's switch (a blocked owner can't check in; an active switch would fire).
+  disabledAccounts: defineTable({
+    accountId: v.string(), // full tokenIdentifier; _creationTime = disabledAt
+    disabledBy: v.string(), // "admin:<tokenIdentifier>"
+    reason: v.optional(v.string()),
+  }).index("by_accountId", ["accountId"]),
 
   // Single-use enrollment tokens for beneficiary keypair/account setup. Only a HASH
   // of the token is stored; the raw token is emailed once and never persisted.

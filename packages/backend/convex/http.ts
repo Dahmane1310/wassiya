@@ -2,12 +2,17 @@ import { httpRouter } from "convex/server"
 import { httpAction } from "./_generated/server"
 import { internal } from "./_generated/api"
 import { authKit } from "./auth"
+import { registerMobileAuthRoutes } from "./mobileAuth"
 
 const http = httpRouter()
 
 // Serves the WorkOS webhook at <deployment>.convex.site/workos/webhook so
 // user.created / user.updated / user.deleted events sync into Convex.
 authKit.registerRoutes(http)
+
+// Credential-auth proxy for the secret-less mobile app (+ the shared
+// password-reset request used by web/admin). See mobileAuth.ts.
+registerMobileAuthRoutes(http)
 
 // ── RevenueCat (native IAP) webhook ─────────────────────────────────────────
 // RevenueCat is the trust anchor for Apple/Google purchases: the device buys via

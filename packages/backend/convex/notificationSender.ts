@@ -55,6 +55,16 @@ function template(
           `Sign in to the Wassiya portal with this email address to open what was left for you.`,
       }
     }
+    case "password_reset": {
+      return {
+        subject: "Wassiya — reset your password",
+        text:
+          `Someone asked to reset the password for your Wassiya account. ` +
+          `If that was you, open this link to choose a new password (it expires soon):\n\n` +
+          `${payload.url ?? ""}\n\n` +
+          `If you didn't ask for this, you can ignore this email — nothing changes.`,
+      }
+    }
     default:
       return {
         subject: "Wassiya notification",

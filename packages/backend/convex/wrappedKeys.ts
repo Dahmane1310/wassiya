@@ -1,5 +1,6 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
+import { getEnabledUser, requireEnabledUser } from "./lib/account"
 
 // Beneficiary key-wrapping — the release envelope. The owner's unlocked device is
 // the ONLY place a DEK exists in plaintext, so wrapping DEKs to beneficiaries is a
@@ -35,7 +36,7 @@ export const listWrapGaps = query({
     })
   ),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await getEnabledUser(ctx)
     if (identity === null) return []
     const ownerId = identity.tokenIdentifier
 
@@ -117,10 +118,7 @@ export const saveWrappedKeys = mutation({
   },
   returns: v.object({ inserted: v.number(), skipped: v.number() }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const ownerId = identity.tokenIdentifier
     if (args.entries.length > MAX_SAVE) {
       throw new Error("TOO_MANY_WRAPPED_KEYS")

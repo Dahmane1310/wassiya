@@ -1,5 +1,6 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
+import { getEnabledUser, requireEnabledUser } from "./lib/account"
 
 // The freely-willed bequest, modelled as PERCENTAGES of the (net) estate so the
 // server can enforce the Sharia one-third cap WITHOUT ever seeing a value. The
@@ -12,7 +13,7 @@ const EPS = 1e-6
 export const listAllocations = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await getEnabledUser(ctx)
     if (identity === null) {
       return []
     }
@@ -42,10 +43,7 @@ export const setAllocation = mutation({
     note: v.optional(encrypted),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const ownerId = identity.tokenIdentifier
     if (!Number.isFinite(args.percentage) || args.percentage < 0 || args.percentage > CAP + EPS) {
       throw new Error("Percentage out of range")
@@ -83,10 +81,7 @@ export const setAllocation = mutation({
 export const removeAllocation = mutation({
   args: { id: v.id("wasiyyahAllocations") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const row = await ctx.db.get(args.id)
     if (row === null || row.ownerId !== identity.tokenIdentifier) {
       throw new Error("Not found")

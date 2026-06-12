@@ -1,6 +1,7 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { authKit } from "./auth"
+import { getEnabledUser, requireEnabledUser } from "./lib/account"
 
 // Protected query. A non-null result proves the WorkOS JWT reached Convex and
 // `auth.config.ts` validated it. `email`/`firstName`/`lastName` come from the
@@ -10,7 +11,7 @@ import { authKit } from "./auth"
 export const currentUser = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await getEnabledUser(ctx)
     if (identity === null) {
       return null
     }
@@ -37,10 +38,7 @@ export const currentUser = query({
 export const setOwnerGender = mutation({
   args: { gender: v.union(v.literal("male"), v.literal("female")) },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const row = await ctx.db
       .query("users")
       .withIndex("by_tokenIdentifier", (q) =>

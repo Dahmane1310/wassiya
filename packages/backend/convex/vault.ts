@@ -1,6 +1,7 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { TRIAL_MS } from "./lib/entitlements"
+import { isAccountDisabled, requireEnabledUser } from "./lib/account"
 
 // Shape of an encrypted package — mirrors `EncryptedDataPackage` from
 // @workspace/crypto and the `encrypted` column validator in schema.ts.
@@ -17,6 +18,7 @@ const EMPTY = {
   recoveryWrapIv: null,
   vaultVerifier: null,
   onboardingComplete: false,
+  disabled: false,
 }
 
 /**
@@ -24,7 +26,9 @@ const EMPTY = {
  * unauthenticated OR when the `users` row doesn't exist yet (it's created lazily by
  * `completeVaultSetup`) — both mean "needs onboarding". The recovery trio is consumed
  * only by the recovery flow (new device / forgotten PIN); routing uses existence +
- * `onboardingComplete`.
+ * `onboardingComplete`. This is the mobile GATE query, so it carries the explicit
+ * `disabled` flag (support-disabled account) instead of throwing — the gate routes
+ * to a disabled screen; every other function rejects via lib/account.ts.
  */
 export const getVaultStatus = query({
   args: {},
@@ -32,6 +36,9 @@ export const getVaultStatus = query({
     const identity = await ctx.auth.getUserIdentity()
     if (identity === null) {
       return EMPTY
+    }
+    if (await isAccountDisabled(ctx, identity.tokenIdentifier)) {
+      return { ...EMPTY, disabled: true }
     }
     const user = await ctx.db
       .query("users")
@@ -48,6 +55,7 @@ export const getVaultStatus = query({
       recoveryWrapIv: user.recoveryWrapIv,
       vaultVerifier: user.vaultVerifier ?? null,
       onboardingComplete: user.onboardingComplete ?? false,
+      disabled: false,
     }
   },
 })
@@ -72,10 +80,7 @@ export const completeVaultSetup = mutation({
     vaultVerifier: encrypted,
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const existing = await ctx.db
       .query("users")
       .withIndex("by_tokenIdentifier", (q) =>
@@ -103,6 +108,16 @@ export const completeVaultSetup = mutation({
       vaultVerifier: args.vaultVerifier,
       onboardingComplete: true,
     })
+
+    // Admin-provisioned account just onboarded — the panel's "awaiting setup"
+    // registry entry is consumed; the real `users` row represents them now.
+    const provisioned = await ctx.db
+      .query("provisionedAccounts")
+      .withIndex("by_accountId", (q) => q.eq("accountId", identity.tokenIdentifier))
+      .unique()
+    if (provisioned !== null) {
+      await ctx.db.delete(provisioned._id)
+    }
 
     // Start the 14-day trial — but never clobber a pay-before-onboard grant.
     const ent = await ctx.db

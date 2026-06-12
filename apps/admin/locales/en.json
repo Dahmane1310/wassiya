@@ -52,6 +52,7 @@
     "review": "Death review",
     "releases": "Releases",
     "users": "Users",
+    "beneficiaries": "Beneficiaries",
     "entitlements": "Entitlements",
     "billing": "Billing",
     "notifications": "Notifications",
@@ -60,7 +61,10 @@
     "brand": "Wassiya",
     "brandSub": "Admin"
   },
-  "roles": { "superadmin": "Superadmin", "admin": "Admin" },
+  "roles": {
+    "superadmin": "Superadmin",
+    "admin": "Admin"
+  },
   "switchStates": {
     "active": "Active",
     "grace": "Grace",
@@ -69,13 +73,59 @@
     "paused": "Paused",
     "noSwitch": "No switch"
   },
-  "plans": { "trial": "Trial", "annual": "Annual", "lifetime": "Lifetime" },
+  "plans": {
+    "trial": "Trial",
+    "annual": "Annual",
+    "lifetime": "Lifetime"
+  },
   "entStatus": {
     "trialing": "Trialing",
     "active": "Active",
     "past_due": "Past due",
     "canceled": "Canceled",
     "expired": "Expired"
+  },
+  "auth": {
+    "signInTitle": "Sign in to Wassiya Admin",
+    "signInSubtitle": "Operations panel — admin accounts only.",
+    "signUpTitle": "Create your admin account",
+    "signUpSubtitle": "Use the email your invite was sent to.",
+    "verifyTitle": "Check your email",
+    "verifyBody": "We sent a 6-digit code to {{email}} to confirm it's really you.",
+    "resetTitle": "Reset your password",
+    "email": "Email",
+    "password": "Password",
+    "newPassword": "New password",
+    "passwordHint": "At least 10 characters keeps it strong.",
+    "codeLabel": "The 6-digit code we emailed you",
+    "codeHint": "Sent to {{email}}. It can take a minute to arrive.",
+    "signIn": "Sign in",
+    "createAccount": "Create account",
+    "confirm": "Confirm",
+    "emailCode": "Email me a code",
+    "useCode": "Email me a code instead",
+    "usePassword": "Use a password instead",
+    "forgot": "Forgot password?",
+    "noAccount": "No account yet?",
+    "haveAccount": "Already have an account?",
+    "orEmail": "or with email",
+    "continueGoogle": "Continue with Google",
+    "continueApple": "Continue with Apple",
+    "sendReset": "Send reset link",
+    "saveSignIn": "Save & sign in",
+    "resetSent": "If an account exists for {{email}}, a reset link is on its way.",
+    "backToSignIn": "Back to sign in",
+    "errors": {
+      "invalid_credentials": "That email or password doesn't match.",
+      "user_not_found": "We couldn't find an account with that email.",
+      "invalid_one_time_code": "That code doesn't match — check it and try again.",
+      "magic_auth_code_expired": "That code has expired — send a new one.",
+      "email_verification_code_expired": "That code has expired — send a new one.",
+      "password_strength_error": "Please pick a stronger password — longer is better.",
+      "user_creation_error": "We couldn't create the account — that email may already be in use.",
+      "password_reset_token_expired": "That reset link has expired — request a new one.",
+      "auth_failed": "Something went wrong. Please try again."
+    }
   },
   "accessDenied": {
     "title": "No admin access",
@@ -117,7 +167,7 @@
   },
   "review": {
     "title": "Death verification",
-    "subtitle": "Review submitted death certificates. Approval releases the estate — it cannot be undone.",
+    "subtitle": "Submitted death certificates. Approval is irreversible.",
     "tabUnderReview": "Under review",
     "tabApproved": "Approved",
     "tabRejected": "Rejected",
@@ -178,7 +228,7 @@
   },
   "releases": {
     "title": "Releases",
-    "subtitle": "Estates awaiting release — including longstop timers that release WITHOUT a human decision — and the frozen distribution of released ones.",
+    "subtitle": "Estates awaiting release and those already released.",
     "tabPending": "Pending release",
     "tabReleased": "Released",
     "colOwner": "Owner",
@@ -206,11 +256,8 @@
   },
   "users": {
     "title": "Users",
-    "subtitle": "Every vault owner. Vault contents are zero-knowledge encrypted — only states and counts are visible here.",
-    "tabOwners": "Owners",
-    "tabBeneficiaries": "Beneficiaries",
+    "subtitle": "Every vault owner — contents stay encrypted.",
     "colUser": "User",
-    "colOnboarded": "Onboarded",
     "colSwitch": "Switch",
     "colEntitlement": "Entitlement",
     "colJoined": "Joined",
@@ -227,7 +274,57 @@
     "noVault": "No vault yet",
     "onboardingIncomplete": "Onboarding incomplete",
     "lastSignIn": "Last sign-in {{date}}",
-    "backToUsers": "Back to users"
+    "backToUsers": "Back to users",
+    "createUser": "Create user",
+    "createTitle": "Create a user account",
+    "createBody": "No password — they sign in with a one-time email code.",
+    "emailLabel": "Email",
+    "firstNameLabel": "First name",
+    "lastNameLabel": "Last name",
+    "createSubmit": "Create account",
+    "createdTitle": "Account created for {{email}}",
+    "createdBody": "They can sign in now with a one-time email code. They'll appear in this table after setting up their vault — until then, find them with the email search.",
+    "createdDone": "Done",
+    "createdView": "View user",
+    "createFailed": "Couldn't create the account",
+    "emailInUse": "An account with that email already exists",
+    "editName": "Edit name",
+    "editNameTitle": "Edit name",
+    "editNameBody": "Fixes the display name on the account. Email can't be changed here.",
+    "editNameSubmit": "Save name",
+    "nameUpdated": "Name updated",
+    "updateFailed": "Couldn't update the name",
+    "disableAccount": "Disable account",
+    "disableTitle": "Disable this account?",
+    "disableBody": "Blocks all access and pauses their check-in switch. The vault data is kept, and the account can be re-enabled later.",
+    "disableReasonLabel": "Reason (optional)",
+    "disableReasonPlaceholder": "e.g. fraud report",
+    "disableConfirm": "Disable",
+    "disabledToast": "Account disabled",
+    "disableBlocked": "Can't disable now — a death case is under review or the estate is released",
+    "disableFailed": "Couldn't disable the account",
+    "disabledBadge": "Disabled",
+    "disabledMeta": "Disabled {{date}}",
+    "enableAccount": "Re-enable",
+    "enableTitle": "Re-enable this account?",
+    "enableBody": "Restores sign-in and vault access. Their check-in switch stays paused until you resume it.",
+    "enableConfirm": "Re-enable",
+    "enabledToast": "Account re-enabled",
+    "enableFailed": "Couldn't re-enable the account",
+    "colStage": "Stage",
+    "stageInvited": "Invited",
+    "stageOnboarding": "Onboarding",
+    "tabOverview": "Overview",
+    "tabPeople": "Beneficiaries",
+    "tabBilling": "Billing",
+    "tabActivity": "Activity",
+    "glanceSwitch": "Switch",
+    "glancePlan": "Plan",
+    "glanceEstate": "Estate"
+  },
+  "beneficiaries": {
+    "title": "Beneficiaries",
+    "subtitle": "Who was named to receive a vault."
   },
   "userSwitch": {
     "title": "Dead-man's switch",
@@ -260,8 +357,6 @@
     "implicitTrial": "Implicit trial from sign-up — no billing row yet."
   },
   "userVault": {
-    "title": "Vault",
-    "zk": "Zero-knowledge",
     "assets": "Assets",
     "family": "Family",
     "wasiyyah": "Wasiyyah",
@@ -297,14 +392,17 @@
   },
   "beneficiaryLookup": {
     "placeholder": "Beneficiary email (exact)…",
-    "intro": "Enter the email a beneficiary was invited with to see every vault that named them, their enrollment state and key fingerprint.",
+    "intro": "Enter a beneficiary's email to search.",
     "noResult": "No beneficiary found for {{email}}",
     "namedBy": "Named by",
-    "fingerprint": "Key fingerprint"
+    "fingerprint": "Key fingerprint",
+    "colBeneficiary": "Beneficiary",
+    "colStatus": "Status",
+    "colNamed": "Named on"
   },
   "entitlements": {
     "title": "Entitlements",
-    "subtitle": "Billing rows across all owners. Grants and revokes are ledgered and audit-logged.",
+    "subtitle": "Plans and entitlements across all owners.",
     "ownerIdPlaceholder": "Owner id (exact)…",
     "allStatuses": "All statuses",
     "allPlans": "All plans",
@@ -334,7 +432,7 @@
   },
   "billing": {
     "title": "Billing",
-    "subtitle": "Append-only ledger of every billing event — trials, grants, renewals, revocations — for refund and dispute support.",
+    "subtitle": "Append-only ledger of every billing event.",
     "colWhen": "When",
     "colOwner": "Owner",
     "colEvent": "Event",
@@ -344,7 +442,7 @@
   },
   "audit": {
     "title": "Audit log",
-    "subtitle": "Append-only record of every vault, switch and admin action.",
+    "subtitle": "Every vault, switch and admin action.",
     "ownerIdPlaceholder": "Owner id (exact)…",
     "allEvents": "All events",
     "fromDate": "From date",
@@ -375,12 +473,16 @@
       "entitlement_granted": "Plan granted",
       "entitlement_revoked": "Plan revoked",
       "admin_added": "Admin added",
-      "admin_removed": "Admin removed"
+      "admin_removed": "Admin removed",
+      "account_created": "Account created",
+      "account_updated": "Account updated",
+      "account_disabled": "Account disabled",
+      "account_enabled": "Account re-enabled"
     }
   },
   "admins": {
     "title": "Admins",
-    "subtitle": "Who can use this panel. Invites activate on first sign-in.",
+    "subtitle": "Who can use this panel.",
     "add": "Add admin",
     "addTitle": "Add an admin",
     "addBody": "Access activates automatically the first time they sign in to this panel with that email (verified).",
@@ -408,7 +510,7 @@
   },
   "notifications": {
     "title": "Notifications",
-    "subtitle": "The outbound email queue. Failed sends can be retried; the queue drains every few minutes.",
+    "subtitle": "The outbound email queue.",
     "tabAll": "All",
     "tabPending": "Pending",
     "tabSent": "Sent",
@@ -432,6 +534,10 @@
       "death_review_result": "death review result",
       "release_notice": "release notice"
     },
-    "statuses": { "pending": "Pending", "sent": "Sent", "failed": "Failed" }
+    "statuses": {
+      "pending": "Pending",
+      "sent": "Sent",
+      "failed": "Failed"
+    }
   }
 }

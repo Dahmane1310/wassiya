@@ -1,6 +1,7 @@
 import { v } from "convex/values"
 import { mutation, query, type MutationCtx } from "./_generated/server"
 import { type Id } from "./_generated/dataModel"
+import { getEnabledUser, requireEnabledUser } from "./lib/account"
 
 // Only the owner's private LABEL (their note/name for the person) is encrypted.
 // contactEmail is plaintext so the server can send the invite + release notice.
@@ -46,7 +47,7 @@ export async function cascadeDeleteBeneficiary(
 export const listBeneficiaries = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await getEnabledUser(ctx)
     if (identity === null) {
       return []
     }
@@ -83,10 +84,7 @@ export const listBeneficiaries = query({
 export const addBeneficiary = mutation({
   args: { contactEmail: v.string(), label: v.optional(encrypted) },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const ownerId = identity.tokenIdentifier
     const email = args.contactEmail.trim().toLowerCase()
     const existing = await ctx.db
@@ -110,10 +108,7 @@ export const addBeneficiary = mutation({
 export const updateBeneficiary = mutation({
   args: { id: v.id("beneficiaries"), contactEmail: v.optional(v.string()), label: v.optional(encrypted) },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const row = await ctx.db.get(args.id)
     if (row === null || row.ownerId !== identity.tokenIdentifier) {
       throw new Error("Not found")
@@ -130,10 +125,7 @@ export const updateBeneficiary = mutation({
 export const removeBeneficiary = mutation({
   args: { id: v.id("beneficiaries") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity === null) {
-      throw new Error("Not authenticated")
-    }
+    const identity = await requireEnabledUser(ctx)
     const row = await ctx.db.get(args.id)
     if (row === null || row.ownerId !== identity.tokenIdentifier) {
       throw new Error("Not found")

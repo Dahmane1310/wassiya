@@ -153,3 +153,20 @@ export const checkAdminInternal = internalQuery({
     return row !== null && row.tokenIdentifier !== undefined
   },
 })
+
+/** Admin identity for ACTIONS that need the actor string / role (audit, gates). */
+export const getAdminInternal = internalQuery({
+  args: {},
+  returns: v.union(
+    v.null(),
+    v.object({
+      tokenIdentifier: v.string(),
+      role: v.union(v.literal("superadmin"), v.literal("admin")),
+    }),
+  ),
+  handler: async (ctx) => {
+    const row = await getAdminRow(ctx)
+    if (row === null || row.tokenIdentifier === undefined) return null
+    return { tokenIdentifier: row.tokenIdentifier, role: row.role ?? "admin" }
+  },
+})

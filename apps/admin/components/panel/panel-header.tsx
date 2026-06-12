@@ -1,5 +1,6 @@
 "use client"
 
+import { Fragment } from "react"
 import { usePathname } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import {
@@ -42,14 +43,17 @@ export function PanelHeader() {
       <Breadcrumb>
         <BreadcrumbList>
           {crumbs.map((c, i) => (
-            <BreadcrumbItem key={c}>
+            // Both are <li>s, so the separator must be a SIBLING of the item.
+            <Fragment key={c}>
               {i > 0 && <BreadcrumbSeparator />}
-              <BreadcrumbPage
-                className={i < crumbs.length - 1 ? "text-muted-foreground" : ""}
-              >
-                {t(c)}
-              </BreadcrumbPage>
-            </BreadcrumbItem>
+              <BreadcrumbItem>
+                <BreadcrumbPage
+                  className={i < crumbs.length - 1 ? "text-muted-foreground" : ""}
+                >
+                  {t(c)}
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </Fragment>
           ))}
         </BreadcrumbList>
       </Breadcrumb>

@@ -18,6 +18,20 @@ export function Home() {
   if (benefactors === undefined) {
     return <Page><p style={{ fontSize: 14, color: "var(--ink-3)" }}>Loading…</p></Page>
   }
+  // Support-disabled account: every query returns empty, so show the real reason.
+  if (keyStatus?.disabled) {
+    return (
+      <Page>
+        <Card pad={28}>
+          <div style={{ textAlign: "center", color: "var(--ink-3)" }}>
+            <Icon name="alert" size={28} style={{ margin: "0 auto 10px", color: "var(--red)" }} />
+            <div style={{ fontSize: 15.5, fontWeight: 700, color: "var(--ink-2)" }}>This account has been disabled</div>
+            <div style={{ fontSize: 13, marginTop: 4, lineHeight: 1.6 }}>Everything entrusted to you is safe and untouched. Contact support to restore access.</div>
+          </div>
+        </Card>
+      </Page>
+    )
+  }
   const released = benefactors.filter((b) => b.status === "released").length
 
   return (

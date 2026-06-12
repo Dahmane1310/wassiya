@@ -109,6 +109,15 @@ export const getUserDetail = query({
           meta: v.union(v.record(v.string(), v.string()), v.null()),
         }),
       ),
+      // Support-disable marker (lib/account.ts wall). null = account enabled.
+      disabled: v.union(
+        v.null(),
+        v.object({
+          disabledAt: v.number(),
+          disabledBy: v.string(),
+          reason: v.union(v.string(), v.null()),
+        }),
+      ),
     }),
   ),
   handler: async (ctx, args) => {
@@ -120,7 +129,16 @@ export const getUserDetail = query({
       .query("users")
       .withIndex("by_tokenIdentifier", (q) => q.eq("tokenIdentifier", ownerId))
       .unique()
-    if (profile === null && appUser === null) return null
+    // Admin-provisioned account: the synced profile may lag the WorkOS webhook,
+    // so fall back to the creation-time snapshot rather than "not found".
+    const provisioned =
+      profile === null
+        ? await ctx.db
+            .query("provisionedAccounts")
+            .withIndex("by_accountId", (q) => q.eq("accountId", ownerId))
+            .unique()
+        : null
+    if (profile === null && appUser === null && provisioned === null) return null
 
     const sw = await ctx.db
       .query("switchState")
@@ -144,12 +162,16 @@ export const getUserDetail = query({
       .withIndex("by_ownerId", (q) => q.eq("ownerId", ownerId))
       .order("desc")
       .take(20)
+    const disabledRow = await ctx.db
+      .query("disabledAccounts")
+      .withIndex("by_accountId", (q) => q.eq("accountId", ownerId))
+      .unique()
 
     return {
       identity: {
         tokenIdentifier: ownerId,
-        email: profile?.email ?? null,
-        name: profile?.name ?? null,
+        email: profile?.email ?? provisioned?.email ?? null,
+        name: profile?.name ?? provisioned?.name ?? null,
         createdAt: profile?.createdAt ?? null,
         lastSignInAt: profile?.lastSignInAt ?? null,
       },
@@ -228,6 +250,14 @@ export const getUserDetail = query({
         targetTable: a.targetTable ?? null,
         meta: a.meta ?? null,
       })),
+      disabled:
+        disabledRow === null
+          ? null
+          : {
+              disabledAt: disabledRow._creationTime,
+              disabledBy: disabledRow.disabledBy,
+              reason: disabledRow.reason ?? null,
+            },
     }
   },
 })
