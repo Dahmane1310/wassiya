@@ -4,6 +4,7 @@ import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Badge } from "@workspace/ui/components/badge"
+import { Card, CardContent } from "@workspace/ui/components/card"
 import { useAdminSession } from "@/components/panel/admin-context"
 import { DisableUserDialog } from "./disable-user-dialog"
 import { EditNameDialog } from "./edit-name-dialog"
@@ -55,10 +56,11 @@ export function UserIdentityCard({ identity, appUser, disabled }: Props) {
         {t("users.backToUsers")}
       </Link>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <div className="bg-primary/10 text-primary flex size-14 shrink-0 items-center justify-center rounded-2xl text-xl font-semibold tracking-tight">
-          {initialsOf(identity.name, identity.email)}
-        </div>
+      <Card className="py-0">
+        <CardContent className="flex flex-wrap items-center gap-x-4 gap-y-3 px-6 py-5">
+          <div className="bg-primary/10 text-primary flex size-14 shrink-0 items-center justify-center rounded-2xl text-xl font-semibold tracking-tight">
+            {initialsOf(identity.name, identity.email)}
+          </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
@@ -93,18 +95,19 @@ export function UserIdentityCard({ identity, appUser, disabled }: Props) {
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          {disabled === null && (
-            <EditNameDialog ownerId={subject} currentName={identity.name} />
-          )}
-          {superadmin &&
-            (disabled !== null ? (
-              <EnableUserButton ownerId={subject} />
-            ) : (
-              <DisableUserDialog ownerId={subject} />
-            ))}
-        </div>
-      </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {disabled === null && (
+              <EditNameDialog ownerId={subject} currentName={identity.name} />
+            )}
+            {superadmin &&
+              (disabled !== null ? (
+                <EnableUserButton ownerId={subject} />
+              ) : (
+                <DisableUserDialog ownerId={subject} />
+              ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
