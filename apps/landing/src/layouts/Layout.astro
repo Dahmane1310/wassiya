@@ -7,11 +7,14 @@ interface Props {
   dir?: "ltr" | "rtl"
   title?: string
   description?: string
+  /** Admin-managed og:image (published); falls back to the checked-in PNG. */
+  ogImage?: string
 }
 
 const {
   lang = "en",
   dir = "ltr",
+  ogImage = "/wassiya-pearl-512.png",
   title = lang === "ar" ? "وصية — إرثك، محفوظ بأمان" : "Wassiya — Your legacy, kept safe",
   description =
     lang === "ar"
@@ -34,7 +37,7 @@ const {
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/wassiya-pearl-512.png" />
+    <meta property="og:image" content={ogImage} />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

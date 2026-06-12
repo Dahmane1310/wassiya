@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server"
 import { v } from "convex/values"
+import { dictValidator } from "./lib/landingValidator"
 
 // Shared shape for every ciphertext column. Mirrors `EncryptedDataPackage` from
 // `@workspace/crypto` (packages/crypto/src/index.ts): base64 AES-GCM ciphertext +
@@ -280,6 +281,7 @@ export default defineSchema({
     ),
     addedBy: v.optional(v.string()),
     note: v.optional(v.string()),
+    avatarStorageId: v.optional(v.id("_storage")), // self-uploaded panel avatar
   })
     .index("by_tokenIdentifier", ["tokenIdentifier"])
     .index("by_email", ["email"]),
@@ -347,6 +349,10 @@ export default defineSchema({
       v.literal("account_updated"),
       v.literal("account_disabled"),
       v.literal("account_enabled"),
+      v.literal("account_deleted"),
+      v.literal("notification_retried"),
+      v.literal("landing_published"),
+      v.literal("landing_draft_discarded"),
     ),
     targetTable: v.optional(v.string()),
     targetId: v.optional(v.string()),
@@ -421,4 +427,30 @@ export default defineSchema({
   })
     .index("by_tokenHash", ["tokenHash"]) // redemption lookup
     .index("by_beneficiaryId", ["beneficiaryId"]),
+
+  // Admin-managed landing-page copy (apps/landing). One row per (lang, channel):
+  // "draft" is what the editor works on, "published" is what the public
+  // /landing-content HTTP endpoint serves and what `astro build` fetches. The
+  // checked-in dicts in @workspace/landing-content remain the build fallback.
+  landingContent: defineTable({
+    lang: v.union(v.literal("en"), v.literal("ar")),
+    channel: v.union(v.literal("draft"), v.literal("published")),
+    data: dictValidator,
+    updatedBy: v.string(), // "admin:<tokenIdentifier>"
+    updatedAt: v.number(), // rows are patched in place, _creationTime goes stale
+    publishedAt: v.optional(v.number()), // published rows only
+    lastDeployAt: v.optional(v.number()), // deploy-hook outcome (published rows)
+    lastDeployOk: v.optional(v.boolean()),
+  }).index("by_lang_and_channel", ["lang", "channel"]),
+
+  // Admin-managed landing images (logo, hero photo, og image). One row per
+  // channel holding the slot → storage-file map; slots are language-agnostic.
+  // Files referenced by EITHER channel are kept; replacement deletes a file
+  // only once nothing references it.
+  landingImages: defineTable({
+    channel: v.union(v.literal("draft"), v.literal("published")),
+    slots: v.record(v.string(), v.id("_storage")),
+    updatedBy: v.string(), // "admin:<tokenIdentifier>"
+    updatedAt: v.number(),
+  }).index("by_channel", ["channel"]),
 })

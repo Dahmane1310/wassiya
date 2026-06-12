@@ -5,6 +5,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "env": ["LANDING_CONTENT_URL"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "lint": {

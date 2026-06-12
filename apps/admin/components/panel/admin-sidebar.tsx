@@ -30,7 +30,7 @@ import { useAdminSession } from "./admin-context"
 import { useLang } from "./lang-provider"
 import { Logo } from "./logo"
 import { NAV_GROUPS, type NavItem } from "./nav-items"
-import { SidebarUserMenu } from "./sidebar-user-menu"
+import { SidebarSignOut } from "./sidebar-sign-out"
 
 function badgeCount(
   badge: NavItem["badge"],
@@ -126,7 +126,7 @@ export function AdminSidebar() {
         })}
       </SidebarContent>
       <SidebarFooter>
-        <SidebarUserMenu />
+        <SidebarSignOut />
       </SidebarFooter>
     </Sidebar>
   )

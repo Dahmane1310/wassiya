@@ -1,7 +1,7 @@
 import { paginationOptsValidator } from "convex/server"
 import { ConvexError, v } from "convex/values"
 import { mutation, query } from "../_generated/server"
-import { requireAdmin } from "../lib/adminAuth"
+import { logAdminAction, requireAdmin } from "../lib/adminAuth"
 
 // Notification outbox: server-side filters (status, kind, status+kind, exact
 // recipient-email) over real indexed queries, plus the admin retry action.
@@ -79,11 +79,19 @@ export const adminRetryNotification = mutation({
   args: { id: v.id("notifications") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await requireAdmin(ctx)
+    const me = await requireAdmin(ctx)
     const row = await ctx.db.get(args.id)
     if (row === null) throw new ConvexError("NOT_FOUND")
     if (row.status !== "failed") throw new ConvexError("INVALID_STATE")
     await ctx.db.patch(args.id, { status: "pending", attempts: 0, error: undefined })
+    await logAdminAction(ctx, {
+      ownerId: row.ownerId ?? `email:${row.recipientEmail}`,
+      actor: `admin:${me.tokenIdentifier}`,
+      event: "notification_retried",
+      targetTable: "notifications",
+      targetId: args.id,
+      meta: { kind: row.kind, recipientEmail: row.recipientEmail },
+    })
     return null
   },
 })

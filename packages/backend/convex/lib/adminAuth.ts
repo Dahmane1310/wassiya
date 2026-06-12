@@ -79,6 +79,7 @@ export type ResolvedProfile = {
   name: string | null
   createdAt: string | null
   lastSignInAt: string | null
+  profilePictureUrl: string | null // SSO-provided (Google/Apple); not uploadable
 }
 
 /** Resolve ANY user's synced WorkOS profile from their tokenIdentifier via the
@@ -97,6 +98,7 @@ export async function resolveProfile(
     name: name.length > 0 ? name : null,
     createdAt: user.createdAt ?? null,
     lastSignInAt: user.lastSignInAt ?? null,
+    profilePictureUrl: user.profilePictureUrl ?? null,
   }
 }
 

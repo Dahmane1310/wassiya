@@ -7,8 +7,9 @@ import type { Dict } from "../i18n/types"
 
 interface Props {
   t: Dict
+  logo?: string
 }
-const { t } = Astro.props
+const { t, logo } = Astro.props
 ---
 
 <Section>
@@ -28,7 +29,7 @@ const { t } = Astro.props
       >
       </div>
       <div class="relative">
-        <div class="mb-6 flex justify-center"><WMark size={64} /></div>
+        <div class="mb-6 flex justify-center"><WMark size={64} src={logo} /></div>
         <h2
           class="mx-auto max-w-[680px] font-semibold tracking-tight"
           style="font-size:clamp(30px,4.6vw,50px);line-height:1.08"

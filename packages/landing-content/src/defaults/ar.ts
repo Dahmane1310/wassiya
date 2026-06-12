@@ -1,6 +1,6 @@
 // Arabic copy for the landing page. Ported verbatim from the approved
 // Claude Design mockup (Wassiya Landing.html → translation dictionary `T.ar`).
-import type { Dict } from "./types"
+import type { Dict } from "../types"
 
 export const ar: Dict = {
   dir: "rtl",

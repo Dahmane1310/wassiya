@@ -1,7 +1,13 @@
 import { paginationOptsValidator } from "convex/server"
 import { ConvexError, v } from "convex/values"
 import { internal } from "../_generated/api"
-import { action, internalMutation, mutation, query } from "../_generated/server"
+import {
+  action,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "../_generated/server"
 import { authKit } from "../auth"
 import {
   expandOwnerId,
@@ -56,12 +62,29 @@ export const listUsers = query({
   },
 })
 
-/** Email → user lookup via the WorkOS API (the synced component store has no
- *  by-email index). Admin-gated through an internal query since actions lack db. */
-export const findUserByEmail = action({
-  args: { email: v.string() },
-  returns: v.union(
-    v.null(),
+const SEARCH_PAGE_LIMIT = 100
+const SEARCH_MAX_PAGES = 5 // scans up to 500 accounts per search
+const SEARCH_MAX_RESULTS = 8
+
+type SearchHit = { tokenIdentifier: string; email: string; name: string | null }
+
+function toSearchHit(issuer: string, user: { id: string; email: string; firstName?: string | null; lastName?: string | null }): SearchHit {
+  const name = [user.firstName, user.lastName].filter(Boolean).join(" ")
+  return {
+    tokenIdentifier: `${issuer}|${user.id}`,
+    email: user.email,
+    name: name.length > 0 ? name : null,
+  }
+}
+
+/** Free-text user search via the WorkOS API (the synced component store has no
+ *  search index): substring match on NAME and EMAIL, exact lookup for a
+ *  "user_…" id, exact email filter as a fast path. WorkOS itself only filters
+ *  by exact email, so the fallback walks bounded pages server-side — fine for
+ *  an internal panel. Admin-gated through an internal query (actions lack db). */
+export const searchUsers = action({
+  args: { query: v.string() },
+  returns: v.array(
     v.object({
       tokenIdentifier: v.string(),
       email: v.string(),
@@ -76,17 +99,45 @@ export const findUserByEmail = action({
     if (!isAdmin) throw new ConvexError("NOT_AUTHORIZED")
     const me = await ctx.auth.getUserIdentity()
     if (me === null) throw new ConvexError("NOT_AUTHORIZED")
-    const res = await authKit.workos.userManagement.listUsers({
-      email: args.email.trim().toLowerCase(),
-    })
-    const user = res.data[0]
-    if (user === undefined) return null
-    const name = [user.firstName, user.lastName].filter(Boolean).join(" ")
-    return {
-      tokenIdentifier: `${issuerOf(me.tokenIdentifier)}|${user.id}`,
-      email: user.email,
-      name: name.length > 0 ? name : null,
+    const issuer = issuerOf(me.tokenIdentifier)
+
+    const q = args.query.trim().toLowerCase()
+    if (q === "") return []
+
+    // Pasted WorkOS id → exact lookup.
+    if (q.startsWith("user_")) {
+      try {
+        const user = await authKit.workos.userManagement.getUser(q)
+        return [toSearchHit(issuer, user)]
+      } catch {
+        return []
+      }
     }
+
+    // Full email typed → the one filter WorkOS supports natively.
+    if (q.includes("@")) {
+      const res = await authKit.workos.userManagement.listUsers({ email: q })
+      if (res.data.length > 0) return res.data.map((u) => toSearchHit(issuer, u))
+    }
+
+    const hits: SearchHit[] = []
+    let after: string | null | undefined
+    for (let page = 0; page < SEARCH_MAX_PAGES; page++) {
+      const res = await authKit.workos.userManagement.listUsers({
+        limit: SEARCH_PAGE_LIMIT,
+        ...(after ? { after } : {}),
+      })
+      for (const u of res.data) {
+        const name = [u.firstName, u.lastName].filter(Boolean).join(" ").toLowerCase()
+        if (u.email.toLowerCase().includes(q) || name.includes(q)) {
+          hits.push(toSearchHit(issuer, u))
+          if (hits.length >= SEARCH_MAX_RESULTS) return hits
+        }
+      }
+      after = res.listMetadata.after
+      if (!after) break
+    }
+    return hits
   },
 })
 
@@ -160,6 +211,88 @@ export const listProvisionedAccounts = query({
       })
     }
     return out
+  },
+})
+
+/** A provisioned account that is still deletable: its row exists AND no vault was
+ *  onboarded (a `users` row would own the identity — deletion is then off-limits). */
+export const getDeletableProvisionedAccount = internalQuery({
+  args: { ownerId: v.string() },
+  returns: v.union(v.null(), v.object({ email: v.string() })),
+  handler: async (ctx, args) => {
+    const row = await ctx.db
+      .query("provisionedAccounts")
+      .withIndex("by_accountId", (q) => q.eq("accountId", args.ownerId))
+      .unique()
+    if (row === null) return null
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) => q.eq("tokenIdentifier", args.ownerId))
+      .unique()
+    if (user !== null) return null // onboarded — no longer just an invite
+    return { email: row.email }
+  },
+})
+
+/** Cleanup half of provisioned-account deletion: drop the row + audit. Runs AFTER
+ *  the WorkOS deletion succeeded so the panel never hides a live account. */
+export const removeProvisionedAccount = internalMutation({
+  args: { ownerId: v.string(), actor: v.string(), email: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const row = await ctx.db
+      .query("provisionedAccounts")
+      .withIndex("by_accountId", (q) => q.eq("accountId", args.ownerId))
+      .unique()
+    if (row !== null) await ctx.db.delete(row._id)
+    await logAdminAction(ctx, {
+      ownerId: args.ownerId,
+      actor: args.actor,
+      event: "account_deleted",
+      targetTable: "provisionedAccounts",
+      meta: { email: args.email },
+    })
+    return null
+  },
+})
+
+/** Delete a stale provisioned account (invited but never onboarded a vault) — the
+ *  WorkOS account is removed too, so the email can be re-provisioned cleanly.
+ *  SUPERADMIN-ONLY and refused outright once a vault exists. */
+export const adminDeleteProvisionedAccount = action({
+  args: { ownerId: v.string() }, // bare subject or full tokenIdentifier
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const admin = await ctx.runQuery(internal.admin.access.getAdminInternal, {})
+    if (admin === null || admin.role !== "superadmin") {
+      throw new ConvexError("NOT_AUTHORIZED")
+    }
+    const ownerId = expandOwnerId(admin.tokenIdentifier, args.ownerId)
+    const deletable: { email: string } | null = await ctx.runQuery(
+      internal.admin.users.getDeletableProvisionedAccount,
+      { ownerId },
+    )
+    if (deletable === null) throw new ConvexError("INVALID_STATE")
+
+    try {
+      await authKit.workos.userManagement.deleteUser(subjectOf(ownerId))
+    } catch {
+      // Tolerate an account that is already gone in WorkOS (retry after a partial
+      // earlier failure); any other failure aborts BEFORE touching panel state.
+      let stillExists = true
+      try {
+        await authKit.workos.userManagement.getUser(subjectOf(ownerId))
+      } catch {
+        stillExists = false
+      }
+      if (stillExists) throw new ConvexError("ACCOUNT_FAILED")
+    }
+    await ctx.runMutation(internal.admin.users.removeProvisionedAccount, {
+      ownerId,
+      actor: `admin:${admin.tokenIdentifier}`,
+      email: deletable.email,
+    })
+    return null
   },
 })
 

@@ -12,11 +12,14 @@ import {
 } from "@workspace/ui/components/breadcrumb"
 import { Separator } from "@workspace/ui/components/separator"
 import { SidebarTrigger } from "@workspace/ui/components/sidebar"
+import { HeaderAvatar } from "./header-avatar"
 import { LangToggle } from "./lang-toggle"
 import { NAV_GROUPS } from "./nav-items"
 import { ThemeToggle } from "./theme-toggle"
 
 function titleFor(pathname: string): string[] {
+  // Not in the sidebar nav — reached from the user menu.
+  if (pathname.startsWith("/profile")) return ["profile.title"]
   for (const group of NAV_GROUPS) {
     for (const item of group.items) {
       if (
@@ -60,6 +63,7 @@ export function PanelHeader() {
       <div className="ms-auto flex items-center gap-1">
         <LangToggle />
         <ThemeToggle />
+        <HeaderAvatar />
       </div>
     </header>
   )

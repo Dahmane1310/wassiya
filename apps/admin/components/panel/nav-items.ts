@@ -2,11 +2,15 @@ import {
   CreditCard,
   FileCheck,
   LayoutDashboard,
+  LayoutList,
   LockOpen,
   Mail,
+  PanelBottom,
   Receipt,
   ScrollText,
   ShieldCheck,
+  Sparkles,
+  Tags,
   UserCheck,
   Users,
   type LucideIcon,
@@ -54,6 +58,16 @@ export const NAV_GROUPS: NavGroup[] = [
     labelKey: "nav.groups.delivery",
     items: [
       { titleKey: "nav.notifications", href: "/notifications", icon: Mail, badge: "failedNotifications" },
+    ],
+  },
+  {
+    // The landing-page CMS, one page per content area.
+    labelKey: "nav.groups.content",
+    items: [
+      { titleKey: "nav.landingHero", href: "/landing/hero", icon: Sparkles },
+      { titleKey: "nav.landingSections", href: "/landing/sections", icon: LayoutList },
+      { titleKey: "nav.landingPricing", href: "/landing/pricing", icon: Tags },
+      { titleKey: "nav.landingFooter", href: "/landing/footer", icon: PanelBottom },
     ],
   },
   {

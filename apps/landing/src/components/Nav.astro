@@ -7,8 +7,9 @@ import type { Dict, Lang } from "../i18n/types"
 interface Props {
   t: Dict
   lang: Lang
+  logo?: string
 }
-const { t, lang } = Astro.props
+const { t, lang, logo } = Astro.props
 const otherHref = lang === "ar" ? "/" : "/ar"
 const otherLabel = lang === "ar" ? "EN" : "ع"
 const wordmark = lang === "ar" ? "وصية" : "Wassiya"
@@ -28,7 +29,7 @@ const links = [
 >
   <div class="mx-auto flex h-[72px] max-w-[1180px] items-center gap-5 px-6">
     <a href="#top" class="flex items-center gap-2.5">
-      <WMark size={38} />
+      <WMark size={38} src={logo} />
       <span class="text-[23px] font-semibold tracking-tight">{wordmark}</span>
     </a>
 

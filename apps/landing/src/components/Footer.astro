@@ -6,8 +6,9 @@ import type { Dict, Lang } from "../i18n/types"
 interface Props {
   t: Dict
   lang: Lang
+  logo?: string
 }
-const { t, lang } = Astro.props
+const { t, lang, logo } = Astro.props
 const wordmark = lang === "ar" ? "وصية" : "Wassiya"
 ---
 
@@ -16,7 +17,7 @@ const wordmark = lang === "ar" ? "وصية" : "Wassiya"
     <div class="grid gap-10 sm:grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
       <div>
         <div class="flex items-center gap-2.5">
-          <WMark size={38} />
+          <WMark size={38} src={logo} />
           <span class="text-[23px] font-semibold">{wordmark}</span>
         </div>
         <div class="text-muted-foreground mt-4 max-w-[240px] text-lg leading-snug font-normal italic">

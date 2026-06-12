@@ -21,6 +21,7 @@
     "@convex-dev/workos-authkit": "^0.2.6",
     "@workos-inc/node": "^9.3.1",
     "@workspace/faraid": "workspace:*",
+    "@workspace/landing-content": "workspace:*",
     "convex": "^1.39.1"
   },
   "devDependencies": {

@@ -117,4 +117,31 @@ http.route({
   }),
 })
 
+// ── Landing-page content (public, read-only) ────────────────────────────────
+// Serves the PUBLISHED admin-managed copy to `astro build` (apps/landing
+// src/i18n/load.ts). No auth: this is already-public marketing copy, bounded
+// to one small JSON document per language. 404 until first publish — the
+// landing build falls back to its checked-in dicts.
+http.route({
+  path: "/landing-content",
+  method: "GET",
+  handler: httpAction(async (ctx, req) => {
+    const lang = new URL(req.url).searchParams.get("lang")
+    if (lang !== "en" && lang !== "ar") {
+      return new Response("Bad Request", { status: 400 })
+    }
+    const data = await ctx.runQuery(internal.admin.landing.getPublished, { lang })
+    if (data === null) return new Response("Not Found", { status: 404 })
+    const images = await ctx.runQuery(internal.admin.landing.getPublishedImages, {})
+    return new Response(JSON.stringify({ content: data, images }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, max-age=300",
+        "Access-Control-Allow-Origin": "*",
+      },
+    })
+  }),
+})
+
 export default http

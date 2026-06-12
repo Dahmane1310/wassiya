@@ -1,18 +1,34 @@
 ---
-// The Wassiya brand mark: the unified W-square monogram (placeholder until the
-// real mark is designed) — same spec as apps/web logo.tsx and the mobile
-// BrandMark. Inline style keeps it out of Tailwind's class scanning and lets
-// the gradient follow the --gold tokens, so dark mode adapts for free.
+// The Wassiya brand mark. With `src` (the admin-managed logo, when published)
+// it renders the image at the same size/rounding; otherwise the unified
+// W-square monogram — same spec as apps/web logo.tsx and the mobile BrandMark.
+// Inline style keeps it out of Tailwind's class scanning and lets the gradient
+// follow the --gold tokens, so dark mode adapts for free.
 interface Props {
   size?: number
   class?: string
+  src?: string
 }
-const { size = 40, class: cls } = Astro.props
+const { size = 40, class: cls, src } = Astro.props
+const radius = Math.round(size * 0.26)
 ---
 
-<span
-  aria-hidden="true"
-  class={cls}
-  style={`display:flex;align-items:center;justify-content:center;flex-shrink:0;width:${size}px;height:${size}px;border-radius:${Math.round(size * 0.26)}px;background:linear-gradient(160deg,var(--gold),var(--gold-deep));color:#fff;font-weight:800;font-size:${Math.round(size * 0.52)}px;letter-spacing:-0.02em;line-height:1;`}
-  >W</span
->
+{
+  src ? (
+    <img
+      src={src}
+      alt=""
+      aria-hidden="true"
+      class={cls}
+      style={`display:block;flex-shrink:0;width:${size}px;height:${size}px;border-radius:${radius}px;object-fit:cover;`}
+    />
+  ) : (
+    <span
+      aria-hidden="true"
+      class={cls}
+      style={`display:flex;align-items:center;justify-content:center;flex-shrink:0;width:${size}px;height:${size}px;border-radius:${radius}px;background:linear-gradient(160deg,var(--gold),var(--gold-deep));color:#fff;font-weight:800;font-size:${Math.round(size * 0.52)}px;letter-spacing:-0.02em;line-height:1;`}
+    >
+      W
+    </span>
+  )
+}

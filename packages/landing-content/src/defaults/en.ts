@@ -1,6 +1,6 @@
 // English copy for the landing page. Ported verbatim from the approved
 // Claude Design mockup (Wassiya Landing.html → translation dictionary `T.en`).
-import type { Dict } from "./types"
+import type { Dict } from "../types"
 
 export const en: Dict = {
   dir: "ltr",

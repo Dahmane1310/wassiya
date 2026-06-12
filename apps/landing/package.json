@@ -12,6 +12,7 @@
   "dependencies": {
     "@astrojs/react": "^5.0.6",
     "@tailwindcss/vite": "^4.3.0",
+    "@workspace/landing-content": "workspace:*",
     "@workspace/ui": "workspace:*",
     "astro": "^6.4.2",
     "lucide-react": "^1.17.0",

@@ -1,6 +1,8 @@
 ---
 import LandingPage from "../../components/LandingPage.astro"
-import { ar } from "../../i18n"
+import { loadLanding } from "../../i18n/load"
+
+const { t, images } = await loadLanding("ar")
 ---
 
-<LandingPage t={ar} lang="ar" />
+<LandingPage t={t} lang="ar" images={images} />

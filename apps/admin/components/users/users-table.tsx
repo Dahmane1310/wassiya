@@ -10,6 +10,7 @@ import { api } from "@workspace/backend/api"
 import { Badge } from "@workspace/ui/components/badge"
 import { DataTable, DataTableColumnHeader } from "@workspace/ui/components/data-table"
 import { useDataTableLabels } from "@/hooks/use-data-table-labels"
+import { DeleteProvisionedButton } from "@/components/users/delete-provisioned-button"
 import { EntitlementBadge } from "@/components/shared/entitlement-badge"
 import { type Order } from "@/components/shared/order"
 import { subjectOf } from "@/lib/owner-id"
@@ -105,6 +106,21 @@ function buildColumns(t: TFunction): ColumnDef<UserRow>[] {
       accessorFn: (u) => u._creationTime,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t("users.colJoined")} />,
       cell: ({ row }) => <TimeCell ts={row.original._creationTime} />,
+    },
+    {
+      id: "actions",
+      meta: { label: t("users.colActions") },
+      enableSorting: false,
+      header: () => null,
+      cell: ({ row }) =>
+        row.original.stage === "invited" ? (
+          <span onClick={(e) => e.stopPropagation()}>
+            <DeleteProvisionedButton
+              ownerId={subjectOf(row.original.tokenIdentifier)}
+              email={row.original.email}
+            />
+          </span>
+        ) : null,
     },
   ]
 }

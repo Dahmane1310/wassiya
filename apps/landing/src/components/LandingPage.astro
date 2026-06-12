@@ -13,19 +13,21 @@ import Stats from "./Stats.astro"
 import Switch from "./Switch.astro"
 import Testimonials from "./Testimonials.astro"
 import Layout from "../layouts/Layout.astro"
+import type { LandingImages } from "@workspace/landing-content"
 import type { Dict, Lang } from "../i18n/types"
 
 interface Props {
   t: Dict
   lang: Lang
+  images?: LandingImages
 }
-const { t, lang } = Astro.props
+const { t, lang, images = {} } = Astro.props
 ---
 
-<Layout lang={lang} dir={t.dir}>
-  <Nav t={t} lang={lang} />
+<Layout lang={lang} dir={t.dir} ogImage={images.ogImage}>
+  <Nav t={t} lang={lang} logo={images.logo} />
   <main>
-    <Hero t={t} />
+    <Hero t={t} photo={images.heroPhoto} />
     <Stats t={t} />
     <HowItWorks t={t} />
     <Sharia t={t} />
@@ -35,7 +37,7 @@ const { t, lang } = Astro.props
     <Pricing t={t} />
     <Testimonials t={t} />
     <FAQ t={t} />
-    <FinalCTA t={t} />
+    <FinalCTA t={t} logo={images.logo} />
   </main>
-  <Footer t={t} lang={lang} />
+  <Footer t={t} lang={lang} logo={images.logo} />
 </Layout>
