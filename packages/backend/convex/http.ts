@@ -57,7 +57,9 @@ http.route({
   path: "/revenuecat/webhook",
   method: "POST",
   handler: httpAction(async (ctx, req) => {
-    const expected = process.env.REVENUECAT_WEBHOOK_AUTH
+    // Panel-managed settings win over the deployment env (integrationSettings.ts).
+    const settings = await ctx.runQuery(internal.integrationSettings.getAllInternal, {})
+    const expected = settings.REVENUECAT_WEBHOOK_AUTH
     if (!expected || req.headers.get("Authorization") !== expected) {
       return new Response("Unauthorized", { status: 401 })
     }
@@ -131,8 +133,13 @@ http.route({
       return new Response("Bad Request", { status: 400 })
     }
     const data = await ctx.runQuery(internal.admin.landing.getPublished, { lang })
-    if (data === null) return new Response("Not Found", { status: 404 })
     const images = await ctx.runQuery(internal.admin.landing.getPublishedImages, {})
+    // 404 only when NOTHING is published; an images-only publish (no text
+    // draft yet) must still reach the site — content stays null and the
+    // landing keeps its checked-in copy for the text.
+    if (data === null && Object.keys(images).length === 0) {
+      return new Response("Not Found", { status: 404 })
+    }
     return new Response(JSON.stringify({ content: data, images }), {
       status: 200,
       headers: {

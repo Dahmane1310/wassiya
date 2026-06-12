@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { RotateCcw } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@workspace/ui/components/button"
@@ -29,10 +30,20 @@ const KINDS: NotificationKind[] = [
   "release_notice",
 ]
 
-export function NotificationsScreen() {
+function NotificationsScreenInner() {
   const { t } = useTranslation()
-  const [status, setStatus] = useState<string>(ALL)
-  const [kind, setKind] = useState<string>(ALL)
+  // Deep-linkable filters (e.g. /notifications?status=failed from Integrations).
+  const searchParams = useSearchParams()
+  const statusParam = searchParams.get("status")
+  const kindParam = searchParams.get("kind")
+  const [status, setStatus] = useState<string>(
+    statusParam !== null && ["pending", "sent", "failed"].includes(statusParam)
+      ? statusParam
+      : ALL,
+  )
+  const [kind, setKind] = useState<string>(
+    kindParam !== null && (KINDS as string[]).includes(kindParam) ? kindParam : ALL,
+  )
   const [recipient, setRecipient] = useState("")
   const dirty = kind !== ALL || recipient !== ""
 
@@ -94,5 +105,14 @@ export function NotificationsScreen() {
         }
       />
     </div>
+  )
+}
+
+/** useSearchParams requires a Suspense boundary (same as the audit screen). */
+export function NotificationsScreen() {
+  return (
+    <Suspense>
+      <NotificationsScreenInner />
+    </Suspense>
   )
 }

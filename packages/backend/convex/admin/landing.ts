@@ -299,7 +299,9 @@ export const triggerDeploy = internalAction({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    const url = process.env.LANDING_DEPLOY_HOOK_URL
+    // Panel-managed settings win over the deployment env (integrationSettings.ts).
+    const settings = await ctx.runQuery(internal.integrationSettings.getAllInternal, {})
+    const url = settings.LANDING_DEPLOY_HOOK_URL
     if (!url) {
       console.log("landing: LANDING_DEPLOY_HOOK_URL not set — skipping rebuild trigger")
       return null

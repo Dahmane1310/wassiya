@@ -353,6 +353,7 @@ export default defineSchema({
       v.literal("notification_retried"),
       v.literal("landing_published"),
       v.literal("landing_draft_discarded"),
+      v.literal("integration_updated"),
     ),
     targetTable: v.optional(v.string()),
     targetId: v.optional(v.string()),
@@ -453,4 +454,14 @@ export default defineSchema({
     updatedBy: v.string(), // "admin:<tokenIdentifier>"
     updatedAt: v.number(),
   }).index("by_channel", ["channel"]),
+
+  // Panel-managed integration secrets (integrationSettings.ts). A row WINS over
+  // the same-named deployment env var. Values are write-only from the panel —
+  // admin queries report set/not-set and never echo them back.
+  integrationSettings: defineTable({
+    key: v.string(), // one of integrationSettings.SETTING_KEYS (mutation-enforced)
+    value: v.string(),
+    updatedBy: v.string(), // "admin:<tokenIdentifier>"
+    updatedAt: v.number(),
+  }).index("by_key", ["key"]),
 })

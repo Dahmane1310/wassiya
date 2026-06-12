@@ -2,6 +2,7 @@ import {
   CreditCard,
   FileCheck,
   LayoutDashboard,
+  Plug,
   LayoutList,
   LockOpen,
   Mail,
@@ -45,6 +46,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { titleKey: "nav.users", href: "/users", icon: Users },
       { titleKey: "nav.beneficiaries", href: "/beneficiaries", icon: UserCheck },
+      { titleKey: "nav.admins", href: "/admins", icon: ShieldCheck, superadminOnly: true },
     ],
   },
   {
@@ -52,12 +54,6 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { titleKey: "nav.entitlements", href: "/entitlements", icon: CreditCard },
       { titleKey: "nav.billing", href: "/billing", icon: Receipt },
-    ],
-  },
-  {
-    labelKey: "nav.groups.delivery",
-    items: [
-      { titleKey: "nav.notifications", href: "/notifications", icon: Mail, badge: "failedNotifications" },
     ],
   },
   {
@@ -73,8 +69,9 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     labelKey: "nav.groups.system",
     items: [
+      { titleKey: "nav.notifications", href: "/notifications", icon: Mail, badge: "failedNotifications" },
       { titleKey: "nav.audit", href: "/audit", icon: ScrollText },
-      { titleKey: "nav.admins", href: "/admins", icon: ShieldCheck, superadminOnly: true },
+      { titleKey: "nav.integrations", href: "/integrations", icon: Plug },
     ],
   },
 ]

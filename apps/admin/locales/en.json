@@ -45,7 +45,6 @@
       "estate": "Estate lifecycle",
       "people": "People",
       "revenue": "Revenue",
-      "delivery": "Delivery",
       "content": "Content",
       "system": "System"
     },
@@ -58,6 +57,7 @@
     "billing": "Billing",
     "notifications": "Notifications",
     "audit": "Audit log",
+    "integrations": "Integrations",
     "admins": "Admins",
     "landingHero": "Hero & intro",
     "landingSections": "Page sections",
@@ -493,7 +493,8 @@
       "account_deleted": "Account deleted",
       "notification_retried": "Notification retried",
       "landing_published": "Landing published",
-      "landing_draft_discarded": "Landing draft discarded"
+      "landing_draft_discarded": "Landing draft discarded",
+      "integration_updated": "Integration updated"
     }
   },
   "profile": {
@@ -592,6 +593,68 @@
       "pending": "Pending",
       "sent": "Sent",
       "failed": "Failed"
+    }
+  },
+  "integrations": {
+    "title": "Integrations",
+    "subtitle": "External services the product depends on. Secrets are set on the Convex deployment — this page shows status and runs tests.",
+    "connected": "Connected",
+    "notConfigured": "Not configured",
+    "notConfiguredToast": "Not configured — add the values via Configure first",
+    "summary": "{{connected}}/{{total}} connected",
+    "viewActivity": "View activity",
+    "openDashboard": "Open dashboard",
+    "sentLabel": "sent",
+    "failedLabel": "failed",
+    "pendingLabel": "pending",
+    "viaPanel": "set in panel",
+    "viaEnv": "from deployment env",
+    "configure": "Configure",
+    "configureTitle": "Configure {{name}}",
+    "configureBody": "Values are write-only: existing ones are never shown. Leave a field empty to keep its current value.",
+    "saveSettings": "Save",
+    "settingsSaved": "Settings saved",
+    "settingsFailed": "Couldn't save the settings",
+    "clearSettings": "Remove panel values",
+    "settingsCleared": "Panel values removed — the deployment env (if set) applies again",
+    "fields": {
+      "RESEND_API_KEY": "API key",
+      "EMAIL_FROM": "From address (e.g. Wassiya <no-reply@wassiya.app>)",
+      "REVENUECAT_WEBHOOK_AUTH": "Webhook secret (Authorization header value)",
+      "LANDING_DEPLOY_HOOK_URL": "Deploy hook URL"
+    },
+    "testEmail": "Send test email",
+    "testEmailSent": "Test email sent to your address",
+    "testEmailFailed": "Test email failed — check the key and from-address",
+    "testHook": "Trigger rebuild",
+    "hookOk": "Rebuild triggered",
+    "hookFailed": "Rebuild trigger failed",
+    "resend": {
+      "name": "Resend — email",
+      "desc": "Delivers all outgoing email: invites, check-in warnings, review results and release notices, drained from the notification outbox every 10 minutes.",
+      "meta": "From {{from}}"
+    },
+    "revenuecat": {
+      "name": "RevenueCat — mobile billing",
+      "desc": "Verifies Apple and Google purchases and posts entitlement events to our webhook.",
+      "lastEvent": "Last store event {{date}}",
+      "noEvents": "No store events received yet"
+    },
+    "deploy": {
+      "name": "Landing deploy hook",
+      "desc": "Rebuilds the static landing site after each content publish.",
+      "lastOk": "Last rebuild triggered {{date}}",
+      "lastFailed": "Last rebuild trigger failed {{date}}",
+      "never": "Never triggered"
+    },
+    "workos": {
+      "name": "WorkOS — authentication",
+      "desc": "Sign-in for every app: owners (mobile), beneficiaries (portal) and this panel.",
+      "meta": "Client {{id}}"
+    },
+    "convex": {
+      "name": "Convex — backend",
+      "desc": "Database, functions, file storage and the scheduled jobs (check-in sweep, email drain, entitlement expiry)."
     }
   },
   "landing": {

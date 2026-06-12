@@ -49,7 +49,6 @@
       "estate": "دورة التركة",
       "people": "الأشخاص",
       "revenue": "الإيرادات",
-      "delivery": "الإرسال",
       "content": "المحتوى",
       "system": "النظام"
     },
@@ -62,6 +61,7 @@
     "billing": "الفوترة",
     "notifications": "الإشعارات",
     "audit": "سجل التدقيق",
+    "integrations": "التكاملات",
     "admins": "المشرفون",
     "landingHero": "الواجهة والمقدمة",
     "landingSections": "أقسام الصفحة",
@@ -505,7 +505,8 @@
       "account_deleted": "حُذف الحساب",
       "notification_retried": "أُعيدت محاولة الإشعار",
       "landing_published": "نُشرت صفحة الهبوط",
-      "landing_draft_discarded": "أُهملت مسودة صفحة الهبوط"
+      "landing_draft_discarded": "أُهملت مسودة صفحة الهبوط",
+      "integration_updated": "حُدّث تكامل"
     }
   },
   "profile": {
@@ -604,6 +605,68 @@
       "pending": "معلّق",
       "sent": "مرسل",
       "failed": "فاشل"
+    }
+  },
+  "integrations": {
+    "title": "التكاملات",
+    "subtitle": "الخدمات الخارجية التي يعتمد عليها المنتج. تُضبط الأسرار على نشر Convex — تعرض هذه الصفحة الحالة وتُجري الاختبارات.",
+    "connected": "متصل",
+    "notConfigured": "غير مهيّأ",
+    "notConfiguredToast": "غير مهيّأ — أضف القيم عبر «تهيئة» أولًا",
+    "summary": "{{connected}}/{{total}} متصل",
+    "viewActivity": "عرض النشاط",
+    "openDashboard": "فتح لوحة Convex",
+    "sentLabel": "مرسل",
+    "failedLabel": "فاشل",
+    "pendingLabel": "معلّق",
+    "viaPanel": "مضبوط من اللوحة",
+    "viaEnv": "من بيئة النشر",
+    "configure": "تهيئة",
+    "configureTitle": "تهيئة {{name}}",
+    "configureBody": "القيم للكتابة فقط: لا تُعرض القيم الحالية أبدًا. اترك الحقل فارغًا للإبقاء على قيمته.",
+    "saveSettings": "حفظ",
+    "settingsSaved": "حُفظت الإعدادات",
+    "settingsFailed": "تعذّر حفظ الإعدادات",
+    "clearSettings": "إزالة قيم اللوحة",
+    "settingsCleared": "أُزيلت قيم اللوحة — تسري بيئة النشر (إن وُجدت) من جديد",
+    "fields": {
+      "RESEND_API_KEY": "مفتاح API",
+      "EMAIL_FROM": "عنوان المُرسل (مثل Wassiya <no-reply@wassiya.app>)",
+      "REVENUECAT_WEBHOOK_AUTH": "سرّ الويب هوك (قيمة ترويسة Authorization)",
+      "LANDING_DEPLOY_HOOK_URL": "رابط إعادة البناء"
+    },
+    "testEmail": "إرسال بريد تجريبي",
+    "testEmailSent": "أُرسل البريد التجريبي إلى عنوانك",
+    "testEmailFailed": "فشل البريد التجريبي — تحقق من المفتاح وعنوان المُرسل",
+    "testHook": "إطلاق إعادة البناء",
+    "hookOk": "أُطلقت إعادة البناء",
+    "hookFailed": "فشل إطلاق إعادة البناء",
+    "resend": {
+      "name": "Resend — البريد",
+      "desc": "يوصل كل البريد الصادر: الدعوات وتنبيهات تسجيل الحضور ونتائج المراجعة وإشعارات الإفصاح، من صندوق الإشعارات كل ١٠ دقائق.",
+      "meta": "من {{from}}"
+    },
+    "revenuecat": {
+      "name": "RevenueCat — فوترة الجوال",
+      "desc": "يتحقق من مشتريات Apple وGoogle ويرسل أحداث الاشتراك إلى الويب هوك.",
+      "lastEvent": "آخر حدث متجر {{date}}",
+      "noEvents": "لم تصل أحداث متجر بعد"
+    },
+    "deploy": {
+      "name": "رابط نشر صفحة الهبوط",
+      "desc": "يعيد بناء موقع الهبوط الثابت بعد كل نشر للمحتوى.",
+      "lastOk": "آخر إعادة بناء أُطلقت {{date}}",
+      "lastFailed": "فشل آخر إطلاق لإعادة البناء {{date}}",
+      "never": "لم تُطلق بعد"
+    },
+    "workos": {
+      "name": "WorkOS — المصادقة",
+      "desc": "تسجيل الدخول لكل التطبيقات: المالكون (الجوال) والمستفيدون (البوابة) وهذه اللوحة.",
+      "meta": "العميل {{id}}"
+    },
+    "convex": {
+      "name": "Convex — الخلفية",
+      "desc": "قاعدة البيانات والدوال وتخزين الملفات والمهام المجدولة (مسح تسجيل الحضور وإرسال البريد وانتهاء الاشتراكات)."
     }
   },
   "landing": {

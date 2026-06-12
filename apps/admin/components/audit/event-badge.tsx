@@ -33,6 +33,7 @@ const EVENTS: Record<string, { className?: string }> = {
   notification_retried: {},
   landing_published: { className: "text-blue-700 dark:text-blue-400" },
   landing_draft_discarded: {},
+  integration_updated: {},
 }
 
 /** The full known-event list — drives the audit page's filter dropdown. */

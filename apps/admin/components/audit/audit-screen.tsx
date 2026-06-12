@@ -32,7 +32,11 @@ function AuditScreenInner() {
   const { t } = useTranslation()
   const searchParams = useSearchParams()
   const [ownerId, setOwnerId] = useState(searchParams.get("ownerId") ?? "")
-  const [event, setEvent] = useState<string>(ALL)
+  // Deep-linkable event filter (e.g. /audit?event=landing_published).
+  const eventParam = searchParams.get("event")
+  const [event, setEvent] = useState<string>(
+    eventParam !== null && AUDIT_EVENTS.includes(eventParam) ? eventParam : ALL,
+  )
   const [fromDate, setFromDate] = useState("")
   const [toDate, setToDate] = useState("")
   const dirty = ownerId !== "" || event !== ALL || fromDate !== "" || toDate !== ""

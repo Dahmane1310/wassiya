@@ -123,8 +123,10 @@ export const drainNotifications = internalAction({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    const apiKey = process.env.RESEND_API_KEY
-    const from = process.env.EMAIL_FROM
+    // Panel-managed settings win over the deployment env (integrationSettings.ts).
+    const settings = await ctx.runQuery(internal.integrationSettings.getAllInternal, {})
+    const apiKey = settings.RESEND_API_KEY
+    const from = settings.EMAIL_FROM
     if (!apiKey || !from) {
       console.log("notificationSender: RESEND_API_KEY/EMAIL_FROM not set — skipping drain")
       return null

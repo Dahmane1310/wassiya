@@ -66,7 +66,8 @@ export async function loadLanding(lang: Lang): Promise<LandingData> {
     }
     const body: unknown = await res.json()
     const remote = (body as { content?: unknown }).content
-    const merged = deepMerge(fallback.t, remote)
+    // content is null for an images-only publish — keep the checked-in copy.
+    const merged = remote == null ? fallback.t : deepMerge(fallback.t, remote)
     // `dir` is structural — always the local value, whatever the endpoint says.
     merged.dir = fallback.t.dir
     console.log(`[landing] ${lang}: using published content from ${base}`)
