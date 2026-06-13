@@ -1,4 +1,4 @@
-import { BenefactorDetail } from "@/components/portal/benefactor-detail"
+import { BenefactorDetail } from "@/components/portal/benefactor/benefactor-detail"
 
 export default async function BenefactorPage({
   params,

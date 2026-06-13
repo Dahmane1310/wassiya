@@ -1,13 +1,22 @@
 import { v } from "convex/values"
 import { computeFaraid, type Heir as EngineHeir } from "@workspace/faraid"
-import { mutation, query } from "./_generated/server"
+import { internal } from "./_generated/api"
+import {
+  internalMutation,
+  mutation,
+  query,
+  type MutationCtx,
+} from "./_generated/server"
+import { type Doc } from "./_generated/dataModel"
 import { getEnabledUser, isAccountDisabled, requireEnabledUser } from "./lib/account"
 
 // A beneficiary-user's release keypair — one per person (`userId` = WorkOS
 // tokenIdentifier). The PRIVATE half is recovery-wrapped client-side before it
 // arrives here, so the server stores only ciphertext + the public key. Enrollment
 // is WRITE-ONCE: overwriting the public key would orphan every DEK already wrapped
-// to the old one. Key rotation / re-enrollment is a separate owner-driven flow.
+// to the old one. The narrow exception is `rotateKeypair` (beneficiary-driven,
+// lost recovery code): it replaces the keypair ONLY while every benefactor is
+// reachable, then deletes the old wraps so owners' apps silently re-wrap.
 
 /** Whether the current user has enrolled a release keypair (+ its fingerprint for
  *  display). Drives the web enrollment page (skip if already enrolled). This is the
@@ -248,6 +257,161 @@ export const enrollKeypair = mutation({
       if (b.status !== "enrolled") {
         await ctx.db.patch(b._id, { status: "enrolled" })
       }
+    }
+    return null
+  },
+})
+
+// ── Key rotation (lost recovery code) ────────────────────────────────────────
+
+const ROTATE_DELETE_BUDGET = 800 // wraps deleted per transaction (well under limits)
+
+/** Rotation is only safe while every owner who named this person is EXPECTED to
+ *  open their app again — the re-wrap of asset keys depends on it. `released`
+ *  is permanent (the owner can never re-wrap); `grace`/`pendingVerification`
+ *  and an open/approved death case mean they may never return. `paused` is a
+ *  deliberate action by a living owner, so it's allowed. */
+async function assertRotationAllowed(
+  ctx: MutationCtx,
+  linked: Doc<"beneficiaries">[],
+): Promise<void> {
+  for (const b of linked) {
+    const sw = await ctx.db
+      .query("switchState")
+      .withIndex("by_ownerId", (q) => q.eq("ownerId", b.ownerId))
+      .unique()
+    if (sw?.state === "released") throw new Error("ROTATION_BLOCKED_RELEASED")
+    if (sw?.state === "grace" || sw?.state === "pendingVerification") {
+      throw new Error("ROTATION_BLOCKED_OWNER_UNREACHABLE")
+    }
+    const dv = await ctx.db
+      .query("deathVerification")
+      .withIndex("by_ownerId", (q) => q.eq("ownerId", b.ownerId))
+      .unique()
+    if (dv?.status === "under_review" || dv?.status === "approved") {
+      throw new Error("ROTATION_BLOCKED_OWNER_UNREACHABLE")
+    }
+  }
+}
+
+/**
+ * Replace the current user's release keypair with a freshly generated one (the
+ * client lost the recovery code). Same envelope shape as `enrollKeypair`. The
+ * old wraps are deleted (budgeted here + a scheduled sweep) so every owner's
+ * reconciliation pass resurfaces the (asset, beneficiary) pairs and re-wraps
+ * to the NEW public key on their next unlock. Serializable with release
+ * approval: approval first → this retries and the guard throws; this first →
+ * no approvable case existed, so the unreachable window is days-scale and is
+ * disclosed in the wizard copy.
+ */
+export const rotateKeypair = mutation({
+  args: {
+    publicKey: v.string(),
+    keyFingerprint: v.string(),
+    recoverySalt: v.string(),
+    wrappedPrivateKey: v.string(),
+    wrappedPrivateKeyIv: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const identity = await requireEnabledUser(ctx)
+    const userId = identity.tokenIdentifier
+
+    const existing = await ctx.db
+      .query("recipientKeys")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .unique()
+    if (existing === null) throw new Error("NOT_ENROLLED")
+
+    const linked = await ctx.db
+      .query("beneficiaries")
+      .withIndex("by_linkedUserId", (q) => q.eq("linkedUserId", userId))
+      .take(200)
+    await assertRotationAllowed(ctx, linked)
+
+    const oldFingerprint = existing.keyFingerprint
+    // Patch in place: the write-once check in enrollKeypair keys off row
+    // EXISTENCE, so this doesn't re-arm enrollment.
+    await ctx.db.patch(existing._id, {
+      publicKey: args.publicKey,
+      keyFingerprint: args.keyFingerprint,
+      recoverySalt: args.recoverySalt,
+      wrappedPrivateKey: args.wrappedPrivateKey,
+      wrappedPrivateKeyIv: args.wrappedPrivateKeyIv,
+    })
+
+    // Delete stale wraps within budget; the scheduled sweep finishes the rest.
+    // Filtering on the OLD-vs-new fingerprint makes deletion idempotent and
+    // safe against owners inserting NEW wraps concurrently.
+    let budget = ROTATE_DELETE_BUDGET
+    for (const b of linked) {
+      if (budget <= 0) break
+      const wraps = await ctx.db
+        .query("wrappedKeys")
+        .withIndex("by_beneficiaryId", (q) => q.eq("beneficiaryId", b._id))
+        .take(budget)
+      for (const w of wraps) {
+        if (w.keyFingerprint !== args.keyFingerprint) {
+          await ctx.db.delete(w._id)
+          budget--
+        }
+      }
+    }
+    // Always schedule the sweep — it self-terminates when nothing stale is left.
+    await ctx.scheduler.runAfter(0, internal.recipients.purgeStaleWraps, { userId })
+
+    for (const b of linked) {
+      await ctx.db.insert("auditLog", {
+        ownerId: b.ownerId,
+        actor: userId,
+        event: "recipient_key_rotated",
+        targetTable: "recipientKeys",
+        // Fingerprints are SHA-256 of PUBLIC keys — non-secret by design.
+        meta: { oldFingerprint, newFingerprint: args.keyFingerprint },
+      })
+    }
+    return null
+  },
+})
+
+/** Budgeted sweep of wraps made under a PREVIOUS key. Re-reads the live
+ *  fingerprint so a continuation from an older rotation can never delete a
+ *  newer rotation's wraps. Reschedules itself while a full batch was deleted. */
+export const purgeStaleWraps = internalMutation({
+  args: { userId: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const key = await ctx.db
+      .query("recipientKeys")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .unique()
+    if (key === null) return null
+    const current = key.keyFingerprint
+
+    const linked = await ctx.db
+      .query("beneficiaries")
+      .withIndex("by_linkedUserId", (q) => q.eq("linkedUserId", args.userId))
+      .take(200)
+
+    let deleted = 0
+    for (const b of linked) {
+      if (deleted >= ROTATE_DELETE_BUDGET) break
+      const wraps = await ctx.db
+        .query("wrappedKeys")
+        .withIndex("by_beneficiaryId", (q) => q.eq("beneficiaryId", b._id))
+        .take(ROTATE_DELETE_BUDGET)
+      for (const w of wraps) {
+        if (deleted >= ROTATE_DELETE_BUDGET) break
+        if (w.keyFingerprint !== current) {
+          await ctx.db.delete(w._id)
+          deleted++
+        }
+      }
+    }
+    if (deleted >= ROTATE_DELETE_BUDGET) {
+      await ctx.scheduler.runAfter(0, internal.recipients.purgeStaleWraps, {
+        userId: args.userId,
+      })
     }
     return null
   },

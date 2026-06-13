@@ -2,14 +2,20 @@
 
 import { useRef, useState } from "react"
 import { useMutation } from "convex/react"
+import { ArrowRight, Check, File, Lock, Upload } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { api } from "@workspace/backend/api"
 import { type Id } from "@workspace/backend/dataModel"
-import { Btn, Field, Modal } from "./ui"
-import { Icon } from "./icon"
+import { Button } from "@workspace/ui/components/button"
+import { Dialog, DialogContent } from "@workspace/ui/components/dialog"
+import { Input } from "@workspace/ui/components/input"
+import { Label } from "@workspace/ui/components/label"
 
 /**
  * Report a death → submit a certificate for admin review. Any enrolled beneficiary
  * of the owner may report; nothing releases on their word alone (an admin approves).
+ * Upload/submit logic unchanged — only the shell moved to Dialog. Closing is
+ * blocked while the upload is in flight. Error state holds an i18n KEY.
  */
 export function ReportDeath({
   beneficiaryId,
@@ -20,12 +26,13 @@ export function ReportDeath({
   ownerName: string
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const [step, setStep] = useState<0 | 1 | 2>(0)
   const [role, setRole] = useState("")
   const [dateOfDeath, setDateOfDeath] = useState("")
   const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState("")
+  const [errorKey, setErrorKey] = useState("")
   const fileRef = useRef<HTMLInputElement>(null)
   const generateUrl = useMutation(api.release.generateCertUploadUrl)
   const submit = useMutation(api.release.submitDeathReport)
@@ -34,10 +41,10 @@ export function ReportDeath({
   const MAX_FILE_BYTES = 10 * 1024 * 1024
 
   function pickFile(f: File | null) {
-    setError("")
+    setErrorKey("")
     if (f && f.size > MAX_FILE_BYTES) {
       setFile(null)
-      setError("That file is larger than 10 MB — please use a smaller photo or PDF.")
+      setErrorKey("report.fileTooLarge")
       return
     }
     setFile(f)
@@ -45,7 +52,7 @@ export function ReportDeath({
 
   async function doSubmit() {
     setBusy(true)
-    setError("")
+    setErrorKey("")
     try {
       let certificateStorageId: Id<"_storage"> | undefined
       if (file) {
@@ -64,48 +71,132 @@ export function ReportDeath({
       })
       setStep(2)
     } catch {
-      setError("Couldn't submit. Please try again.")
+      setErrorKey("report.submitFailed")
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <Modal open onClose={onClose} width={480}>
-      {step === 0 && (
-        <div style={{ padding: 28 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 14, background: "var(--amber-soft)", color: "oklch(0.5 0.13 60)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}><Icon name="file" size={26} /></div>
-          <h2 className="serif" style={{ fontSize: 23, fontWeight: 600, letterSpacing: -0.3, margin: 0 }}>Report the passing of {first}</h2>
-          <p style={{ fontSize: 14, color: "var(--ink-2)", lineHeight: 1.6, marginTop: 10, fontWeight: 500 }}>This begins the verification process. You&apos;ll upload a death certificate, which a Wassiya reviewer checks before anything is released. Nothing is released on your word alone.</p>
-          <div style={{ display: "flex", alignItems: "center", gap: 9, padding: 13, background: "var(--surface-2)", borderRadius: 12, marginTop: 16 }}><Icon name="lock" size={17} style={{ color: "var(--green)" }} /><div style={{ fontSize: 12.5, color: "var(--ink-2)", fontWeight: 600 }}>The certificate is reviewed privately — it is never added to the vault.</div></div>
-          <div style={{ display: "flex", gap: 10, marginTop: 22, justifyContent: "flex-end" }}><Btn variant="ghost" onClick={onClose}>Cancel</Btn><Btn variant="gold" iconR="arrowR" onClick={() => setStep(1)}>Continue</Btn></div>
-        </div>
-      )}
-      {step === 1 && (
-        <div style={{ padding: 28 }}>
-          <h2 className="serif" style={{ fontSize: 22, fontWeight: 600, letterSpacing: -0.3, margin: 0 }}>Upload the certificate</h2>
-          <input ref={fileRef} type="file" accept="image/*,application/pdf" style={{ display: "none" }} onChange={(e) => pickFile(e.target.files?.[0] ?? null)} />
-          <button className="press" onClick={() => fileRef.current?.click()} style={{ width: "100%", border: "1.5px dashed var(--line)", borderRadius: 14, padding: 34, textAlign: "center", color: "var(--ink-3)", marginTop: 16, background: "var(--surface)" }}>
-            <Icon name={file ? "check" : "upload"} size={30} style={{ margin: "0 auto 10px", color: file ? "var(--green)" : "var(--ink-3)" }} />
-            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink-2)" }}>{file ? file.name : "Choose the death certificate"}</div>
-            <div style={{ fontSize: 12.5, marginTop: 3 }}>PDF or photo · up to 10 MB · sent securely</div>
-          </button>
-          <div style={{ marginTop: 16 }}>
-            <Field label="Date of passing (if known)" type="date" value={dateOfDeath} onChange={setDateOfDeath} />
-            <Field label="Your relationship / role" value={role} onChange={setRole} placeholder="e.g. son, named executor" />
+    <Dialog open onOpenChange={(open) => !open && !busy && onClose()}>
+      <DialogContent className="sm:max-w-[480px]" showCloseButton={!busy}>
+        {step === 0 && (
+          <div>
+            <div className="bg-amber-soft mb-4 flex size-13 items-center justify-center rounded-2xl text-amber-700 dark:text-amber-400">
+              <File className="size-6.5" />
+            </div>
+            <h2 className="serif text-[23px] font-semibold tracking-tight">
+              {t("report.title", { firstName: first })}
+            </h2>
+            <p className="text-foreground/70 mt-2.5 text-sm leading-relaxed">
+              {t("report.intro")}
+            </p>
+            <div className="bg-muted mt-4 flex items-center gap-2 rounded-xl p-3.5">
+              <Lock className="text-green size-4 shrink-0" />
+              <div className="text-foreground/70 text-[12.5px] font-semibold">
+                {t("report.privateNote")}
+              </div>
+            </div>
+            <div className="mt-5.5 flex justify-end gap-2.5">
+              <Button variant="outline" size="lg" onClick={onClose}>
+                {t("common.cancel")}
+              </Button>
+              <Button size="lg" onClick={() => setStep(1)}>
+                {t("common.continue")} <ArrowRight />
+              </Button>
+            </div>
           </div>
-          {error && <div style={{ fontSize: 13, color: "var(--red)", fontWeight: 600, marginBottom: 8 }}>{error}</div>}
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}><Btn variant="ghost" onClick={() => setStep(0)}>Back</Btn><Btn variant="gold" icon="upload" disabled={busy} onClick={doSubmit}>{busy ? "Submitting…" : "Submit for review"}</Btn></div>
-        </div>
-      )}
-      {step === 2 && (
-        <div style={{ padding: "32px 28px", textAlign: "center" }}>
-          <div style={{ width: 84, height: 84, borderRadius: 99, background: "var(--green-soft)", color: "var(--green)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", animation: "wPop .5s ease" }}><Icon name="check" size={42} sw={2.4} /></div>
-          <h2 className="serif" style={{ fontSize: 22, fontWeight: 600, letterSpacing: -0.3, margin: 0 }}>Submitted for review</h2>
-          <p style={{ fontSize: 14, color: "var(--ink-2)", lineHeight: 1.6, marginTop: 10, fontWeight: 500 }}>A reviewer will verify the certificate. You and the other beneficiaries will be notified of the outcome. Thank you — this is a hard thing to do.</p>
-          <div style={{ marginTop: 20 }}><Btn variant="primary" full onClick={onClose}>Done</Btn></div>
-        </div>
-      )}
-    </Modal>
+        )}
+        {step === 1 && (
+          <div>
+            <h2 className="serif text-[22px] font-semibold tracking-tight">
+              {t("report.uploadTitle")}
+            </h2>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*,application/pdf"
+              className="hidden"
+              onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+            />
+            <button
+              type="button"
+              className="press bg-card hover:border-primary/50 mt-4 w-full rounded-2xl border-[1.5px] border-dashed p-8 text-center transition-colors"
+              onClick={() => fileRef.current?.click()}
+            >
+              {file ? (
+                <Check className="text-green mx-auto mb-2.5 size-7" />
+              ) : (
+                <Upload className="text-muted-foreground mx-auto mb-2.5 size-7" />
+              )}
+              <div className="text-foreground/80 text-sm font-bold">
+                {file ? file.name : t("report.chooseFile")}
+              </div>
+              <div className="text-muted-foreground mt-0.5 text-[12.5px]">
+                {t("report.fileHint")}
+              </div>
+            </button>
+            <div className="mt-4 flex flex-col gap-3.5">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="dod">{t("report.dateLabel")}</Label>
+                <Input
+                  id="dod"
+                  type="date"
+                  value={dateOfDeath}
+                  onChange={(e) => setDateOfDeath(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="role">{t("report.roleLabel")}</Label>
+                <Input
+                  id="role"
+                  value={role}
+                  placeholder={t("report.rolePlaceholder")}
+                  onChange={(e) => setRole(e.target.value)}
+                />
+              </div>
+            </div>
+            {errorKey && (
+              <div className="text-destructive mt-2 text-[13px] font-semibold">
+                {t(errorKey)}
+              </div>
+            )}
+            <div className="mt-4 flex justify-end gap-2.5">
+              <Button variant="outline" size="lg" disabled={busy} onClick={() => setStep(0)}>
+                {t("common.back")}
+              </Button>
+              <Button size="lg" disabled={busy} onClick={() => void doSubmit()}>
+                <Upload /> {busy ? t("report.submitting") : t("report.submit")}
+              </Button>
+            </div>
+          </div>
+        )}
+        {step === 2 && (
+          <div className="py-1 text-center">
+            <div
+              className="bg-green-soft text-green mx-auto mb-4 flex size-21 items-center justify-center rounded-full"
+              style={{ animation: "wPop .5s ease" }}
+            >
+              <Check className="size-10.5" strokeWidth={2.4} />
+            </div>
+            <h2 className="serif text-[22px] font-semibold tracking-tight">
+              {t("report.submittedTitle")}
+            </h2>
+            <p className="text-foreground/70 mt-2.5 text-sm leading-relaxed">
+              {t("report.submittedBody")}
+            </p>
+            <div className="mt-5">
+              <Button
+                className="bg-espresso w-full text-white hover:bg-espresso/90"
+                size="lg"
+                onClick={onClose}
+              >
+                {t("common.done")}
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }

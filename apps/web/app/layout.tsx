@@ -1,9 +1,12 @@
 import { Inter, JetBrains_Mono, Tajawal } from "next/font/google"
+import Script from "next/script"
 
 import "@workspace/ui/globals.css"
 import "./globals.css"
 import { ConvexClientProvider } from "@/components/convex-client-provider"
+import { LangProvider } from "@/components/lang-provider"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@workspace/ui/components/sonner"
 import { cn } from "@workspace/ui/lib/utils"
 
 // Wassiya brand type system (shared with mobile and landing): Inter for Latin
@@ -35,8 +38,16 @@ export default function RootLayout({
       )}
     >
       <body>
+        {/* No-flash language boot: apply the saved lang/dir before first paint
+            (LangProvider re-syncs React state after hydration). */}
+        <Script id="lang-boot" strategy="beforeInteractive">
+          {`try{var l=localStorage.getItem("wassiya_web_lang");if(l==="ar"||l==="en"){document.documentElement.lang=l;document.documentElement.dir=l==="ar"?"rtl":"ltr"}}catch(e){}`}
+        </Script>
         <ThemeProvider>
-          <ConvexClientProvider>{children}</ConvexClientProvider>
+          <LangProvider>
+            <ConvexClientProvider>{children}</ConvexClientProvider>
+          </LangProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

@@ -48,6 +48,19 @@
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
     --font-sans: var(--font-sans);
+    /* Brand extras (text-gold, bg-green-soft, …). The blue family is
+       deliberately NOT mapped — Tailwind's own blue scale stays untouched. */
+    --color-ink-3: var(--ink-3);
+    --color-gold: var(--gold);
+    --color-gold-deep: var(--gold-deep);
+    --color-gold-soft: var(--gold-soft);
+    --color-green: var(--green);
+    --color-green-soft: var(--green-soft);
+    --color-espresso: var(--espresso);
+    --color-espresso-2: var(--espresso-2);
+    --color-amber: var(--amber);
+    --color-amber-soft: var(--amber-soft);
+    --color-red-soft: var(--red-soft);
 }
 
 /* Wassiya "Living Vault" brand defaults: warm paper, bronze primary, sage and
@@ -86,6 +99,24 @@
     --sidebar-accent-foreground: oklch(0.5 0.105 64);
     --sidebar-border: oklch(0.905 0.007 80);
     --sidebar-ring: oklch(0.58 0.1 66);
+    /* Brand extras shared by landing/web/admin. Values follow the canonical
+       mobile palette where they overlap; --ink-3 intentionally stays WARM
+       (hue 60) — mobile's cool hue-255 ink ramp is flagged for a future pass. */
+    --ink-3: oklch(0.62 0.012 60);
+    --gold: oklch(0.7 0.105 72);
+    --gold-deep: oklch(0.58 0.1 66);
+    --gold-soft: oklch(0.955 0.035 80);
+    --green: oklch(0.6 0.1 160);
+    --green-soft: oklch(0.95 0.04 160);
+    --espresso: oklch(0.22 0.014 62);
+    --espresso-2: oklch(0.17 0.012 60);
+    --amber: oklch(0.72 0.13 70);
+    --amber-soft: oklch(0.96 0.05 75);
+    --red-soft: oklch(0.955 0.035 25);
+    /* "Released" status family (kept out of @theme — see note there). */
+    --blue: oklch(0.48 0.115 245);
+    --blue-600: oklch(0.42 0.12 248);
+    --blue-soft: oklch(0.955 0.028 245);
 }
 
 .dark {
@@ -120,6 +151,21 @@
     --sidebar-accent-foreground: oklch(0.965 0.006 80);
     --sidebar-border: oklch(0.31 0.009 62);
     --sidebar-ring: oklch(0.72 0.1 74);
+    --ink-3: oklch(0.6 0.012 72);
+    --gold: oklch(0.78 0.1 76);
+    --gold-deep: oklch(0.64 0.11 73);
+    --gold-soft: oklch(0.34 0.045 72);
+    --green: oklch(0.7 0.105 162);
+    --green-soft: oklch(0.32 0.05 162);
+    --espresso: oklch(0.12 0.008 60);
+    --espresso-2: oklch(0.1 0.006 60);
+    --amber: oklch(0.78 0.12 75);
+    --amber-soft: oklch(0.34 0.06 75);
+    --red-soft: oklch(0.33 0.07 25);
+    /* --blue-600 must be LIGHT in dark — it renders as text on --blue-soft. */
+    --blue: oklch(0.58 0.13 245);
+    --blue-600: oklch(0.68 0.12 245);
+    --blue-soft: oklch(0.3 0.05 245);
 }
 
 @layer base {

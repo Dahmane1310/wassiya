@@ -473,6 +473,7 @@
       "asset_read_at_release": "Asset read at release",
       "beneficiary_invited": "Beneficiary invited",
       "beneficiary_enrolled": "Beneficiary enrolled",
+      "recipient_key_rotated": "Beneficiary key rotated",
       "executor_invited": "Executor invited",
       "attestation_recorded": "Attestation recorded",
       "attestation_revoked": "Attestation revoked",

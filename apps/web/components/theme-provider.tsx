@@ -13,6 +13,9 @@ function ThemeProvider({
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange
+      // Shared with the landing's theme boot script (same-origin only) so
+      // toggling on one keeps the other in sync.
+      storageKey="wl_theme"
       {...props}
     >
       <ThemeHotkey />

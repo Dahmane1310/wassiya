@@ -1,6 +1,8 @@
 // Client-side time formatting for the portal (safe to read wall-clock here — these
 // are not Convex queries). Backend returns raw timestamps; the UI derives labels.
 
+import i18n from "@/lib/i18n"
+
 export function daysFromNow(ts: number | null): number | null {
   if (ts == null) return null
   return Math.max(0, Math.ceil((ts - Date.now()) / 86_400_000))
@@ -9,11 +11,11 @@ export function daysFromNow(ts: number | null): number | null {
 export function relPast(ts: number | null): string {
   if (ts == null) return ""
   const d = Math.floor((Date.now() - ts) / 86_400_000)
-  if (d <= 0) return "today"
-  if (d === 1) return "yesterday"
-  if (d < 14) return `${d} days ago`
-  if (d < 60) return `${Math.floor(d / 7)} weeks ago`
-  return `${Math.floor(d / 30)} months ago`
+  if (d <= 0) return i18n.t("common.today")
+  if (d === 1) return i18n.t("common.yesterday")
+  if (d < 14) return i18n.t("common.daysAgo", { count: d })
+  if (d < 60) return i18n.t("common.weeksAgo", { count: Math.floor(d / 7) })
+  return i18n.t("common.monthsAgo", { count: Math.floor(d / 30) })
 }
 
 export function initialsOf(name: string): string {

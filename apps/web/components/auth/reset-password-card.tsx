@@ -3,22 +3,26 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { completePasswordReset, requestPasswordReset } from "@/app/auth-actions"
-import { Btn, Card, Field } from "@/components/portal/ui"
-import { friendlyAuthError } from "./error-messages"
+import { Button } from "@workspace/ui/components/button"
+import { AuthCard } from "./auth-card"
+import { AuthField } from "./auth-field"
+import { friendlyAuthErrorKey } from "./error-messages"
 
 /** Without a token: request a reset link. With ?token=: choose a new password. */
 export function ResetPasswordCard({ token }: { token: string | null }) {
+  const { t } = useTranslation()
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [sent, setSent] = useState(false)
-  const [error, setError] = useState("")
+  const [errorKey, setErrorKey] = useState("")
   const [busy, setBusy] = useState(false)
 
   async function submit() {
     setBusy(true)
-    setError("")
+    setErrorKey("")
     try {
       if (token === null) {
         await requestPasswordReset(email)
@@ -27,55 +31,68 @@ export function ResetPasswordCard({ token }: { token: string | null }) {
       }
       const result = await completePasswordReset(token, password)
       if ("ok" in result) router.push("/home")
-      else if ("error" in result) setError(friendlyAuthError(result.error))
+      else if ("error" in result) setErrorKey(friendlyAuthErrorKey(result.error))
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <Card pad={32}>
-      <h1 className="serif" style={{ fontSize: 26, fontWeight: 600, letterSpacing: -0.4, margin: 0 }}>
-        {token === null ? "Reset your password" : "Choose a new password"}
-      </h1>
+    <AuthCard title={token === null ? t("auth.resetTitle") : t("auth.choosePasswordTitle")}>
       {token === null ? (
         sent ? (
-          <p style={{ fontSize: 14, color: "var(--ink-2)", marginTop: 10, fontWeight: 500, lineHeight: 1.55 }}>
-            If an account exists for <b>{email}</b>, a reset link is on its way.
-            Open it on this device to choose a new password.
+          <p className="text-foreground/70 mt-2.5 text-sm leading-relaxed">
+            {t("auth.resetSent1")} <b>{email}</b>
+            {t("auth.resetSent2")}
           </p>
         ) : (
           <>
-            <p style={{ fontSize: 14, color: "var(--ink-2)", marginTop: 8, fontWeight: 500, lineHeight: 1.5 }}>
-              Enter your email and we&apos;ll send you a link to choose a new one.
+            <p className="text-foreground/70 mt-2 text-sm leading-normal">
+              {t("auth.resetBody")}
             </p>
-            <form style={{ marginTop: 18 }} onSubmit={(e) => { e.preventDefault(); void submit() }}>
-              <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" autoFocus />
-              <Btn variant="gold" size="lg" full disabled={busy || !email.includes("@")} onClick={() => void submit()}>
-                {busy ? "One moment…" : "Send reset link"}
-              </Btn>
+            <form
+              className="mt-4.5"
+              onSubmit={(e) => {
+                e.preventDefault()
+                void submit()
+              }}
+            >
+              <AuthField label={t("auth.email")} type="email" value={email} onChange={setEmail} placeholder={t("auth.emailPlaceholder")} autoFocus />
+              <Button size="xl" className="w-full" disabled={busy || !email.includes("@")} onClick={() => void submit()}>
+                {busy ? t("auth.oneMoment") : t("auth.sendResetLink")}
+              </Button>
             </form>
           </>
         )
       ) : (
         <>
-          <p style={{ fontSize: 14, color: "var(--ink-2)", marginTop: 8, fontWeight: 500, lineHeight: 1.5 }}>
-            Pick a new password for your account.
+          <p className="text-foreground/70 mt-2 text-sm leading-normal">
+            {t("auth.pickNewPassword")}
           </p>
-          <form style={{ marginTop: 18 }} onSubmit={(e) => { e.preventDefault(); void submit() }}>
-            <Field label="New password" type="password" value={password} onChange={setPassword} hint="At least 10 characters keeps it strong." autoFocus />
-            {error && <div style={{ fontSize: 13, color: "var(--red)", fontWeight: 600, marginBottom: 10 }}>{error}</div>}
-            <Btn variant="gold" size="lg" full disabled={busy || password.length < 8} onClick={() => void submit()}>
-              {busy ? "One moment…" : "Save & sign in"}
-            </Btn>
+          <form
+            className="mt-4.5"
+            onSubmit={(e) => {
+              e.preventDefault()
+              void submit()
+            }}
+          >
+            <AuthField label={t("auth.newPassword")} type="password" value={password} onChange={setPassword} hint={t("auth.passwordHint")} autoFocus />
+            {errorKey && (
+              <div className="text-destructive mb-2.5 text-[13px] font-semibold">
+                {t(errorKey)}
+              </div>
+            )}
+            <Button size="xl" className="w-full" disabled={busy || password.length < 8} onClick={() => void submit()}>
+              {busy ? t("auth.oneMoment") : t("auth.saveSignIn")}
+            </Button>
           </form>
         </>
       )}
-      <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--line)", fontSize: 13.5, fontWeight: 500, textAlign: "center" }}>
-        <Link href="/sign-in" style={{ color: "var(--primary)", fontWeight: 700 }}>
-          Back to sign in
+      <div className="mt-4.5 border-t pt-4 text-center text-[13.5px]">
+        <Link href="/sign-in" className="text-primary font-bold">
+          {t("auth.backToSignIn")}
         </Link>
       </div>
-    </Card>
+    </AuthCard>
   )
 }

@@ -12,6 +12,7 @@ const EVENTS: Record<string, { className?: string }> = {
   asset_read_at_release: {},
   beneficiary_invited: {},
   beneficiary_enrolled: {},
+  recipient_key_rotated: { className: "text-amber-700 dark:text-amber-400" },
   executor_invited: {},
   attestation_recorded: {},
   attestation_revoked: {},

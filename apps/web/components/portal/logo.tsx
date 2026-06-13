@@ -17,8 +17,9 @@ export function Logo({ size = 34 }: { size?: number }) {
         fontFamily: "var(--font-display)",
         fontWeight: 800,
         fontSize: size * 0.52,
-        letterSpacing: -0.5,
-        boxShadow: "var(--shadow-sm)",
+        // Unified mark spec (landing WMark is canonical): em-tracking, no shadow.
+        letterSpacing: "-0.02em",
+        lineHeight: 1,
       }}
     >
       W

@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { mutation } from "./_generated/server"
+import { mutation, query } from "./_generated/server"
 import { authKit } from "./auth"
 import { requireEnabledUser } from "./lib/account"
 
@@ -7,6 +7,45 @@ import { requireEnabledUser } from "./lib/account"
 // token is ever stored — the raw token is generated on the OWNER's device, shared
 // out-of-band, and never reaches the server (schema `invites`). Executors were
 // removed, so every invite is for a beneficiary.
+
+/**
+ * Preview an invite BEFORE redemption — the /invite/[token] page personalizes
+ * its copy and shows expired/used states pre-sign-in. PUBLIC by design: the
+ * high-entropy link IS the capability (the server only ever sees its sha256),
+ * and only the owner's display name is exposed — exactly what the shared
+ * invite already tells the recipient. Raw timestamps; the client derives
+ * "expired" (queries must not read the wall clock).
+ */
+export const getInviteInfo = query({
+  args: { tokenHash: v.string() },
+  returns: v.union(
+    v.object({ found: v.literal(false) }),
+    v.object({
+      found: v.literal(true),
+      ownerName: v.union(v.string(), v.null()),
+      expiresAt: v.number(),
+      consumedAt: v.union(v.number(), v.null()),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const invite = await ctx.db
+      .query("invites")
+      .withIndex("by_tokenHash", (q) => q.eq("tokenHash", args.tokenHash))
+      .unique()
+    if (invite === null) return { found: false as const }
+    let ownerName: string | null = null
+    if (invite.beneficiaryId !== undefined) {
+      const b = await ctx.db.get(invite.beneficiaryId)
+      ownerName = b?.ownerName ?? null
+    }
+    return {
+      found: true as const,
+      ownerName,
+      expiresAt: invite.expiresAt,
+      consumedAt: invite.consumedAt ?? null,
+    }
+  },
+})
 
 /**
  * Issue an invite for one of the owner's beneficiaries. The client generated the

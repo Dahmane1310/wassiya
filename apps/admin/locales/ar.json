@@ -485,6 +485,7 @@
       "asset_read_at_release": "قُرئ أصل عند الإفصاح",
       "beneficiary_invited": "دُعي مستفيد",
       "beneficiary_enrolled": "سُجّل مستفيد",
+      "recipient_key_rotated": "بُدّل مفتاح مستفيد",
       "executor_invited": "دُعي منفّذ",
       "attestation_recorded": "سُجّلت شهادة",
       "attestation_revoked": "أُلغيت شهادة",

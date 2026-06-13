@@ -3,22 +3,26 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { signUpWithPassword } from "@/app/auth-actions"
-import { Btn, Card, Field } from "@/components/portal/ui"
-import { friendlyAuthError } from "./error-messages"
+import { Button } from "@workspace/ui/components/button"
+import { AuthCard } from "./auth-card"
+import { AuthField } from "./auth-field"
+import { friendlyAuthErrorKey } from "./error-messages"
 import { OAuthButtons } from "./oauth-buttons"
 
 export function SignUpCard({ returnTo }: { returnTo: string }) {
+  const { t } = useTranslation()
   const router = useRouter()
   const [firstName, setFirstName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [errorKey, setErrorKey] = useState("")
   const [busy, setBusy] = useState(false)
 
   async function submit() {
     setBusy(true)
-    setError("")
+    setErrorKey("")
     try {
       const result = await signUpWithPassword(email, password, firstName)
       if ("ok" in result) {
@@ -28,7 +32,7 @@ export function SignUpCard({ returnTo }: { returnTo: string }) {
           `/verify-email?pending=${encodeURIComponent(result.verifyEmail.pendingAuthenticationToken)}&email=${encodeURIComponent(result.verifyEmail.email)}&returnTo=${encodeURIComponent(returnTo)}`,
         )
       } else {
-        setError(friendlyAuthError(result.error))
+        setErrorKey(friendlyAuthErrorKey(result.error))
       }
     } finally {
       setBusy(false)
@@ -36,19 +40,16 @@ export function SignUpCard({ returnTo }: { returnTo: string }) {
   }
 
   return (
-    <Card pad={32}>
-      <h1 className="serif" style={{ fontSize: 26, fontWeight: 600, letterSpacing: -0.4, margin: 0 }}>Create your account</h1>
-      <p style={{ fontSize: 14, color: "var(--ink-2)", marginTop: 8, fontWeight: 500, lineHeight: 1.5 }}>
-        A few seconds now — a lifetime of peace of mind.
-      </p>
-
-      <div style={{ marginTop: 20 }}>
+    <AuthCard title={t("auth.createYourAccount")} sub={t("auth.createSub")}>
+      <div className="mt-5">
         <OAuthButtons returnTo={returnTo} />
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "18px 0" }}>
-        <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
-        <span style={{ fontSize: 12, color: "var(--ink-3)", fontWeight: 600 }}>or with email</span>
-        <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
+      <div className="my-4.5 flex items-center gap-3">
+        <div className="bg-border h-px flex-1" />
+        <span className="text-muted-foreground text-xs font-semibold">
+          {t("auth.orWithEmail")}
+        </span>
+        <div className="bg-border h-px flex-1" />
       </div>
 
       <form
@@ -57,23 +58,32 @@ export function SignUpCard({ returnTo }: { returnTo: string }) {
           void submit()
         }}
       >
-        <Field label="First name (optional)" value={firstName} onChange={setFirstName} placeholder="Your name" />
-        <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" />
-        <Field label="Password" type="password" value={password} onChange={setPassword} hint="At least 10 characters keeps it strong." />
+        <AuthField label={t("auth.firstNameOptional")} value={firstName} onChange={setFirstName} placeholder={t("auth.yourNamePlaceholder")} />
+        <AuthField label={t("auth.email")} type="email" value={email} onChange={setEmail} placeholder={t("auth.emailPlaceholder")} />
+        <AuthField label={t("auth.password")} type="password" value={password} onChange={setPassword} hint={t("auth.passwordHint")} />
 
-        {error && <div style={{ fontSize: 13, color: "var(--red)", fontWeight: 600, marginBottom: 10 }}>{error}</div>}
+        {errorKey && (
+          <div className="text-destructive mb-2.5 text-[13px] font-semibold">
+            {t(errorKey)}
+          </div>
+        )}
 
-        <Btn variant="gold" size="lg" full disabled={busy || !email.includes("@") || password.length < 8} onClick={() => void submit()}>
-          {busy ? "One moment…" : "Create account"}
-        </Btn>
+        <Button
+          size="xl"
+          className="w-full"
+          disabled={busy || !email.includes("@") || password.length < 8}
+          onClick={() => void submit()}
+        >
+          {busy ? t("auth.oneMoment") : t("auth.createAccount")}
+        </Button>
       </form>
 
-      <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--line)", fontSize: 13.5, color: "var(--ink-2)", fontWeight: 500, textAlign: "center" }}>
-        Already have an account?{" "}
-        <Link href={`/sign-in?returnTo=${encodeURIComponent(returnTo)}`} style={{ color: "var(--primary)", fontWeight: 700 }}>
-          Sign in
+      <div className="text-foreground/70 mt-4.5 border-t pt-4 text-center text-[13.5px]">
+        {t("auth.alreadyHaveAccount")}{" "}
+        <Link href={`/sign-in?returnTo=${encodeURIComponent(returnTo)}`} className="text-primary font-bold">
+          {t("auth.signIn")}
         </Link>
       </div>
-    </Card>
+    </AuthCard>
   )
 }

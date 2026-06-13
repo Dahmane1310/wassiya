@@ -1,4 +1,4 @@
-import { InviteRedeem } from "@/components/invite-redeem"
+import { InviteRedeem } from "@/components/invite/invite-redeem"
 
 // Beneficiary invite landing. The token is the raw value from the share link
 // (mobile share → https://<web>/invite/<token>); it is hashed client-side and only

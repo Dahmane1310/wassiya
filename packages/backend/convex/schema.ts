@@ -331,6 +331,7 @@ export default defineSchema({
       v.literal("asset_read_at_release"),
       v.literal("beneficiary_invited"),
       v.literal("beneficiary_enrolled"),
+      v.literal("recipient_key_rotated"),
       v.literal("executor_invited"),
       v.literal("attestation_recorded"),
       v.literal("attestation_revoked"),

@@ -1,55 +1,52 @@
-/* Beneficiary-portal design system (Claude Design handoff). Scoped under `.portal`
-   so it never collides with the shared shadcn tokens in @workspace/ui/globals.css.
-   Wrap portal pages in <div className="portal">. Values ported from the mockup
-   (Wassiya Web.template.html). */
-.portal {
-  --bg: oklch(0.982 0.006 80);
-  --surface: oklch(1 0 0);
-  --surface-2: oklch(0.978 0.006 80);
-  --surface-3: oklch(0.962 0.007 80);
-  --sidebar: oklch(0.215 0.014 62);
-  --sidebar-2: oklch(0.255 0.015 64);
-  --ink: oklch(0.24 0.016 255);
-  --ink-2: oklch(0.48 0.014 255);
-  --ink-3: oklch(0.62 0.012 255);
-  --line: oklch(0.915 0.006 80);
-  --line-2: oklch(0.945 0.006 80);
-
-  --primary: oklch(0.58 0.1 66);
-  --primary-600: oklch(0.5 0.105 64);
-  --primary-soft: oklch(0.955 0.035 80);
-
-  /* "Released" status family — the only place blue survives the bronze rebrand. */
-  --blue: oklch(0.48 0.115 245);
-  --blue-600: oklch(0.42 0.12 248);
-  --blue-soft: oklch(0.955 0.028 245);
-
-  --gold: oklch(0.7 0.105 72);
-  --gold-deep: oklch(0.58 0.1 66);
-  --gold-soft: oklch(0.96 0.03 80);
-
-  --green: oklch(0.6 0.1 160);
-  --green-soft: oklch(0.95 0.04 160);
-
-  --amber: oklch(0.72 0.13 70);
-  --amber-soft: oklch(0.96 0.05 75);
-
-  --red: oklch(0.55 0.17 25);
-  --red-soft: oklch(0.96 0.035 25);
-
-  --espresso: oklch(0.21 0.014 62);
-
-  --font-display: var(--font-inter), -apple-system, system-ui, sans-serif;
+/* Wire the shared font tokens so @workspace/ui (shadcn) components render
+   Inter/JetBrains in this app (next/font provides the --font-inter/... vars). */
+:root {
   --font-sans: var(--font-inter), -apple-system, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+}
+
+/* Arabic typography: swap Inter for Tajawal under RTL (same as the landing). */
+:root[dir="rtl"] {
+  --font-sans: var(--font-tajawal), var(--font-inter), sans-serif;
+}
+
+/* Beneficiary-portal token names, now DERIVED from the shared "Living Vault"
+   palette in @workspace/ui/globals.css (one brand across landing/web/admin —
+   warm hue-60 text replaced the mockup's cool hue-255). The old names stay
+   defined so existing inline-styled components keep working; dark mode comes
+   from the shared `.dark` block plus the few literals overridden below.
+   Wrap portal pages in <div className="portal">. */
+.portal {
+  --bg: var(--background);
+  --surface: var(--card);
+  --surface-2: var(--muted);
+  --surface-3: var(--secondary);
+  /* Brand espresso panels (auth shell, release reveal) — deliberately shadows
+     the shadcn sidebar token inside .portal. */
+  --sidebar: oklch(0.215 0.014 62);
+  --sidebar-2: oklch(0.255 0.015 64);
+  --ink: var(--foreground);
+  --ink-2: var(--muted-foreground);
+  /* --ink-3, --primary, --blue*, --gold*, --green*, --amber*, --red-soft,
+     --espresso inherit from the shared palette. */
+  --line: var(--border);
+  --line-2: color-mix(in oklch, var(--border) 60%, var(--background));
+
+  --primary-600: oklch(0.5 0.105 64);
+  --primary-soft: var(--accent);
+  --red: var(--destructive);
+
+  --font-display: var(--font-inter), -apple-system, system-ui, sans-serif;
   --font-ar: var(--font-tajawal), sans-serif;
 
-  --r-lg: 18px;
-  --r-md: 13px;
-  --r-sm: 9px;
-  --shadow-sm: 0 1px 2px rgba(28, 30, 40, 0.05), 0 1px 3px rgba(28, 30, 40, 0.04);
-  --shadow-md: 0 2px 6px rgba(28, 30, 40, 0.05), 0 8px 24px rgba(28, 30, 40, 0.07);
-  --shadow-lg: 0 8px 24px rgba(28, 30, 40, 0.09), 0 24px 56px rgba(28, 30, 40, 0.12);
+  /* Derived from the shared radius base: 18px / ~13px / 9px exactly. */
+  --r-lg: calc(var(--radius) * 1.25);
+  --r-md: calc(var(--radius) * 0.9);
+  --r-sm: calc(var(--radius) * 0.625);
+  /* Portal-local soft shadows, warm-tinted to match the palette. */
+  --shadow-sm: 0 1px 2px rgba(38, 32, 24, 0.05), 0 1px 3px rgba(38, 32, 24, 0.04);
+  --shadow-md: 0 2px 6px rgba(38, 32, 24, 0.05), 0 8px 24px rgba(38, 32, 24, 0.07);
+  --shadow-lg: 0 8px 24px rgba(38, 32, 24, 0.09), 0 24px 56px rgba(38, 32, 24, 0.12);
 
   background: var(--bg);
   color: var(--ink);
@@ -57,6 +54,22 @@
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Dark mode: shared `.dark` tokens flow through the derivations above; only
+   the portal-local literals need explicit dark values. */
+.dark .portal {
+  --sidebar: oklch(0.235 0.013 62);
+  --sidebar-2: oklch(0.275 0.014 64);
+  /* Btn primary = espresso bg + white text: the shared dark espresso (0.12)
+     would vanish against the 0.17 background — use an elevated charcoal. */
+  --espresso: oklch(0.32 0.014 62);
+  /* Elevation must go LIGHTER in dark (secondary 0.205 would invert it). */
+  --surface-3: oklch(0.305 0.01 62);
+  --primary-600: oklch(0.78 0.1 76);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45), 0 24px 56px rgba(0, 0, 0, 0.5);
 }
 
 .portal .serif { font-family: var(--font-display); }
@@ -71,8 +84,6 @@
 .portal .rowhover:hover { background: var(--surface-2); }
 .portal .lift { transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, border-color 0.2s ease; }
 .portal .lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: color-mix(in oklch, var(--ink) 12%, var(--line)); }
-.portal .linkrow { transition: color 0.15s ease; }
-.portal .linkrow:hover { color: var(--primary); }
 .portal .w-fade { animation: wFade 0.4s ease both; }
 .portal .w-up { animation: wUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
@@ -82,7 +93,6 @@
 @keyframes wHeart { 0%, 100% { transform: scale(1); } 14% { transform: scale(1.06); } 28% { transform: scale(1); } 42% { transform: scale(1.04); } 56% { transform: scale(1); } }
 @keyframes wPop { 0% { transform: scale(0.7); opacity: 0; } 60% { transform: scale(1.06); } 100% { transform: scale(1); opacity: 1; } }
 
-@media (max-width: 720px) { .portal .trust-chip { display: none !important; } }
 @media (prefers-reduced-motion: reduce) {
   .portal * { animation-duration: 0.001s !important; }
   .portal .lift:hover { transform: none; }

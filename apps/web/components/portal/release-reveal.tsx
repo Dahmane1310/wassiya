@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { useQuery } from "convex/react"
+import { ChevronLeft, Info, LockOpen } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { api } from "@workspace/backend/api"
 import {
   base64ToBytes,
@@ -15,40 +17,16 @@ import {
   unwrapDekWithPrivateKey,
   unwrapKey,
 } from "@workspace/crypto"
-import { Btn, Card, Field, IconBadge } from "./ui"
-import { Icon, type IconName } from "./icon"
+import { Button } from "@workspace/ui/components/button"
+import { Card, CardContent } from "@workspace/ui/components/card"
+import { Input } from "@workspace/ui/components/input"
+import { Label } from "@workspace/ui/components/label"
+import { Spinner } from "@workspace/ui/components/spinner"
+import { ReleasedItemRow, type Item, type Payload } from "./release/released-item-row"
 
-type Payload = {
-  label?: string
-  category?: string
-  value?: number | null
-  currency?: string | null
-  notes?: string | null
-  details?: Record<string, string> | null
-  file?: { name: string; mimeType: string | null } | null
-}
-type Item = { assetId: string; payload: Payload; dek: CryptoKey; fileUrl: string | null; fileIv: string | null }
-
-const CAT_ICON: Record<string, { icon: IconName; tint: string }> = {
-  real_estate: { icon: "home", tint: "var(--primary)" },
-  bank_account: { icon: "bank", tint: "var(--green)" },
-  cash: { icon: "coins", tint: "var(--gold-deep)" },
-  vehicle: { icon: "car", tint: "oklch(0.52 0.11 285)" },
-  crypto: { icon: "bitcoin", tint: "var(--gold)" },
-  document: { icon: "doc", tint: "oklch(0.52 0.06 255)" },
-}
-const catMeta = (c?: string) => CAT_ICON[c ?? ""] ?? { icon: "doc" as IconName, tint: "var(--ink-3)" }
-
-function secretLine(p: Payload): string {
-  if (p.notes) return p.notes
-  if (p.details) {
-    const first = Object.values(p.details).find(Boolean)
-    if (first) return first
-  }
-  if (p.value != null) return `${p.currency ?? ""} ${p.value}`.trim()
-  return "—"
-}
-
+/** Full-screen reveal of a released legacy. The decryption logic (`unlock`,
+ *  `download`) is unchanged — only the shell was restyled. NOT a Dialog:
+ *  this is deliberately a takeover moment. Error state holds an i18n KEY. */
 export function ReleaseReveal({
   ownerId,
   ownerName,
@@ -58,23 +36,24 @@ export function ReleaseReveal({
   ownerName: string
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const legacy = useQuery(api.release.getReleasedLegacy, { ownerId })
   const [code, setCode] = useState("")
   const [items, setItems] = useState<Item[] | null>(null)
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState("")
+  const [errorKey, setErrorKey] = useState("")
 
   async function unlock() {
     if (!legacy) return
     setBusy(true)
-    setError("")
+    setErrorKey("")
     try {
       const recKey = await deriveKeyFromPassword(normalizeRecoveryCode(code), legacy.escrow.recoverySalt)
       let pkcs8: Uint8Array<ArrayBuffer>
       try {
         pkcs8 = await unwrapKey(legacy.escrow.wrappedPrivateKey, legacy.escrow.wrappedPrivateKeyIv, recKey)
       } catch {
-        setError("That recovery code didn't work. Check it and try again.")
+        setErrorKey("release.wrongCode")
         setBusy(false)
         return
       }
@@ -90,7 +69,7 @@ export function ReleaseReveal({
       }
       setItems(out)
     } catch {
-      setError("Something went wrong while opening it. Please try again.")
+      setErrorKey("release.openFailed")
     } finally {
       setBusy(false)
     }
@@ -111,54 +90,127 @@ export function ReleaseReveal({
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "var(--bg)", overflow: "auto" }} className="w-fade portal">
-      <div style={{ maxWidth: 620, margin: "0 auto", padding: "30px 24px 70px" }}>
-        <button className="press" onClick={onClose} style={{ display: "flex", alignItems: "center", gap: 5, color: "var(--ink-2)", fontSize: 14, fontWeight: 600, marginBottom: 22 }}><Icon name="chevL" size={17} sw={2.4} /> Close</button>
+    <div className="w-fade portal bg-background fixed inset-0 z-[300] overflow-auto">
+      <div className="mx-auto max-w-[620px] px-6 pt-7 pb-18">
+        <button
+          type="button"
+          className="press text-foreground/70 hover:text-primary mb-5.5 flex items-center gap-1 text-sm font-semibold transition-colors"
+          onClick={onClose}
+        >
+          <ChevronLeft className="size-4" strokeWidth={2.4} /> {t("common.close")}
+        </button>
 
-        <div style={{ background: "linear-gradient(150deg, var(--sidebar), oklch(0.17 0.012 60))", borderRadius: "var(--r-lg)", padding: 32, color: "#fff", position: "relative", overflow: "hidden", marginBottom: 16 }}>
-          <div style={{ position: "absolute", top: -30, right: -20, width: 170, height: 170, borderRadius: 999, background: "radial-gradient(circle, color-mix(in oklch, var(--gold) 35%, transparent), transparent 70%)" }} />
-          <div style={{ position: "relative", textAlign: "center" }}>
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}><div style={{ width: 66, height: 66, borderRadius: 99, background: "rgba(255,255,255,0.1)", border: "1.5px solid var(--gold)", color: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center", animation: "wPop .6s ease" }}><Icon name="lockOpen" size={30} /></div></div>
-            <div className="serif" style={{ fontSize: 24, fontWeight: 600, letterSpacing: -0.3 }}>{ownerName}&apos;s legacy is released to you</div>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.62)", marginTop: 8, lineHeight: 1.6, fontWeight: 500 }}>Opened privately on your device — for you alone. May Allah have mercy on them.</p>
+        <div
+          className="relative mb-4 overflow-hidden p-8 text-white"
+          style={{
+            background: "linear-gradient(150deg, var(--sidebar), oklch(0.17 0.012 60))",
+            borderRadius: "var(--r-lg)",
+          }}
+        >
+          <div
+            className="absolute -top-8 -right-5 size-[170px] rounded-full"
+            style={{
+              background:
+                "radial-gradient(circle, color-mix(in oklch, var(--gold) 35%, transparent), transparent 70%)",
+            }}
+          />
+          <div className="relative text-center">
+            <div className="mb-3.5 flex justify-center">
+              <div
+                className="border-gold text-gold flex size-16.5 items-center justify-center rounded-full border-[1.5px] bg-white/10"
+                style={{ animation: "wPop .6s ease" }}
+              >
+                <LockOpen className="size-7.5" />
+              </div>
+            </div>
+            <div className="serif text-2xl font-semibold tracking-tight">
+              {t("release.heroTitle", { ownerName })}
+            </div>
+            <p className="mt-2 text-[13.5px] leading-relaxed font-medium text-white/60">
+              {t("release.heroSub")}
+            </p>
           </div>
         </div>
 
-        {legacy === undefined && <Card pad={24}><p style={{ fontSize: 14, color: "var(--ink-3)" }}>Loading…</p></Card>}
-        {legacy === null && <Card pad={24}><p style={{ fontSize: 14, color: "var(--ink-2)", fontWeight: 600 }}>This legacy isn&apos;t available to view yet.</p></Card>}
+        {legacy === undefined && (
+          <Card className="py-0">
+            <CardContent className="flex justify-center p-6">
+              <Spinner className="text-muted-foreground size-5" />
+            </CardContent>
+          </Card>
+        )}
+        {legacy === null && (
+          <Card className="py-0">
+            <CardContent className="p-6">
+              <p className="text-foreground/70 text-sm font-semibold">
+                {t("release.notAvailable")}
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {legacy && items === null && (
-          <Card pad={24}>
-            <h3 className="serif" style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Enter your Recovery Code</h3>
-            <p style={{ fontSize: 13.5, color: "var(--ink-2)", marginTop: 6, fontWeight: 500, lineHeight: 1.5 }}>This opens what was left for you, privately on this device. We never see your code.</p>
-            <div style={{ marginTop: 14 }}><Field label="Recovery Code" value={code} onChange={setCode} placeholder="WASIYA-••••-••••-••••-••••" mono /></div>
-            {error && <div style={{ fontSize: 13, color: "var(--red)", fontWeight: 600, marginBottom: 8 }}>{error}</div>}
-            <Btn variant="blue" size="lg" full icon="lockOpen" disabled={busy || code.trim().length < 8} onClick={unlock}>{busy ? "Opening…" : "Open my legacy"}</Btn>
-          </Card>
-        )}
-
-        {items !== null && (
-          <Card pad={0}>
-            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", fontSize: 13, fontWeight: 800, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: 0.3 }}>Left for you</div>
-            {items.length === 0 && <div style={{ padding: 20, fontSize: 14, color: "var(--ink-3)" }}>No items were sealed for you.</div>}
-            {items.map((it, i) => {
-              const c = catMeta(it.payload.category)
-              return (
-                <div key={it.assetId} style={{ display: "flex", alignItems: "center", gap: 13, padding: "15px 20px", borderBottom: i < items.length - 1 ? "1px solid var(--line-2)" : "none" }}>
-                  <IconBadge name={c.icon} tint={c.tint} size={42} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14.5, fontWeight: 700 }}>{it.payload.label ?? "Item"}</div>
-                    <div className="mono" style={{ fontSize: 12.5, color: "var(--ink-2)", fontWeight: 600, marginTop: 2, wordBreak: "break-word" }}>{secretLine(it.payload)}</div>
-                  </div>
-                  {it.fileUrl && it.fileIv && <Btn size="sm" variant="ghost" icon="download" onClick={() => void download(it)}>File</Btn>}
+          <Card className="py-0">
+            <CardContent className="p-6">
+              <h3 className="serif text-lg font-semibold">{t("release.enterCode")}</h3>
+              <p className="text-foreground/70 mt-1.5 text-[13.5px] leading-normal">
+                {t("release.enterCodeBody")}
+              </p>
+              <div className="mt-3.5 mb-4 flex flex-col gap-1.5">
+                <Label htmlFor="recovery-code">{t("release.recoveryCodeLabel")}</Label>
+                <Input
+                  id="recovery-code"
+                  className="mono h-12"
+                  value={code}
+                  placeholder={t("release.codePlaceholder")}
+                  onChange={(e) => setCode(e.target.value)}
+                />
+              </div>
+              {errorKey && (
+                <div className="text-destructive mb-2 text-[13px] font-semibold">
+                  {t(errorKey)}
                 </div>
-              )
-            })}
+              )}
+              <Button
+                size="xl"
+                className="w-full bg-[var(--blue)] text-white hover:bg-[var(--blue)]/90"
+                disabled={busy || code.trim().length < 8}
+                onClick={() => void unlock()}
+              >
+                <LockOpen /> {busy ? t("release.opening") : t("release.openButton")}
+              </Button>
+            </CardContent>
           </Card>
         )}
 
         {items !== null && (
-          <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 9, padding: "14px 16px", background: "var(--surface-2)", borderRadius: 13 }}><Icon name="info" size={17} style={{ color: "var(--ink-3)" }} /><div style={{ fontSize: 12.5, color: "var(--ink-2)", fontWeight: 600 }}>Distributed by Fara&apos;id with the rest of the estate. Keep these details private.</div></div>
+          <Card className="gap-0 py-0">
+            <div className="text-muted-foreground border-b px-5 py-4 text-[13px] font-extrabold tracking-wide uppercase">
+              {t("release.leftForYou")}
+            </div>
+            {items.length === 0 && (
+              <div className="text-muted-foreground p-5 text-sm">
+                {t("release.noItems")}
+              </div>
+            )}
+            {items.map((it, i) => (
+              <ReleasedItemRow
+                key={it.assetId}
+                item={it}
+                last={i === items.length - 1}
+                onDownload={(item) => void download(item)}
+              />
+            ))}
+          </Card>
+        )}
+
+        {items !== null && (
+          <div className="bg-muted mt-4 flex items-center gap-2 rounded-2xl px-4 py-3.5">
+            <Info className="text-muted-foreground size-4 shrink-0" />
+            <div className="text-foreground/70 text-[12.5px] font-semibold">
+              {t("release.faraidNote")}
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -6,37 +6,21 @@
    source so those classes are generated. */
 @source "./**/*.{astro,ts,tsx}";
 
-/* ── Wassiya brand extras ────────────────────────────────────────────────────
-   The warm "Living Vault" shadcn tokens (paper / bronze / sage / espresso) now
-   ship as the defaults in @workspace/ui/globals.css, so the landing only adds
-   the brand extras that have no shadcn equivalent. Values ported from the
-   approved landing mockup (Wassiya Landing.html). */
+/* ── Landing-only extras ─────────────────────────────────────────────────────
+   The brand palette (gold/green/espresso/ink-3 + Tailwind utilities for them)
+   now ships from @workspace/ui/globals.css — shared with web and admin. Only
+   the hero gradient stops and the font mechanism stay local. */
 :root {
-  --ink-3: oklch(0.62 0.012 60);
-  --gold: oklch(0.74 0.105 74);
-  --gold-deep: oklch(0.58 0.1 66);
-  --gold-soft: oklch(0.955 0.035 80);
-  --green: oklch(0.6 0.1 162);
-  --green-soft: oklch(0.95 0.04 162);
-  --espresso: oklch(0.22 0.014 62);
-  --espresso-2: oklch(0.17 0.012 60);
   --hero-grad-1: oklch(0.965 0.03 80);
   --hero-grad-2: oklch(0.95 0.03 162);
 
-  /* Inter drives Latin; Tajawal is swapped in for RTL below. */
+  /* Inter drives Latin; Tajawal is swapped in for RTL below. (Google Fonts
+     <link> in Layout.astro — web/admin load the same families via next/font.) */
   --font-sans: "Inter", -apple-system, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 .dark {
-  --ink-3: oklch(0.6 0.012 72);
-  --gold: oklch(0.8 0.1 76);
-  --gold-deep: oklch(0.72 0.1 74);
-  --gold-soft: oklch(0.32 0.045 72);
-  --green: oklch(0.7 0.1 162);
-  --green-soft: oklch(0.3 0.05 162);
-  --espresso: oklch(0.12 0.008 60);
-  --espresso-2: oklch(0.1 0.006 60);
   --hero-grad-1: oklch(0.26 0.03 75);
   --hero-grad-2: oklch(0.24 0.03 200);
 }
@@ -44,18 +28,6 @@
 /* Arabic typography: swap Inter for Tajawal under RTL. */
 :root[dir="rtl"] {
   --font-sans: "Tajawal", "Inter", sans-serif;
-}
-
-/* Expose the brand extras as Tailwind utilities (bg-gold, text-green, …). */
-@theme inline {
-  --color-ink-3: var(--ink-3);
-  --color-gold: var(--gold);
-  --color-gold-deep: var(--gold-deep);
-  --color-gold-soft: var(--gold-soft);
-  --color-green: var(--green);
-  --color-green-soft: var(--green-soft);
-  --color-espresso: var(--espresso);
-  --color-espresso-2: var(--espresso-2);
 }
 
 .mono {

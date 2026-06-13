@@ -46,10 +46,16 @@ const {
       rel="stylesheet"
     />
 
-    <!-- No-flash theme boot: apply the saved theme before first paint. -->
+    <!-- No-flash theme boot. Shares localStorage["wl_theme"] with the web
+         portal (next-themes storageKey) — same-origin only; "system" or no
+         value falls back to the OS preference, matching next-themes. -->
     <script is:inline>
       try {
-        if (localStorage.getItem("wl_theme") === "dark") {
+        var t = localStorage.getItem("wl_theme")
+        if (
+          t === "dark" ||
+          ((!t || t === "system") && matchMedia("(prefers-color-scheme: dark)").matches)
+        ) {
           document.documentElement.classList.add("dark")
         }
       } catch (e) {}

@@ -3,13 +3,15 @@
 import { useEffect } from "react"
 import { usePathname } from "next/navigation"
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react"
-import { TopNav } from "@/components/portal/top-nav"
+import { useTranslation } from "react-i18next"
+import { TopNav } from "@/components/portal/top-nav/top-nav"
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation()
   return (
     <div className="portal" style={{ minHeight: "100vh", background: "radial-gradient(1000px 700px at 85% -10%, var(--gold-soft), transparent 50%), var(--bg)" }}>
       <AuthLoading>
-        <Centered>Checking your session…</Centered>
+        <Centered>{t("common.checkingSession")}</Centered>
       </AuthLoading>
       <Unauthenticated>
         <SignInRedirect />
@@ -27,9 +29,10 @@ function Centered({ children }: { children: React.ReactNode }) {
 }
 
 function SignInRedirect() {
+  const { t } = useTranslation()
   const pathname = usePathname()
   useEffect(() => {
     window.location.href = `/sign-in?returnTo=${encodeURIComponent(pathname || "/home")}`
   }, [pathname])
-  return <Centered>Redirecting to sign in…</Centered>
+  return <Centered>{t("common.redirectingSignIn")}</Centered>
 }
